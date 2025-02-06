@@ -302,15 +302,11 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
 
   return (
     <Dialog
-      open={editInvoice ? dialogOpen : open}
+      open={dialogOpen}
       onOpenChange={(newOpen) => {
-        if (editInvoice) {
-          setDialogOpen(newOpen);
-          if (!newOpen && onComplete) {
-            onComplete();
-          }
-        } else {
-          setOpen(newOpen);
+        setDialogOpen(newOpen);
+        if (!newOpen && onComplete) {
+          onComplete();
         }
       }}
     >
@@ -339,7 +335,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                     <Button
                       variant="outline"
                       role="combobox"
-                      aria-expanded={open}
+                      aria-expanded={comboboxOpen}
                       className="w-full justify-between"
                     >
                       {form.watch("supplierId")
@@ -531,10 +527,9 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
             </div>
 
             <Button
-              type="button"
+              type="submit"
               className="w-full"
               disabled={updateInvoiceMutation.isPending}
-              onClick={handleSubmit}
             >
               {updateInvoiceMutation.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
