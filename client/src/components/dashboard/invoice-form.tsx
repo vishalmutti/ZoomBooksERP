@@ -71,25 +71,56 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   const updateInvoiceMutation = useMutation({
     mutationFn: async (data: InsertInvoice) => {
       const formData = new FormData();
+
+      // If we're in upload mode and there's a file, add it to formData
       if (mode === "upload" && file) {
         formData.append('file', file);
       }
+
+      // Convert the invoice data to a JSON string and append it
       const invoiceData = {
         ...data,
         mode,
         items: mode === "manual" ? data.items : undefined,
       };
-      formData.append('invoiceData', JSON.stringify(invoiceData));
-      const res = await apiRequest(
-        editInvoice ? "PATCH" : "POST",
-        editInvoice ? `/api/invoices/${editInvoice.id}` : "/api/invoices",
-        formData
-      );
-      if (!res.ok) {
-        const error = await res.text();
-        throw new Error(error || 'Failed to update invoice');
+
+      // Ensure dates are properly formatted
+      if (invoiceData.dueDate) {
+        invoiceData.dueDate = new Date(invoiceData.dueDate).toISOString();
       }
-      return res.json();
+      if (invoiceData.paymentDate) {
+        invoiceData.paymentDate = new Date(invoiceData.paymentDate).toISOString();
+      }
+
+      formData.append('invoiceData', JSON.stringify(invoiceData));
+
+      try {
+        const res = await apiRequest(
+          editInvoice ? "PATCH" : "POST",
+          editInvoice ? `/api/invoices/${editInvoice.id}` : "/api/invoices",
+          formData,
+          // Don't set Content-Type header, let the browser set it with the boundary
+          { headers: {} }
+        );
+
+        if (!res.ok) {
+          const errorText = await res.text();
+          try {
+            // Try to parse error as JSON
+            const errorJson = JSON.parse(errorText);
+            throw new Error(errorJson.message || 'Failed to update invoice');
+          } catch {
+            // If parsing fails, use the raw text
+            throw new Error(errorText || 'Failed to update invoice');
+          }
+        }
+
+        const responseData = await res.json();
+        return responseData;
+      } catch (error) {
+        console.error('Invoice update error:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });

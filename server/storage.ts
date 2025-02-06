@@ -205,22 +205,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateInvoice(id: number, updates: Partial<Invoice>): Promise<Invoice> {
-    const [invoice] = await db
-      .update(invoices)
-      .set({
-        ...updates,
-        // Ensure dates are properly formatted
-        dueDate: updates.dueDate ? new Date(updates.dueDate).toISOString() : undefined,
-        paymentDate: updates.paymentDate ? new Date(updates.paymentDate).toISOString() : undefined
-      })
-      .where(eq(invoices.id, id))
-      .returning();
+    try {
+      const [invoice] = await db
+        .update(invoices)
+        .set({
+          ...updates,
+          // Ensure dates are properly formatted
+          dueDate: updates.dueDate ? new Date(updates.dueDate).toISOString() : undefined,
+          paymentDate: updates.paymentDate ? new Date(updates.paymentDate).toISOString() : undefined,
+          // Ensure other fields are properly typed
+          totalAmount: updates.totalAmount?.toString(),
+          isPaid: updates.isPaid ?? false,
+        })
+        .where(eq(invoices.id, id))
+        .returning();
 
-    if (!invoice) {
-      throw new Error('Invoice not found');
+      if (!invoice) {
+        throw new Error('Invoice not found');
+      }
+
+      return invoice;
+    } catch (error) {
+      console.error('Error updating invoice:', error);
+      throw error;
     }
-
-    return invoice;
   }
 
   async getInvoice(id: number): Promise<Invoice | undefined> {
