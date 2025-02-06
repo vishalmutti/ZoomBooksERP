@@ -177,14 +177,14 @@ export function registerRoutes(app: Express): Server {
       let uploadedFile = req.file ? req.file.filename : undefined;
 
       // Generate PDF if it's a manual entry
-      if (!req.file && (parsed.data.items?.length || existingInvoice.items?.length)) {
+      if (!req.file && parsed.data.items?.length) {
         const supplier = await storage.getSupplier(parsed.data.supplierId || existingInvoice.supplierId);
         if (supplier) {
           uploadedFile = await generateInvoicePDF({ 
             invoice: { 
               ...existingInvoice,
               ...parsed.data,
-              items: parsed.data.items || existingInvoice.items,
+              items: parsed.data.items,
               id,
               invoiceNumber: existingInvoice.invoiceNumber
             },
