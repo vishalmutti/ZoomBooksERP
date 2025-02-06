@@ -6,6 +6,9 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Create the server instance at the top level
+const server = registerRoutes(app);
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -36,16 +39,14 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  const status = err.status || err.statusCode || 500;
+  const message = err.message || "Internal Server Error";
+  res.status(status).json({ message });
+  console.error(err);
+});
+
 (async () => {
-  const server = registerRoutes(app);
-
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-    res.status(status).json({ message });
-    console.error(err);
-  });
-
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
@@ -64,7 +65,9 @@ app.use((req, res, next) => {
         .once('error', (err: any) => {
           if (err.code === 'EADDRINUSE') {
             log(`Port ${port} in use, trying ${port + 1}`);
-            resolve(tryPort(port + 1));
+            server.close(() => {
+              tryPort(port + 1).then(resolve).catch(reject);
+            });
           } else {
             reject(err);
           }
@@ -72,7 +75,6 @@ app.use((req, res, next) => {
     });
   };
 
-  // Start with port 5000
   try {
     await tryPort(5000);
   } catch (err) {

@@ -1,7 +1,7 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 
 const navItems = [
   { href: "/", label: "Dashboard" },
@@ -15,21 +15,18 @@ export function Navbar() {
   return (
     <header className="border-b">
       <div className="container mx-auto flex h-32 items-center justify-between px-4">
-        <div 
-          className="cursor-pointer pt-4" 
-          onClick={() => window.location.href = '/'}
-        >
+        <Link href="/" className="cursor-pointer pt-4">
           <img 
             src="/logo.png" 
             alt="Zoom Books Logo" 
-            className="h-96 w-auto -mt-8" 
+            className="h-24 w-auto" 
           />
-        </div>
+        </Link>
 
         <div className="flex items-center gap-8">
           <nav className="flex items-center gap-6">
             {navItems.map((item) => (
-              <a
+              <Link
                 key={item.href}
                 href={item.href}
                 className={`text-sm font-medium transition-colors hover:text-primary ${
@@ -37,7 +34,7 @@ export function Navbar() {
                 }`}
               >
                 {item.label}
-              </a>
+              </Link>
             ))}
           </nav>
           <Button 

@@ -10,10 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertInvoiceSchema, type InsertInvoice, type InsertInvoiceItem, type Invoice, type InvoiceItem } from "@shared/schema";
+import { insertInvoiceSchema, type InsertInvoice, type InsertInvoiceItem, type Invoice, type InvoiceItem, type Supplier } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2, Plus, Upload, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -47,30 +47,31 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   const { toast } = useToast();
   const [file, setFile] = useState<File | null>(null);
 
-  // Fetch invoice items if editing
-  const { data: invoiceItems = [] } = useQuery({
-    queryKey: ["/api/invoices", editInvoice?.id, "items"],
-    enabled: !!editInvoice?.id && mode === "manual",
-  });
-
   const form = useForm<InsertInvoice>({
     resolver: zodResolver(insertInvoiceSchema),
-    values: editInvoice ? {
-      ...editInvoice,
-      items: editInvoice.items?.map(item => ({
-        description: item.description || "",
-        quantity: item.quantity?.toString() || "0",
-        unitPrice: item.unitPrice?.toString() || "0",
-        totalPrice: item.totalPrice?.toString() || "0",
-        invoiceId: item.invoiceId
-      })) || [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: editInvoice.id }]
-    } : undefined,
     defaultValues: {
       items: [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }]
     }
   });
 
-  const { data: suppliers = [] } = useQuery({
+  // Initialize form with edit invoice data when available
+  useEffect(() => {
+    if (editInvoice) {
+      const formData = {
+        ...editInvoice,
+        items: editInvoice.items?.map(item => ({
+          description: item.description || "",
+          quantity: item.quantity?.toString() || "0",
+          unitPrice: item.unitPrice?.toString() || "0",
+          totalPrice: item.totalPrice?.toString() || "0",
+          invoiceId: item.invoiceId
+        })) || [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: editInvoice.id }]
+      };
+      form.reset(formData);
+    }
+  }, [editInvoice, form]);
+
+  const { data: suppliers = [] } = useQuery<Supplier[]>({
     queryKey: ["/api/suppliers", supplierSearch],
     queryFn: async () => {
       const url = supplierSearch
@@ -86,55 +87,43 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     mutationFn: async (data: InsertInvoice) => {
       const formData = new FormData();
 
-      // If we're in upload mode and there's a file, add it to formData
       if (mode === "upload" && file) {
         formData.append('file', file);
       }
 
-      // Convert the invoice data to a JSON string and append it
       const invoiceData = {
         ...data,
         mode,
         items: mode === "manual" ? data.items : undefined,
       };
 
-      // Ensure dates are properly formatted
       if (invoiceData.dueDate) {
         invoiceData.dueDate = new Date(invoiceData.dueDate).toISOString();
       }
+      //Inferred fix for paymentDate - mirroring dueDate handling.
       if (invoiceData.paymentDate) {
         invoiceData.paymentDate = new Date(invoiceData.paymentDate).toISOString();
       }
 
       formData.append('invoiceData', JSON.stringify(invoiceData));
 
-      try {
-        const res = await apiRequest(
-          editInvoice ? "PATCH" : "POST",
-          editInvoice ? `/api/invoices/${editInvoice.id}` : "/api/invoices",
-          formData,
-          // Don't set Content-Type header, let the browser set it with the boundary
-          { headers: {} }
-        );
+      const res = await apiRequest(
+        editInvoice ? "PATCH" : "POST",
+        editInvoice ? `/api/invoices/${editInvoice.id}` : "/api/invoices",
+        formData
+      );
 
-        if (!res.ok) {
-          const errorText = await res.text();
-          try {
-            // Try to parse error as JSON
-            const errorJson = JSON.parse(errorText);
-            throw new Error(errorJson.message || 'Failed to update invoice');
-          } catch {
-            // If parsing fails, use the raw text
-            throw new Error(errorText || 'Failed to update invoice');
-          }
+      if (!res.ok) {
+        const errorText = await res.text();
+        try {
+          const errorJson = JSON.parse(errorText);
+          throw new Error(errorJson.message || 'Failed to update invoice');
+        } catch {
+          throw new Error(errorText || 'Failed to update invoice');
         }
-
-        const responseData = await res.json();
-        return responseData;
-      } catch (error) {
-        console.error('Invoice update error:', error);
-        throw error;
       }
+
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
@@ -166,14 +155,16 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     const items = form.getValues("items") || [];
     const item = items[index];
 
-    form.setValue(`items.${index}.${field}`, value);
+    if (item) {
+      form.setValue(`items.${index}.${field}`, value);
 
-    if ((field === "quantity" || field === "unitPrice") && item) {
-      const quantity = parseFloat(field === "quantity" ? value : item.quantity);
-      const unitPrice = parseFloat(field === "unitPrice" ? value : item.unitPrice);
+      if ((field === "quantity" || field === "unitPrice")) {
+        const quantity = parseFloat(field === "quantity" ? value : item.quantity || "0");
+        const unitPrice = parseFloat(field === "unitPrice" ? value : item.unitPrice || "0");
 
-      if (!isNaN(quantity) && !isNaN(unitPrice)) {
-        form.setValue(`items.${index}.totalPrice`, (quantity * unitPrice).toString());
+        if (!isNaN(quantity) && !isNaN(unitPrice)) {
+          form.setValue(`items.${index}.totalPrice`, (quantity * unitPrice).toString());
+        }
       }
     }
   };
@@ -186,7 +177,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
 
   const handleModeChange = (value: string) => {
     setMode(value as "manual" | "upload");
-    // Preserve existing form data when switching modes
     const currentValues = form.getValues();
     form.reset({
       ...currentValues,
@@ -202,7 +192,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   };
 
   const handleSubmit = form.handleSubmit((data) => {
-    // Validation
     if (!data.supplierId) {
       toast({
         title: "Error",
@@ -248,7 +237,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         return;
       }
     } else {
-      // Manual mode validation
       if (!data.items || data.items.length === 0) {
         toast({
           title: "Error",
@@ -258,7 +246,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         return;
       }
 
-      // Validate each item
       for (const item of data.items) {
         if (!item.description) {
           toast({
@@ -286,7 +273,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         }
       }
 
-      // Calculate total amount
       data.totalAmount = data.items
         .reduce((sum, item) => sum + (Number(item.quantity) * Number(item.unitPrice)), 0)
         .toString();
@@ -313,7 +299,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
 
           <form onSubmit={handleSubmit} className="space-y-6 mt-4">
             <div className="space-y-4">
-              {/* Supplier Selection */}
               <div>
                 <Label>Supplier</Label>
                 <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
@@ -364,19 +349,16 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                 </Popover>
               </div>
 
-              {/* Invoice Number */}
               <div>
                 <Label htmlFor="invoiceNumber">Invoice Number</Label>
                 <Input {...form.register("invoiceNumber")} />
               </div>
 
-              {/* Due Date */}
               <div>
                 <Label htmlFor="dueDate">Due Date</Label>
                 <Input type="date" {...form.register("dueDate")} />
               </div>
 
-              {/* Mode specific content */}
               <TabsContent value="manual">
                 <div>
                   <Label>Items</Label>
@@ -509,14 +491,12 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                 </div>
               </TabsContent>
 
-              {/* Notes */}
               <div>
                 <Label htmlFor="notes">Notes</Label>
                 <Textarea {...form.register("notes")} />
               </div>
             </div>
 
-            {/* Submit Button */}
             <Button
               type="button"
               className="w-full"
