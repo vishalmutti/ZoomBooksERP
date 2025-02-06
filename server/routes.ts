@@ -202,24 +202,24 @@ export function registerRoutes(app: Express): Server {
         return res.status(404).json({ message: 'Invoice not found' });
       }
 
-      // Update invoice items if provided
-      if (parsed.data.items?.length) {
-        await storage.db.transaction(async (tx) => {
-          // Delete existing items
-          await tx.delete(storage.invoiceItems).where(eq(storage.invoiceItems.invoiceId, id));
-          
-          // Insert new items
+      // Always update invoice items with the provided data
+      await storage.db.transaction(async (tx) => {
+        // Delete existing items
+        await tx.delete(storage.invoiceItems).where(eq(storage.invoiceItems.invoiceId, id));
+        
+        // Insert new items if provided
+        if (parsed.data.items?.length) {
           await tx.insert(storage.invoiceItems).values(
             parsed.data.items.map(item => ({
               invoiceId: id,
               description: item.description,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
+              quantity: item.quantity.toString(),
+              unitPrice: item.unitPrice.toString(),
               totalPrice: (Number(item.quantity) * Number(item.unitPrice)).toString(),
             }))
           );
-        });
-      }
+        }
+      });
 
       res.json(invoice);
     } catch (error) {
