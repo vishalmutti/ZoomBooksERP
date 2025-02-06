@@ -14,27 +14,35 @@ export function Navbar() {
 
   return (
     <header className="border-b">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-6">
-            <h1 className="text-2xl font-bold">Zoom Books AR</h1>
-            <nav className="flex items-center space-x-4">
-              {navItems.map((item) => (
-                <Link key={item.href} href={item.href}>
-                  <a className={`text-sm font-medium transition-colors hover:text-primary ${
-                    location === item.href ? "text-primary" : "text-muted-foreground"
-                  }`}>
-                    {item.label}
-                  </a>
-                </Link>
-              ))}
-            </nav>
-          </div>
-          <Button variant="ghost" onClick={() => logoutMutation.mutate()}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
+      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+        <div className="flex items-center gap-8">
+          <Link href="/">
+            <img 
+              src="/attached_assets/Zoom Books Logo Final-01.png" 
+              alt="Zoom Books Logo" 
+              className="h-12 w-auto" 
+            />
+          </Link>
+          <nav className="flex items-center gap-6">
+            {navItems.map((item) => (
+              <Link key={item.href} href={item.href}>
+                <a className={`text-sm font-medium transition-colors hover:text-primary ${
+                  location === item.href ? "text-primary" : "text-muted-foreground"
+                }`}>
+                  {item.label}
+                </a>
+              </Link>
+            ))}
+          </nav>
         </div>
+        <Button 
+          variant="ghost" 
+          onClick={() => logoutMutation.mutate()}
+          className="gap-2"
+        >
+          <LogOut className="h-4 w-4" />
+          Logout
+        </Button>
       </div>
     </header>
   );
