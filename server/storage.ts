@@ -1,6 +1,6 @@
 import { invoices, suppliers, invoiceItems, users, payments, type User, type InsertUser, type Invoice, type InsertInvoice, type Supplier, type InsertSupplier, type Payment, type InsertPayment } from "@shared/schema";
 import { db } from "./db";
-import { eq, ilike, and, gte, lte, sql } from "drizzle-orm";
+import { eq, ilike, and, gte, lte, sql, desc } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
@@ -13,6 +13,7 @@ interface InvoiceFilters {
   isPaid?: boolean;
   minAmount?: number;
   maxAmount?: number;
+  supplierId?: number;
 }
 
 export interface IStorage {
@@ -20,11 +21,12 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
 
-  getSuppliers(): Promise<Supplier[]>;
+  getSuppliers(): Promise<(Supplier & { outstandingAmount: string })[]>;
   searchSuppliers(query: string): Promise<Supplier[]>;
   createSupplier(supplier: InsertSupplier): Promise<Supplier>;
   updateSupplier(id: number, updates: Partial<InsertSupplier>): Promise<Supplier | undefined>;
-  getSupplier(id: number): Promise<Supplier | undefined>;
+  getSupplier(id: number): Promise<(Supplier & { outstandingAmount: string }) | undefined>;
+  getSupplierInvoices(supplierId: number): Promise<Invoice[]>;
   deleteSupplier(id: number): Promise<void>;
 
   getInvoices(filters?: InvoiceFilters): Promise<Invoice[]>;
@@ -36,11 +38,11 @@ export interface IStorage {
   createPayment(payment: InsertPayment): Promise<Payment>;
   getInvoicePayments(invoiceId: number): Promise<Payment[]>;
 
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
 }
 
 export class DatabaseStorage implements IStorage {
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
 
   constructor() {
     this.sessionStore = new PostgresSessionStore({
@@ -64,15 +66,30 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async getSuppliers(): Promise<Supplier[]> {
-    return await db.select().from(suppliers).orderBy(suppliers.name);
+  async getSuppliers(): Promise<(Supplier & { outstandingAmount: string })[]> {
+    const result = await db
+      .select({
+        ...suppliers,
+        outstandingAmount: sql<string>`COALESCE(
+          SUM(CASE WHEN ${invoices.isPaid} = false THEN ${invoices.totalAmount} ELSE 0 END),
+          '0'
+        )::text`
+      })
+      .from(suppliers)
+      .leftJoin(invoices, eq(invoices.supplierId, suppliers.id))
+      .groupBy(suppliers.id)
+      .orderBy(desc(sql`COALESCE(
+        SUM(CASE WHEN ${invoices.isPaid} = false THEN ${invoices.totalAmount}::numeric ELSE 0 END),
+        0
+      )`));
+    return result;
   }
 
   async searchSuppliers(query: string): Promise<Supplier[]> {
     return await db
       .select()
       .from(suppliers)
-      .where(ilike(suppliers.name, `${query}%`))
+      .where(ilike(suppliers.name, `%${query}%`))
       .orderBy(suppliers.name);
   }
 
@@ -90,9 +107,28 @@ export class DatabaseStorage implements IStorage {
     return supplier;
   }
 
-  async getSupplier(id: number): Promise<Supplier | undefined> {
-    const [supplier] = await db.select().from(suppliers).where(eq(suppliers.id, id));
-    return supplier;
+  async getSupplier(id: number): Promise<(Supplier & { outstandingAmount: string }) | undefined> {
+    const [result] = await db
+      .select({
+        ...suppliers,
+        outstandingAmount: sql<string>`COALESCE(
+          SUM(CASE WHEN ${invoices.isPaid} = false THEN ${invoices.totalAmount} ELSE 0 END),
+          '0'
+        )::text`
+      })
+      .from(suppliers)
+      .leftJoin(invoices, eq(invoices.supplierId, suppliers.id))
+      .where(eq(suppliers.id, id))
+      .groupBy(suppliers.id);
+    return result;
+  }
+
+  async getSupplierInvoices(supplierId: number): Promise<Invoice[]> {
+    return await db
+      .select()
+      .from(invoices)
+      .where(eq(invoices.supplierId, supplierId))
+      .orderBy(sql`${invoices.isPaid}, ${invoices.dueDate} DESC`);
   }
 
   async deleteSupplier(id: number): Promise<void> {
@@ -103,10 +139,10 @@ export class DatabaseStorage implements IStorage {
     let conditions = [];
 
     if (filters?.startDate) {
-      conditions.push(gte(invoices.dueDate, filters.startDate));
+      conditions.push(gte(invoices.dueDate, filters.startDate.toISOString()));
     }
     if (filters?.endDate) {
-      conditions.push(lte(invoices.dueDate, filters.endDate));
+      conditions.push(lte(invoices.dueDate, filters.endDate.toISOString()));
     }
     if (filters?.isPaid !== undefined) {
       conditions.push(eq(invoices.isPaid, filters.isPaid));
@@ -116,6 +152,9 @@ export class DatabaseStorage implements IStorage {
     }
     if (filters?.maxAmount !== undefined) {
       conditions.push(lte(invoices.totalAmount, filters.maxAmount.toString()));
+    }
+    if (filters?.supplierId !== undefined) {
+      conditions.push(eq(invoices.supplierId, filters.supplierId));
     }
 
     const query = conditions.length > 0

@@ -6,9 +6,8 @@ import { insertInvoiceSchema, insertPaymentSchema, insertSupplierSchema } from "
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import express from "express"; // Added import for express.static
+import express from "express"; 
 
-// Before upload middleware definition, add directory creation
 const uploadDir = path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
@@ -27,7 +26,6 @@ const upload = multer({
 });
 
 export function registerRoutes(app: Express): Server {
-  // Add this before setting up auth
   app.use('/uploads', express.static(uploadDir));
 
   setupAuth(app);
@@ -52,6 +50,17 @@ export function registerRoutes(app: Express): Server {
 
     if (!supplier) return res.status(404).send("Supplier not found");
     res.json(supplier);
+  });
+
+  app.get("/api/suppliers/:id/invoices", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    const id = parseInt(req.params.id);
+    const supplier = await storage.getSupplier(id);
+    if (!supplier) return res.status(404).send("Supplier not found");
+
+    const invoices = await storage.getSupplierInvoices(id);
+    res.json(invoices);
   });
 
   app.post("/api/suppliers", async (req, res) => {
