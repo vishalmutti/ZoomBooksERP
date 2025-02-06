@@ -16,7 +16,7 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
   const writeStream = fs.createWriteStream(filePath);
 
   // Company logo
-  doc.image('public/logo.png', 50, 45, { width: 100 })
+  doc.image('public/logo.png', 50, 45, { width: 300 })
      .fontSize(20)
      .text('Zoom Books Company', 200, 45)
      .fontSize(10)
