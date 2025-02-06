@@ -141,10 +141,10 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         ...data,
         mode,
         items: data.items?.map(item => ({
-          ...item,
-          quantity: Number(item.quantity),
-          unitPrice: Number(item.unitPrice),
-          totalPrice: Number(item.totalPrice),
+          description: item.description,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          totalPrice: (Number(item.quantity) * Number(item.unitPrice)).toString(),
         })),
       };
 
