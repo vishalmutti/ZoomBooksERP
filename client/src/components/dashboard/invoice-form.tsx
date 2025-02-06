@@ -47,51 +47,77 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   const { toast } = useToast();
   const [file, setFile] = useState<File | null>(null);
 
-  // Initialize form with editInvoice data if available
+  // Fetch fresh invoice data when editing
+  const { data: currentInvoiceData } = useQuery<Invoice & { items?: InvoiceItem[] }>({
+    queryKey: [`/api/invoices/${editInvoice?.id}`],
+    enabled: !!editInvoice?.id,
+    queryFn: async () => {
+      const response = await fetch(`/api/invoices/${editInvoice?.id}`);
+      if (!response.ok) throw new Error('Failed to fetch invoice');
+      return response.json();
+    },
+  });
+
+  // Initialize form with the latest invoice data
   const form = useForm<InsertInvoice>({
     resolver: zodResolver(insertInvoiceSchema),
     defaultValues: {
-      supplierId: editInvoice?.supplierId || 0,
-      invoiceNumber: editInvoice?.invoiceNumber || "",
-      dueDate: editInvoice?.dueDate ? new Date(editInvoice.dueDate).toISOString().split('T')[0] : "",
-      totalAmount: editInvoice?.totalAmount?.toString() || "0",
-      notes: editInvoice?.notes || "",
-      isPaid: editInvoice?.isPaid || false,
-      items: editInvoice?.items?.map(item => ({
-            description: item.description || "",
-            quantity: (item.quantity || "0").toString(),
-            unitPrice: (item.unitPrice || "0").toString(),
-            totalPrice: (item.totalPrice || "0").toString(),
+      supplierId: currentInvoiceData?.supplierId || editInvoice?.supplierId || 0,
+      invoiceNumber: currentInvoiceData?.invoiceNumber || editInvoice?.invoiceNumber || "",
+      dueDate: currentInvoiceData?.dueDate ? new Date(currentInvoiceData.dueDate).toISOString().split('T')[0] : 
+               editInvoice?.dueDate ? new Date(editInvoice.dueDate).toISOString().split('T')[0] : "",
+      totalAmount: currentInvoiceData?.totalAmount?.toString() || editInvoice?.totalAmount?.toString() || "0",
+      notes: currentInvoiceData?.notes || editInvoice?.notes || "",
+      isPaid: currentInvoiceData?.isPaid || editInvoice?.isPaid || false,
+      items: currentInvoiceData?.items?.length
+        ? currentInvoiceData.items.map(item => ({
+            description: item.description,
+            quantity: item.quantity?.toString() || "0",
+            unitPrice: item.unitPrice?.toString() || "0",
+            totalPrice: item.totalPrice?.toString() || "0",
+            invoiceId: currentInvoiceData.id
+          }))
+        : editInvoice?.items?.length
+        ? editInvoice.items.map(item => ({
+            description: item.description,
+            quantity: item.quantity?.toString() || "0",
+            unitPrice: item.unitPrice?.toString() || "0",
+            totalPrice: item.totalPrice?.toString() || "0",
             invoiceId: editInvoice.id
-          })) || [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }]
+          }))
+        : [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }]
     }
   });
 
-  // Effect to handle dialog state and form reset when editInvoice changes
+  // Effect to handle dialog state and form reset when currentInvoiceData changes
   useEffect(() => {
-    if (editInvoice) {
+    if (currentInvoiceData || editInvoice) {
+      const invoiceData = currentInvoiceData || editInvoice;
+      if (!invoiceData) return;
+
       setDialogOpen(true);
-      setMode(editInvoice.uploadedFile ? "upload" : "manual");
+      // Only update mode if we're opening the dialog
+      if (!dialogOpen) {
+        setMode(invoiceData.uploadedFile ? "upload" : "manual");
+      }
 
-      const formData = {
-        supplierId: editInvoice.supplierId,
-        invoiceNumber: editInvoice.invoiceNumber,
-        dueDate: new Date(editInvoice.dueDate).toISOString().split('T')[0],
-        totalAmount: editInvoice.totalAmount.toString(),
-        notes: editInvoice.notes || "",
-        isPaid: editInvoice.isPaid,
-        items: editInvoice.items?.map(item => ({
+      form.reset({
+        supplierId: invoiceData.supplierId,
+        invoiceNumber: invoiceData.invoiceNumber,
+        dueDate: new Date(invoiceData.dueDate).toISOString().split('T')[0],
+        totalAmount: invoiceData.totalAmount.toString(),
+        notes: invoiceData.notes || "",
+        isPaid: invoiceData.isPaid,
+        items: invoiceData.items?.map(item => ({
           description: item.description,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          totalPrice: (Number(item.quantity) * Number(item.unitPrice)).toString(),
-          invoiceId: editInvoice.id
+          quantity: item.quantity?.toString() || "0",
+          unitPrice: item.unitPrice?.toString() || "0",
+          totalPrice: item.totalPrice?.toString() || "0",
+          invoiceId: invoiceData.id
         })) || [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }]
-      };
-
-      form.reset(formData);
+      });
     }
-  }, [editInvoice, form]);
+  }, [currentInvoiceData, editInvoice, form, dialogOpen]);
 
   const { data: suppliers = [] } = useQuery<Supplier[]>({
     queryKey: ["/api/suppliers", supplierSearch],
@@ -145,13 +171,10 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/invoices/${editInvoice?.id}`] });
       toast({
         title: "Success",
         description: `Invoice ${editInvoice ? "updated" : "created"} successfully`,
-      });
-      form.reset({
-        isPaid: false,
-        items: [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }],
       });
       if (editInvoice && onComplete) {
         onComplete();
@@ -186,7 +209,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         }
       }
 
-      form.setValue("items", items);
+      form.setValue("items", items, { shouldDirty: true });
     }
   };
 
@@ -199,17 +222,15 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   const handleModeChange = (value: string) => {
     setMode(value as "manual" | "upload");
     const currentValues = form.getValues();
+    // Preserve the current form values when switching modes
     form.reset({
       ...currentValues,
       items: value === "manual"
         ? currentValues.items?.length
           ? currentValues.items
           : [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }]
-        : undefined,
+        : currentValues.items
     });
-    if (value === "manual") {
-      setFile(null);
-    }
   };
 
   const handleSubmit = form.handleSubmit((data) => {
@@ -294,6 +315,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         }
       }
 
+      // Calculate total amount from items
       data.totalAmount = data.items
         .reduce((sum, item) => sum + (Number(item.quantity) * Number(item.unitPrice)), 0)
         .toString();
@@ -416,9 +438,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                             placeholder="Quantity"
                             defaultValue={item.quantity}
                             {...form.register(`items.${index}.quantity`)}
-                            onChange={(e) => {
-                              handleItemChange(index, "quantity", e.target.value);
-                            }}
+                            onChange={(e) => handleItemChange(index, "quantity", e.target.value)}
                           />
                         </div>
                         <div className="col-span-2">
@@ -428,9 +448,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                             placeholder="Unit Price"
                             defaultValue={item.unitPrice}
                             {...form.register(`items.${index}.unitPrice`)}
-                            onChange={(e) => {
-                              handleItemChange(index, "unitPrice", e.target.value);
-                            }}
+                            onChange={(e) => handleItemChange(index, "unitPrice", e.target.value)}
                           />
                         </div>
                         <div className="col-span-2">
@@ -438,8 +456,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                             type="number"
                             step="0.01"
                             placeholder="Total"
-                            defaultValue={item.totalPrice}
-                            {...form.register(`items.${index}.totalPrice`)}
+                            value={item.totalPrice}
                             readOnly
                           />
                         </div>
