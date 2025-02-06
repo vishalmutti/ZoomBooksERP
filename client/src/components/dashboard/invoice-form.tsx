@@ -175,7 +175,41 @@ export function InvoiceForm() {
             <TabsTrigger value="upload">Upload Invoice</TabsTrigger>
           </TabsList>
 
-          <form onSubmit={form.handleSubmit((data) => createInvoiceMutation.mutate(data))} className="space-y-6 mt-4">
+          <form onSubmit={form.handleSubmit((data) => {
+    if (!data.supplierId) {
+      toast({
+        title: "Error",
+        description: "Please select a supplier",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (mode === "manual" && (!data.items || data.items.length === 0)) {
+      toast({
+        title: "Error",
+        description: "Please add at least one item",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (mode === "upload" && !file) {
+      toast({
+        title: "Error",
+        description: "Please upload an invoice file",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Calculate total amount for manual mode
+    if (mode === "manual") {
+      const totalAmount = data.items?.reduce((sum, item) => 
+        sum + (parseFloat(item.totalPrice) || 0), 0).toString();
+      data.totalAmount = totalAmount;
+    }
+    
+    createInvoiceMutation.mutate(data);
+  })} className="space-y-6 mt-4">
             <div className="space-y-4">
               <div>
                 <Label>Supplier</Label>
