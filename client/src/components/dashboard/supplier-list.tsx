@@ -43,11 +43,11 @@ export function SupplierList({ suppliers }: SupplierListProps) {
       sortingFn: (rowA, rowB) => {
         return Number(rowB.original.outstandingAmount) - Number(rowA.original.outstandingAmount);
       },
-    },
+    }
   ];
 
   return (
-    <div>
+    <div className="space-y-4">
       <DataTable
         columns={columns}
         data={suppliers}

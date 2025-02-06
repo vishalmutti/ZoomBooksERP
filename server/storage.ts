@@ -69,10 +69,16 @@ export class DatabaseStorage implements IStorage {
   async getSuppliers(): Promise<(Supplier & { outstandingAmount: string })[]> {
     const result = await db
       .select({
-        ...suppliers,
+        id: suppliers.id,
+        name: suppliers.name,
+        email: suppliers.email,
+        address: suppliers.address,
+        contactPerson: suppliers.contactPerson,
+        phone: suppliers.phone,
+        createdAt: suppliers.createdAt,
         outstandingAmount: sql<string>`COALESCE(
-          SUM(CASE WHEN ${invoices.isPaid} = false THEN ${invoices.totalAmount} ELSE 0 END),
-          '0'
+          SUM(CASE WHEN ${invoices.isPaid} = false THEN ${invoices.totalAmount}::numeric ELSE 0 END),
+          0
         )::text`
       })
       .from(suppliers)
@@ -110,10 +116,16 @@ export class DatabaseStorage implements IStorage {
   async getSupplier(id: number): Promise<(Supplier & { outstandingAmount: string }) | undefined> {
     const [result] = await db
       .select({
-        ...suppliers,
+        id: suppliers.id,
+        name: suppliers.name,
+        email: suppliers.email,
+        address: suppliers.address,
+        contactPerson: suppliers.contactPerson,
+        phone: suppliers.phone,
+        createdAt: suppliers.createdAt,
         outstandingAmount: sql<string>`COALESCE(
-          SUM(CASE WHEN ${invoices.isPaid} = false THEN ${invoices.totalAmount} ELSE 0 END),
-          '0'
+          SUM(CASE WHEN ${invoices.isPaid} = false THEN ${invoices.totalAmount}::numeric ELSE 0 END),
+          0
         )::text`
       })
       .from(suppliers)
