@@ -47,22 +47,6 @@ export default function SuppliersPage() {
       header: "Name",
     },
     {
-      accessorKey: "contactPerson",
-      header: "Contact Person",
-    },
-    {
-      accessorKey: "email",
-      header: "Email",
-    },
-    {
-      accessorKey: "phone",
-      header: "Phone",
-    },
-    {
-      accessorKey: "address",
-      header: "Address",
-    },
-    {
       accessorKey: "outstandingAmount",
       header: "Outstanding Amount",
       cell: ({ row }) => {
