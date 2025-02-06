@@ -155,21 +155,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         formData
       );
 
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      if (editInvoice?.id) {
-        queryClient.invalidateQueries({ queryKey: [`/api/invoices/${editInvoice.id}`] });
-      }
-      toast({
-        title: "Success",
-        description: editInvoice ? "Invoice updated" : "Invoice created",
-      });
-      if (onComplete) onComplete();
-      setDialogOpen(false);
-    }
-
       // For 500 status, just return empty object since we know it succeeded
       if (res.status === 500) {
         return {};
