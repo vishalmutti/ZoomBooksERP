@@ -163,11 +163,17 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       return res.json();
     },
     onSuccess: () => {
-      // Invalidate all invoice queries to refresh UI immediately
-      queryClient.invalidateQueries({ 
-        queryKey: ["/api/invoices"],
-        exact: false 
-      });
+      // Force refetch all invoice queries
+      Promise.all([
+        queryClient.invalidateQueries({ 
+          queryKey: ["/api/invoices"],
+          refetchType: "all"
+        }),
+        editInvoice?.id && queryClient.invalidateQueries({ 
+          queryKey: [`/api/invoices/${editInvoice.id}`],
+          refetchType: "all"
+        })
+      ]);
 
       toast({
         title: "Success",
