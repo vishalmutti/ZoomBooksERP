@@ -37,6 +37,7 @@ export function InvoiceForm() {
   const [open, setOpen] = useState(false);
   const [supplierSearch, setSupplierSearch] = useState("");
   const [comboboxOpen, setComboboxOpen] = useState(false);
+  const [mode, setMode] = useState<"manual" | "upload">("manual");
   const { toast } = useToast();
   const [file, setFile] = useState<File | null>(null);
 
@@ -66,7 +67,12 @@ export function InvoiceForm() {
       if (file) {
         formData.append('file', file);
       }
-      formData.append('invoiceData', JSON.stringify(data));
+      formData.append('invoiceData', JSON.stringify({
+        ...data,
+        // Clear items if in upload mode
+        items: mode === "upload" ? undefined : data.items
+      }));
+
       const res = await apiRequest("POST", "/api/invoices", formData);
       return res.json();
     },
@@ -130,6 +136,12 @@ export function InvoiceForm() {
     }
   };
 
+  const handleModeChange = (value: string) => {
+    setMode(value as "manual" | "upload");
+    // Reset form when changing modes
+    form.reset();
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -139,7 +151,7 @@ export function InvoiceForm() {
         <DialogHeader>
           <DialogTitle>Create New Invoice</DialogTitle>
         </DialogHeader>
-        <Tabs defaultValue="manual" className="w-full">
+        <Tabs defaultValue="manual" className="w-full" onValueChange={handleModeChange}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="manual">Manual Entry</TabsTrigger>
             <TabsTrigger value="upload">Upload Invoice</TabsTrigger>

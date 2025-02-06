@@ -51,6 +51,17 @@ export function registerRoutes(app: Express): Server {
     res.status(201).json(supplier);
   });
 
+  app.delete("/api/suppliers/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    const id = parseInt(req.params.id);
+    const supplier = await storage.getSupplier(id);
+    if (!supplier) return res.status(404).send("Supplier not found");
+
+    await storage.deleteSupplier(id);
+    res.sendStatus(200);
+  });
+
   // Invoice routes
   app.get("/api/invoices", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
@@ -79,6 +90,17 @@ export function registerRoutes(app: Express): Server {
       console.error('Error creating invoice:', error);
       res.status(400).json({ message: 'Invalid invoice data' });
     }
+  });
+
+  app.delete("/api/invoices/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    const id = parseInt(req.params.id);
+    const invoice = await storage.getInvoice(id);
+    if (!invoice) return res.status(404).send("Invoice not found");
+
+    await storage.deleteInvoice(id);
+    res.sendStatus(200);
   });
 
   app.patch("/api/invoices/:id/mark-paid", async (req, res) => {

@@ -16,11 +16,13 @@ export interface IStorage {
   searchSuppliers(query: string): Promise<Supplier[]>;
   createSupplier(supplier: InsertSupplier): Promise<Supplier>;
   getSupplier(id: number): Promise<Supplier | undefined>;
+  deleteSupplier(id: number): Promise<void>;
 
   getInvoices(): Promise<Invoice[]>;
   createInvoice(invoice: InsertInvoice): Promise<Invoice>;
   updateInvoice(id: number, updates: Partial<Invoice>): Promise<Invoice>;
   getInvoice(id: number): Promise<Invoice | undefined>;
+  deleteInvoice(id: number): Promise<void>;
 
   sessionStore: session.SessionStore;
 }
@@ -70,6 +72,10 @@ export class DatabaseStorage implements IStorage {
   async getSupplier(id: number): Promise<Supplier | undefined> {
     const [supplier] = await db.select().from(suppliers).where(eq(suppliers.id, id));
     return supplier;
+  }
+
+  async deleteSupplier(id: number): Promise<void> {
+    await db.delete(suppliers).where(eq(suppliers.id, id));
   }
 
   async getInvoices(): Promise<Invoice[]> {
@@ -123,6 +129,13 @@ export class DatabaseStorage implements IStorage {
       .from(invoices)
       .where(eq(invoices.id, id));
     return invoice;
+  }
+
+  async deleteInvoice(id: number): Promise<void> {
+    await db.transaction(async (tx) => {
+      await tx.delete(invoiceItems).where(eq(invoiceItems.invoiceId, id));
+      await tx.delete(invoices).where(eq(invoices.id, id));
+    });
   }
 }
 
