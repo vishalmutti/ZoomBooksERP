@@ -170,12 +170,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       setDialogOpen(false);
     },
 
-      if (invoiceData.dueDate) {
-        invoiceData.dueDate = new Date(invoiceData.dueDate).toISOString();
-      }
-
-      formData.append('invoiceData', JSON.stringify(invoiceData));
-
       const res = await apiRequest(
         editInvoice ? "PATCH" : "POST",
         editInvoice ? `/api/invoices/${editInvoice.id}` : "/api/invoices",
