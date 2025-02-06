@@ -10,12 +10,11 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { SupplierView } from "@/components/dashboard/supplier-view";
 
 export default function SuppliersPage() {
   const [showAddSupplier, setShowAddSupplier] = useState(false);
-  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
+  const [selectedSupplier, setSelectedSupplier] = useState<(Supplier & { outstandingAmount: string }) | null>(null);
   const { toast } = useToast();
 
   const { data: suppliers = [] } = useQuery<(Supplier & { outstandingAmount: string })[]>({
@@ -73,9 +72,6 @@ export default function SuppliersPage() {
             ${amount.toFixed(2)}
           </Badge>
         );
-      },
-      sortingFn: (rowA, rowB) => {
-        return Number(rowB.original.outstandingAmount) - Number(rowA.original.outstandingAmount);
       },
     },
     {
@@ -139,11 +135,11 @@ export default function SuppliersPage() {
       />
 
       {selectedSupplier && (
-        <Dialog open={!!selectedSupplier} onOpenChange={(open) => !open && setSelectedSupplier(null)}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <SupplierView supplier={selectedSupplier} />
-          </DialogContent>
-        </Dialog>
+        <SupplierView
+          supplier={selectedSupplier}
+          open={!!selectedSupplier}
+          onOpenChange={(open) => !open && setSelectedSupplier(null)}
+        />
       )}
     </div>
   );
