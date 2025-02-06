@@ -81,12 +81,18 @@ export default function AuthPage() {
         </Card>
       </div>
 
-      <div className="hidden md:flex bg-primary items-center justify-center p-8">
-        <div className="text-primary-foreground max-w-md space-y-4">
-          <h1 className="text-4xl font-bold">Zoom Books AR Management</h1>
-          <p className="text-lg">
-            Efficiently manage your accounts receivable, track invoices, and monitor financial performance all in one place.
+      <div className="hidden md:flex bg-primary/10 items-center justify-center p-8">
+        <div className="max-w-md space-y-4">
+          <h1 className="text-4xl font-bold text-primary">Zoom Books AR Management</h1>
+          <p className="text-lg text-gray-600">
+            Efficiently manage your accounts receivable, track invoices, and monitor financial performance all in one place. Features include:
           </p>
+          <ul className="list-disc list-inside space-y-2 text-gray-600">
+            <li>Invoice creation and management</li>
+            <li>Supplier directory with auto-complete</li>
+            <li>Payment tracking and status updates</li>
+            <li>Financial overview and reporting</li>
+          </ul>
         </div>
       </div>
     </div>
