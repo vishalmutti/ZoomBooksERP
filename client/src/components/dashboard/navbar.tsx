@@ -17,7 +17,10 @@ export function Navbar() {
       <div className="container mx-auto px-4 py-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-6">
+            <div className="flex items-center gap-2">
+            <img src="/attached_assets/Zoom Books Logo Final-02.png" alt="Zoom Books Logo" className="h-8" />
             <h1 className="text-2xl font-bold">Zoom Books AR</h1>
+          </div>
             <nav className="flex items-center space-x-4">
               {navItems.map((item) => (
                 <Link key={item.href} href={item.href}>
