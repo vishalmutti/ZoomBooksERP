@@ -11,7 +11,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Trash2, CalendarIcon, Edit, Download } from "lucide-react";
+import { Trash2, CalendarIcon, Edit, Download, Loader2 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
@@ -33,14 +33,17 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
-  // Add a new query for fetching complete invoice data
-  const { data: completeInvoiceData } = useQuery({
+  // Fetch complete invoice data when an invoice is selected for editing
+  const { data: completeInvoiceData, isLoading: isLoadingInvoice } = useQuery({
     queryKey: ["/api/invoices", selectedInvoice?.id],
     queryFn: async () => {
       if (!selectedInvoice?.id) return null;
+      console.log('Fetching complete invoice data for ID:', selectedInvoice.id);
       const response = await fetch(`/api/invoices/${selectedInvoice.id}`);
       if (!response.ok) throw new Error('Failed to fetch invoice details');
-      return response.json();
+      const data = await response.json();
+      console.log('Received complete invoice data:', data);
+      return data;
     },
     enabled: !!selectedInvoice?.id
   });
@@ -331,7 +334,11 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
           <DialogHeader>
             <DialogTitle>Edit Invoice</DialogTitle>
           </DialogHeader>
-          {completeInvoiceData && (
+          {isLoadingInvoice ? (
+            <div className="flex items-center justify-center p-4">
+              <Loader2 className="h-6 w-6 animate-spin" />
+            </div>
+          ) : completeInvoiceData ? (
             <InvoiceForm 
               editInvoice={completeInvoiceData} 
               onComplete={() => {
@@ -339,6 +346,10 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
                 setSelectedInvoice(null);
               }} 
             />
+          ) : (
+            <div className="p-4 text-center text-muted-foreground">
+              Failed to load invoice data
+            </div>
           )}
         </DialogContent>
       </Dialog>
