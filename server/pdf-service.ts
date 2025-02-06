@@ -16,7 +16,7 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
 
   // Company logo and header
   doc.image('attached_assets/Zoom Books Logo Final-02.png', 0, 0, { 
-    width: 450
+    width: 225
   })
      .fontSize(10)
      .text('Acirassi Books Ltd', 50, 200)
