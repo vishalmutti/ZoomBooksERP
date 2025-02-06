@@ -367,6 +367,12 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                 <div>
                   <Label>Items</Label>
                   <div className="mt-2 space-y-4">
+                    <div className="grid grid-cols-12 gap-2 mb-2">
+                      <div className="col-span-6 font-medium">Description</div>
+                      <div className="col-span-2 font-medium">Quantity</div>
+                      <div className="col-span-2 font-medium">Unit Price</div>
+                      <div className="col-span-2 font-medium">Total</div>
+                    </div>
                     {form.watch("items")?.map((item, index) => (
                       <div key={index} className="grid grid-cols-12 gap-2">
                         <div className="col-span-6">
@@ -380,9 +386,17 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                             type="number"
                             step="0.01"
                             placeholder="Quantity"
-                            {...form.register(`items.${index}.quantity`, {
-                              onChange: (e) => handleItemChange(index, "quantity", e.target.value),
-                            })}
+                            {...form.register(`items.${index}.quantity`)}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              form.setValue(`items.${index}.quantity`, value);
+                              if (value && form.getValues(`items.${index}.unitPrice`)) {
+                                form.setValue(
+                                  `items.${index}.totalPrice`,
+                                  (Number(value) * Number(form.getValues(`items.${index}.unitPrice`))).toString()
+                                );
+                              }
+                            }}
                           />
                         </div>
                         <div className="col-span-2">
@@ -390,9 +404,17 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                             type="number"
                             step="0.01"
                             placeholder="Unit Price"
-                            {...form.register(`items.${index}.unitPrice`, {
-                              onChange: (e) => handleItemChange(index, "unitPrice", e.target.value),
-                            })}
+                            {...form.register(`items.${index}.unitPrice`)}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              form.setValue(`items.${index}.unitPrice`, value);
+                              if (value && form.getValues(`items.${index}.quantity`)) {
+                                form.setValue(
+                                  `items.${index}.totalPrice`,
+                                  (Number(value) * Number(form.getValues(`items.${index}.quantity`))).toString()
+                                );
+                              }
+                            }}
                           />
                         </div>
                         <div className="col-span-2">
@@ -401,7 +423,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                             step="0.01"
                             placeholder="Total"
                             {...form.register(`items.${index}.totalPrice`)}
-                            readOnly
                           />
                         </div>
                       </div>
