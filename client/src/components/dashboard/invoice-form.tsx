@@ -162,9 +162,9 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
 
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: async (data) => {
       // Force refetch all invoice queries
-      Promise.all([
+      await Promise.all([
         queryClient.invalidateQueries({ 
           queryKey: ["/api/invoices"],
           refetchType: "all"
@@ -174,6 +174,20 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
           refetchType: "all"
         })
       ]);
+      
+      // Update form with fresh data if editing
+      if (editInvoice && data) {
+        form.reset({
+          ...data,
+          items: data.items?.map(item => ({
+            description: item.description,
+            quantity: item.quantity?.toString() || "0",
+            unitPrice: item.unitPrice?.toString() || "0",
+            totalPrice: item.totalPrice?.toString() || "0",
+            invoiceId: data.id
+          }))
+        });
+      }
 
       toast({
         title: "Success",
