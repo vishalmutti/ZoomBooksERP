@@ -42,25 +42,50 @@ app.use((req, res, next) => {
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
-
     res.status(status).json({ message });
-    throw err;
+    console.error(err);
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client
-  const PORT = 5000;
-  server.listen(PORT, "0.0.0.0", () => {
-    log(`✨ Server running at http://0.0.0.0:${PORT}`);
-    log(`🔒 API available at http://0.0.0.0:${PORT}/api`);
-  });
+  // Try ports starting from 5000 until we find an available one
+  const tryPort = (port: number): Promise<number> => {
+    return new Promise((resolve, reject) => {
+      server.listen(port, "0.0.0.0")
+        .once('listening', () => {
+          log(`✨ Server running at http://0.0.0.0:${port}`);
+          log(`🔒 API available at http://0.0.0.0:${port}/api`);
+          resolve(port);
+        })
+        .once('error', (err: any) => {
+          if (err.code === 'EADDRINUSE') {
+            log(`Port ${port} in use, trying ${port + 1}`);
+            resolve(tryPort(port + 1));
+          } else {
+            reject(err);
+          }
+        });
+    });
+  };
+
+  // Start with port 5000
+  try {
+    await tryPort(5000);
+  } catch (err) {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  }
 })();
+
+// Handle graceful shutdown
+process.on('SIGTERM', () => {
+  log('SIGTERM signal received: closing HTTP server');
+  server.close(() => {
+    log('HTTP server closed');
+    process.exit(0);
+  });
+});
