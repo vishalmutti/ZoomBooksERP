@@ -140,7 +140,12 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       const invoiceData = {
         ...data,
         mode,
-        items: mode === "manual" ? data.items : undefined,
+        items: data.items?.map(item => ({
+          ...item,
+          quantity: Number(item.quantity),
+          unitPrice: Number(item.unitPrice),
+          totalPrice: Number(item.totalPrice),
+        })),
       };
 
       if (invoiceData.dueDate) {
@@ -157,12 +162,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
 
       if (!res.ok) {
         const errorText = await res.text();
-        try {
-          const errorJson = JSON.parse(errorText);
-          throw new Error(errorJson.message || 'Failed to update invoice');
-        } catch {
-          throw new Error(errorText || 'Failed to update invoice');
-        }
+        throw new Error('Failed to update invoice');
       }
 
       return res.json();
