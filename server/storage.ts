@@ -204,53 +204,27 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  async updateInvoice(id: number, updates: Partial<Invoice & { items?: InsertInvoiceItem[] }>): Promise<Invoice> {
+  async updateInvoice(id: number, updates: Partial<Invoice>): Promise<Invoice> {
     try {
-      return await db.transaction(async (tx) => {
-        // First verify the invoice exists
-        const [existingInvoice] = await tx
-          .select()
-          .from(invoices)
-          .where(eq(invoices.id, id));
+      const [invoice] = await db
+        .update(invoices)
+        .set({
+          ...updates,
+          // Ensure dates are properly formatted
+          dueDate: updates.dueDate ? new Date(updates.dueDate).toISOString() : undefined,
+          paymentDate: updates.paymentDate ? new Date(updates.paymentDate).toISOString() : undefined,
+          // Ensure other fields are properly typed
+          totalAmount: updates.totalAmount?.toString(),
+          isPaid: updates.isPaid ?? false,
+        })
+        .where(eq(invoices.id, id))
+        .returning();
 
-        if (!existingInvoice) {
-          throw new Error('Invoice not found');
-        }
+      if (!invoice) {
+        throw new Error('Invoice not found');
+      }
 
-        // Update invoice
-        const [invoice] = await tx
-          .update(invoices)
-          .set({
-            ...updates,
-            dueDate: updates.dueDate ? new Date(updates.dueDate).toISOString() : undefined,
-            paymentDate: updates.paymentDate ? new Date(updates.paymentDate).toISOString() : undefined,
-            totalAmount: updates.totalAmount?.toString(),
-            isPaid: updates.isPaid ?? false,
-          })
-          .where(eq(invoices.id, id))
-          .returning();
-
-        // Handle items update if present
-        if (updates.items) {
-          // Delete existing items
-          await tx.delete(invoiceItems).where(eq(invoiceItems.invoiceId, id));
-          
-          // Insert new items with proper type conversion
-          if (updates.items.length > 0) {
-            await tx.insert(invoiceItems).values(
-              updates.items.map(item => ({
-                description: item.description,
-                quantity: item.quantity.toString(),
-                unitPrice: item.unitPrice.toString(),
-                totalPrice: item.totalPrice.toString(),
-                invoiceId: id
-              }))
-            );
-          }
-        }
-
-        return invoice;
-      });
+      return invoice;
     } catch (error) {
       console.error('Error updating invoice:', error);
       throw error;

@@ -23,15 +23,7 @@ const upload = multer({
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
       cb(null, uniqueSuffix + path.extname(file.originalname));
     }
-  }),
-  fileFilter: function (req, file, cb) {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
-    if (allowedTypes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Invalid file format. Only PDF and image files are allowed.'));
-    }
-  }
+  })
 });
 
 export function registerRoutes(app: Express): Server {
@@ -177,55 +169,32 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).json({ message: 'Invalid invoice data' });
       }
 
-      try {
-        let uploadedFile = req.file ? req.file.filename : undefined;
-        const existingInvoice = await storage.getInvoice(id);
-        
-        if (!existingInvoice) {
-          return res.status(404).json({ message: 'Invoice not found' });
-        }
-
-        // Always generate new PDF for manual entries
-        if (parsed.data.items?.length || existingInvoice.items?.length) {
-          const supplier = await storage.getSupplier(parsed.data.supplierId || existingInvoice.supplierId);
-          if (supplier) {
-            const pdfFileName = await generateInvoicePDF({ 
-              invoice: { 
-                ...existingInvoice,
-                ...parsed.data,
-                id,
-                items: parsed.data.items || existingInvoice.items,
-                invoiceNumber: existingInvoice.invoiceNumber || `Invoice #${id}`
-              },
-              supplier 
-            });
-            uploadedFile = pdfFileName;
-          }
-        }
-
-        const invoice = await storage.updateInvoice(id, {
-          ...parsed.data,
-          uploadedFile,
-        });
-
-        if (!invoice) {
-          return res.status(404).json({ message: 'Invoice not found' });
-        }
-
-        res.json(invoice);
-      } catch (error) {
-        console.error('Error updating invoice:', error);
-        res.status(500).json({ 
-          success: false,
-          message: error instanceof Error ? error.message : 'Failed to update invoice'
-        });
-      }
-    } catch (error) {
-      console.error('Error in PDF generation:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to generate PDF'
+      const invoice = await storage.updateInvoice(id, {
+        ...parsed.data,
+        uploadedFile: req.file ? req.file.filename : undefined,
       });
+
+      // Generate PDF if it's a manual entry
+      if (!req.file && parsed.data.items?.length) {
+        const supplier = await storage.getSupplier(parsed.data.supplierId || invoice.supplierId);
+        if (supplier && invoice) {
+          const pdfFileName = await generateInvoicePDF({ 
+            invoice: { ...invoice, items: parsed.data.items },
+            supplier 
+          });
+          await storage.updateInvoice(invoice.id, { uploadedFile: pdfFileName });
+          invoice.uploadedFile = pdfFileName;
+        }
+      }
+
+      if (!invoice) {
+        return res.status(404).json({ message: 'Invoice not found' });
+      }
+
+      res.json(invoice);
+    } catch (error) {
+      console.error('Invoice update error:', error);
+      res.status(500).json({ message: 'Failed to update invoice' });
     }
   });
 

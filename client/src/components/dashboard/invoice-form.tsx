@@ -149,8 +149,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      queryClient.invalidateQueries({ queryKey: [`/api/invoices/${editInvoice?.id}`] });
-      queryClient.invalidateQueries({ queryKey: ["/api/suppliers"] });
       toast({
         title: "Success",
         description: `Invoice ${editInvoice ? "updated" : "created"} successfully`,
@@ -166,11 +164,10 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       }
       setFile(null);
     },
-    onError: (error: any) => {
-      const errorMessage = error?.message || "Failed to save invoice";
+    onError: (error: Error) => {
       toast({
         title: "Error",
-        description: errorMessage,
+        description: error.message || "Failed to save invoice",
         variant: "destructive",
       });
     },
@@ -391,10 +388,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
 
               <div>
                 <Label htmlFor="dueDate">Due Date</Label>
-                <Input 
-                  type="date" 
-                  {...form.register("dueDate")} 
-                />
+                <Input type="date" {...form.register("dueDate")} />
               </div>
 
               <TabsContent value="manual">

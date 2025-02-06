@@ -16,32 +16,34 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
   const writeStream = fs.createWriteStream(filePath);
 
   // Company logo
-  doc.image('public/logo.png', 50, 45, { width: 300 })
+  doc.image('public/logo.png', 50, 45, { width: 100 })
+     .fontSize(20)
+     .text('Zoom Books Company', 200, 45)
      .fontSize(10)
-     .text('Acirassi Books Ltd', 50, 160)
-     .text('507/508-19055 Airport Way', 50, 175)
-     .text('Pitt Meadows, BC V3Y 0G4', 50, 190)
+     .text('Acirassi Books Ltd', 200, 65)
+     .text('507/508-19055 Airport Way', 200, 80)
+     .text('Pitt Meadows, BC V3Y 0G4', 200, 95)
      .moveDown();
 
   // Invoice details
   doc.fontSize(16)
-     .text('INVOICE', 400, 160)
+     .text('INVOICE', 50, 150)
      .fontSize(10)
-     .text(`Invoice Number: ${data.invoice.invoiceNumber}`, 400, 185)
-     .text(`Due Date: ${new Date(data.invoice.dueDate).toLocaleDateString()}`, 400, 200);
+     .text(`Invoice Number: ${data.invoice.invoiceNumber}`, 50, 180)
+     .text(`Due Date: ${new Date(data.invoice.dueDate).toLocaleDateString()}`, 50, 195);
 
   // Supplier details
   doc.fontSize(12)
-     .text('Bill To:', 50, 220)
+     .text('Bill To:', 50, 230)
      .fontSize(10)
-     .text(data.supplier.name, 50, 235)
-     .text(data.supplier.address || '', 50, 250)
-     .text(`Contact: ${data.supplier.contactPerson || ''}`, 50, 265)
-     .text(`Email: ${data.supplier.email || ''}`, 50, 280)
+     .text(data.supplier.name, 50, 250)
+     .text(data.supplier.address || '', 50, 265)
+     .text(`Contact: ${data.supplier.contactPerson || ''}`, 50, 280)
+     .text(`Email: ${data.supplier.email || ''}`, 50, 295)
      .moveDown();
 
   // Items table
-  const tableTop = 320;
+  const tableTop = 350;
   doc.font('Helvetica-Bold');
   
   // Table header
@@ -68,9 +70,8 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
      .text(`$${Number(data.invoice.totalAmount).toFixed(2)}`, 450, position + 20);
 
   // Footer
-  const currentY = position + 50;
   doc.fontSize(8)
-     .text('Thank you for your business!', 50, currentY);
+     .text('Thank you for your business!', 50, doc.page.height - 50);
 
   return new Promise((resolve, reject) => {
     doc.pipe(writeStream);
