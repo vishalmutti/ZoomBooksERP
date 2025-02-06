@@ -95,11 +95,9 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       const invoiceData = currentInvoiceData || editInvoice;
       if (!invoiceData) return;
 
+      console.log("Editing invoice with items:", invoiceData.items);
       setDialogOpen(true);
-      // Only update mode if we're opening the dialog
-      if (!dialogOpen) {
-        setMode(invoiceData.uploadedFile ? "upload" : "manual");
-      }
+      setMode(invoiceData.uploadedFile ? "upload" : "manual");
 
       form.reset({
         supplierId: invoiceData.supplierId,
@@ -117,7 +115,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         })) || [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }]
       });
     }
-  }, [currentInvoiceData, editInvoice, form, dialogOpen]);
+  }, [currentInvoiceData, editInvoice, form]);
 
   const { data: suppliers = [] } = useQuery<Supplier[]>({
     queryKey: ["/api/suppliers", supplierSearch],
