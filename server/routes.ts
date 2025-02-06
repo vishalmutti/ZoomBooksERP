@@ -189,14 +189,21 @@ export function registerRoutes(app: Express): Server {
       let uploadedFile = req.file ? req.file.filename : undefined;
 
       // Generate PDF if it's a manual entry
-      if (!req.file && (parsed.data.items?.length || existingInvoice.items?.length)) {
+      if (!req.file && parsed.data.items?.length) {
         const supplier = await storage.getSupplier(parsed.data.supplierId || existingInvoice.supplierId);
         if (supplier) {
+          const itemsForPDF = parsed.data.items.map(item => ({
+            description: item.description,
+            quantity: item.quantity?.toString() || "0",
+            unitPrice: item.unitPrice?.toString() || "0",
+            totalPrice: (Number(item.quantity || 0) * Number(item.unitPrice || 0)).toString()
+          }));
+
           uploadedFile = await generateInvoicePDF({ 
             invoice: { 
               ...existingInvoice,
               ...parsed.data,
-              items: parsed.data.items || existingInvoice.items,
+              items: itemsForPDF,
               id,
               invoiceNumber: existingInvoice.invoiceNumber
             },
