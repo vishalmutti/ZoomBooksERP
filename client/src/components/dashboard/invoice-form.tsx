@@ -234,7 +234,8 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         return;
       }
     } else {
-      if (!data.items?.length) {
+      // Manual mode validation
+      if (!data.items || data.items.length === 0) {
         toast({
           title: "Error",
           description: "Please add at least one item",
@@ -243,26 +244,38 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         return;
       }
 
-      const invalidItems = data.items.some(item =>
-        !item.description ||
-        isNaN(Number(item.quantity)) ||
-        Number(item.quantity) <= 0 ||
-        isNaN(Number(item.unitPrice)) ||
-        Number(item.unitPrice) <= 0
-      );
-
-      if (invalidItems) {
-        toast({
-          title: "Error",
-          description: "Please ensure all items have a description, valid quantity, and unit price",
-          variant: "destructive",
-        });
-        return;
+      // Validate each item
+      for (const item of data.items) {
+        if (!item.description) {
+          toast({
+            title: "Error",
+            description: "Please enter a description for all items",
+            variant: "destructive",
+          });
+          return;
+        }
+        if (!item.quantity || isNaN(Number(item.quantity)) || Number(item.quantity) <= 0) {
+          toast({
+            title: "Error",
+            description: "Please enter a valid quantity greater than 0",
+            variant: "destructive",
+          });
+          return;
+        }
+        if (!item.unitPrice || isNaN(Number(item.unitPrice)) || Number(item.unitPrice) <= 0) {
+          toast({
+            title: "Error",
+            description: "Please enter a valid unit price greater than 0",
+            variant: "destructive",
+          });
+          return;
+        }
       }
 
-      const totalAmount = data.items.reduce((sum, item) =>
-        sum + (parseFloat(item.totalPrice) || 0), 0).toString();
-      data.totalAmount = totalAmount;
+      // Calculate total amount
+      data.totalAmount = data.items
+        .reduce((sum, item) => sum + (Number(item.quantity) * Number(item.unitPrice)), 0)
+        .toString();
     }
 
     updateInvoiceMutation.mutate(data);
