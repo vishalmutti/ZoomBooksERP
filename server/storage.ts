@@ -232,19 +232,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getInvoice(id: number): Promise<(Invoice & { items?: InvoiceItem[] }) | undefined> {
-    console.log(`Fetching invoice with ID: ${id}`);
     // First, get the invoice
     const [invoice] = await db
       .select()
       .from(invoices)
       .where(eq(invoices.id, id));
 
-    if (!invoice) {
-      console.log('No invoice found with ID:', id);
-      return undefined;
-    }
-
-    console.log('Found invoice:', invoice);
+    if (!invoice) return undefined;
 
     // Then, get all items for this invoice
     const items = await db
@@ -252,8 +246,6 @@ export class DatabaseStorage implements IStorage {
       .from(invoiceItems)
       .where(eq(invoiceItems.invoiceId, id))
       .orderBy(invoiceItems.id);
-
-    console.log('Found invoice items:', items);
 
     return {
       ...invoice,
