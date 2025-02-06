@@ -50,7 +50,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
 
   const form = useForm<InsertInvoice>({
     resolver: zodResolver(insertInvoiceSchema),
-    defaultValues: {
+    values: {
       ...editInvoice,
       items: editInvoice?.items?.map(item => ({
         ...item,
