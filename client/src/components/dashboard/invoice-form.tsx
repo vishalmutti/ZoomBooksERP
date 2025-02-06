@@ -54,9 +54,11 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       ...editInvoice,
       items: editInvoice?.items?.map(item => ({
         ...item,
-        quantity: item.quantity.toString(),
-        unitPrice: item.unitPrice.toString(),
-        totalPrice: item.totalPrice.toString()
+        description: item.description || "",
+        quantity: Number(item.quantity || 0).toString(),
+        unitPrice: Number(item.unitPrice || 0).toString(),
+        totalPrice: Number(item.totalPrice || 0).toString(),
+        invoiceId: item.invoiceId || 0
       })) || [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }],
     },
   });
