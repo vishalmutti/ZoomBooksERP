@@ -64,14 +64,13 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
     position += 20;
   });
 
-  // Total
+  // Total and Footer
   doc.font('Helvetica-Bold')
      .text('Total Amount:', 350, position + 20)
-     .text(`$${Number(data.invoice.totalAmount).toFixed(2)}`, 450, position + 20);
-
-  // Footer
-  doc.fontSize(8)
-     .text('Thank you for your business!', 50, doc.page.height - 50);
+     .text(`$${Number(data.invoice.totalAmount).toFixed(2)}`, 450, position + 20)
+     .fontSize(8)
+     .font('Helvetica')
+     .text('Thank you for your business!', 50, position + 50);
 
   return new Promise((resolve, reject) => {
     doc.pipe(writeStream);
