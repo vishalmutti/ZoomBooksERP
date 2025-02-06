@@ -22,7 +22,7 @@ export function Navbar() {
           <img 
             src="/logo.png" 
             alt="Zoom Books Logo" 
-            className="h-24 w-auto -mt-2" 
+            className="h-32 w-auto -mt-4" 
           />
         </div>
 
