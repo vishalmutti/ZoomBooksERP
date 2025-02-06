@@ -6,6 +6,7 @@ import { insertInvoiceSchema, insertPaymentSchema, insertSupplierSchema } from "
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import express from "express"; // Added import for express.static
 
 // Before upload middleware definition, add directory creation
 const uploadDir = path.join(process.cwd(), 'uploads');
@@ -26,6 +27,9 @@ const upload = multer({
 });
 
 export function registerRoutes(app: Express): Server {
+  // Add this before setting up auth
+  app.use('/uploads', express.static(uploadDir));
+
   setupAuth(app);
 
   // Supplier routes

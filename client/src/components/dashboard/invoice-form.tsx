@@ -10,11 +10,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertInvoiceSchema, type InsertInvoice, type InsertInvoiceItem } from "@shared/schema";
+import { insertInvoiceSchema, type InsertInvoice, type InsertInvoiceItem, type Invoice } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useState } from "react";
-import { Loader2, Plus, Upload } from "lucide-react";
+import { Loader2, Plus, Upload, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Command,
@@ -42,7 +42,9 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   const [open, setOpen] = useState(false);
   const [supplierSearch, setSupplierSearch] = useState("");
   const [comboboxOpen, setComboboxOpen] = useState(false);
-  const [mode, setMode] = useState<"manual" | "upload">("manual");
+  // Determine initial mode based on whether the invoice has items or an uploaded file
+  const initialMode = editInvoice?.uploadedFile ? "upload" : "manual";
+  const [mode, setMode] = useState<"manual" | "upload">(initialMode);
   const { toast } = useToast();
   const [file, setFile] = useState<File | null>(null);
 
@@ -137,10 +139,12 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   const handleModeChange = (value: string) => {
     setMode(value as "manual" | "upload");
     form.reset({
-      isPaid: false,
+      ...form.getValues(),
       items: value === "manual" ? [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }] : undefined,
     });
-    setFile(null);
+    if (value === "manual") {
+      setFile(null);
+    }
   };
 
   const handleSubmit = form.handleSubmit((data) => {
@@ -173,7 +177,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     }
 
     if (mode === "upload") {
-      if (!file) {
+      if (!file && !editInvoice?.uploadedFile) {
         toast({
           title: "Error",
           description: "Please upload an invoice file",
@@ -190,7 +194,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         return;
       }
     } else {
-      // For manual mode, ensure there are items
       if (!data.items?.length) {
         toast({
           title: "Error",
@@ -200,7 +203,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         return;
       }
 
-      // Validate items
       const invalidItems = data.items.some(item =>
         !item.description ||
         isNaN(Number(item.quantity)) ||
@@ -218,7 +220,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         return;
       }
 
-      // Calculate total amount from items
       const totalAmount = data.items.reduce((sum, item) =>
         sum + (parseFloat(item.totalPrice) || 0), 0).toString();
       data.totalAmount = totalAmount;
@@ -237,7 +238,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
           <DialogTitle>{editInvoice ? "Edit" : "Create New"} Invoice</DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="manual" className="w-full" onValueChange={handleModeChange}>
+        <Tabs defaultValue={initialMode} className="w-full" onValueChange={handleModeChange}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="manual">Manual Entry</TabsTrigger>
             <TabsTrigger value="upload">Upload Invoice</TabsTrigger>
@@ -388,7 +389,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
                           <Upload className="w-8 h-8 mb-2 text-gray-400" />
                           <p className="mb-2 text-sm text-gray-500">
-                            {file ? file.name : "Click to upload or drag and drop"}
+                            {file ? file.name : editInvoice?.uploadedFile ? "Replace current file" : "Click to upload or drag and drop"}
                           </p>
                         </div>
                         <input
@@ -399,6 +400,23 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                         />
                       </label>
                     </div>
+                    {editInvoice?.uploadedFile && (
+                      <div className="mt-4">
+                        <Label>Current File</Label>
+                        <div className="flex items-center justify-between p-2 mt-1 border rounded">
+                          <span className="text-sm">{editInvoice.uploadedFile}</span>
+                          <a
+                            href={`/uploads/${editInvoice.uploadedFile}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center text-blue-600 hover:text-blue-800"
+                          >
+                            <Download className="h-4 w-4 mr-1" />
+                            Download
+                          </a>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </TabsContent>
@@ -426,9 +444,4 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       </DialogContent>
     </Dialog>
   );
-}
-
-interface Invoice {
-  id: number;
-  name: string;
 }
