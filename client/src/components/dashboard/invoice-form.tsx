@@ -75,7 +75,8 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       setDialogOpen(true);
       setMode(editInvoice.uploadedFile ? "upload" : "manual");
 
-      // Reset form with all invoice data including items
+      console.log('Editing invoice with items:', editInvoice.items); // Debug log
+
       form.reset({
         supplierId: editInvoice.supplierId,
         invoiceNumber: editInvoice.invoiceNumber,
@@ -405,6 +406,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                         <div className="col-span-6">
                           <Input
                             placeholder="Description"
+                            defaultValue={item.description}
                             {...form.register(`items.${index}.description`)}
                           />
                         </div>
@@ -413,16 +415,10 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                             type="number"
                             step="0.01"
                             placeholder="Quantity"
+                            defaultValue={item.quantity}
                             {...form.register(`items.${index}.quantity`)}
                             onChange={(e) => {
-                              const value = e.target.value;
-                              form.setValue(`items.${index}.quantity`, value);
-                              if (value && form.getValues(`items.${index}.unitPrice`)) {
-                                form.setValue(
-                                  `items.${index}.totalPrice`,
-                                  (Number(value) * Number(form.getValues(`items.${index}.unitPrice`))).toString()
-                                );
-                              }
+                              handleItemChange(index, "quantity", e.target.value);
                             }}
                           />
                         </div>
@@ -431,16 +427,10 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                             type="number"
                             step="0.01"
                             placeholder="Unit Price"
+                            defaultValue={item.unitPrice}
                             {...form.register(`items.${index}.unitPrice`)}
                             onChange={(e) => {
-                              const value = e.target.value;
-                              form.setValue(`items.${index}.unitPrice`, value);
-                              if (value && form.getValues(`items.${index}.quantity`)) {
-                                form.setValue(
-                                  `items.${index}.totalPrice`,
-                                  (Number(value) * Number(form.getValues(`items.${index}.quantity`))).toString()
-                                );
-                              }
+                              handleItemChange(index, "unitPrice", e.target.value);
                             }}
                           />
                         </div>
@@ -449,7 +439,9 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                             type="number"
                             step="0.01"
                             placeholder="Total"
+                            defaultValue={item.totalPrice}
                             {...form.register(`items.${index}.totalPrice`)}
+                            readOnly
                           />
                         </div>
                       </div>
