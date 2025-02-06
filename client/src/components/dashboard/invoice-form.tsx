@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertInvoiceSchema, type InsertInvoice } from "@shared/schema";
+import { insertInvoiceSchema, type InsertInvoice, type InsertInvoiceItem } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useState } from "react";
@@ -33,7 +33,12 @@ import { Check } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-export function InvoiceForm() {
+interface InvoiceFormProps {
+  editInvoice?: Invoice;
+  onComplete?: () => void;
+}
+
+export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   const [open, setOpen] = useState(false);
   const [supplierSearch, setSupplierSearch] = useState("");
   const [comboboxOpen, setComboboxOpen] = useState(false);
@@ -43,9 +48,9 @@ export function InvoiceForm() {
 
   const form = useForm<InsertInvoice>({
     resolver: zodResolver(insertInvoiceSchema),
-    defaultValues: {
+    defaultValues: editInvoice || {
       isPaid: false,
-      items: [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0" }],
+      items: [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }],
     },
   });
 
@@ -61,57 +66,58 @@ export function InvoiceForm() {
     },
   });
 
-  const createInvoiceMutation = useMutation({
+  const updateInvoiceMutation = useMutation({
     mutationFn: async (data: InsertInvoice) => {
       const formData = new FormData();
-
-      // If in upload mode, add the file
       if (mode === "upload" && file) {
         formData.append('file', file);
       }
-
-      // Add the invoice data
       const invoiceData = {
         ...data,
         mode,
         items: mode === "manual" ? data.items : undefined,
       };
-
       formData.append('invoiceData', JSON.stringify(invoiceData));
-      const res = await apiRequest("POST", "/api/invoices", formData);
+      const res = await apiRequest(
+        editInvoice ? "PATCH" : "POST",
+        editInvoice ? `/api/invoices/${editInvoice.id}` : "/api/invoices",
+        formData
+      );
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
       toast({
         title: "Success",
-        description: "Invoice created successfully",
+        description: `Invoice ${editInvoice ? "updated" : "created"} successfully`,
       });
       form.reset({
         isPaid: false,
-        items: [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0" }],
+        items: [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }],
       });
-      setOpen(false);
+      if (editInvoice && onComplete) {
+        onComplete();
+      } else {
+        setOpen(false);
+      }
       setFile(null);
       setMode("manual");
     },
     onError: (error: Error) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to create invoice",
+        description: error.message || "Failed to save invoice",
         variant: "destructive",
       });
     },
   });
 
-  const handleItemChange = (index: number, field: string, value: string) => {
+  const handleItemChange = (index: number, field: keyof InsertInvoiceItem, value: string) => {
     const items = form.getValues("items") || [];
     const item = items[index];
 
-    // Update the specified field
     form.setValue(`items.${index}.${field}`, value);
 
-    // Only calculate total if both quantity and unit price have valid numbers
     if ((field === "quantity" || field === "unitPrice") && item) {
       const quantity = parseFloat(field === "quantity" ? value : item.quantity);
       const unitPrice = parseFloat(field === "unitPrice" ? value : item.unitPrice);
@@ -132,7 +138,7 @@ export function InvoiceForm() {
     setMode(value as "manual" | "upload");
     form.reset({
       isPaid: false,
-      items: value === "manual" ? [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0" }] : undefined,
+      items: value === "manual" ? [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }] : undefined,
     });
     setFile(null);
   };
@@ -218,17 +224,17 @@ export function InvoiceForm() {
       data.totalAmount = totalAmount;
     }
 
-    createInvoiceMutation.mutate(data);
+    updateInvoiceMutation.mutate(data);
   });
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={editInvoice ? true : open} onOpenChange={editInvoice ? onComplete : setOpen}>
       <DialogTrigger asChild>
-        <Button>Create Invoice</Button>
+        {!editInvoice && <Button>Create Invoice</Button>}
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create New Invoice</DialogTitle>
+          <DialogTitle>{editInvoice ? "Edit" : "Create New"} Invoice</DialogTitle>
         </DialogHeader>
 
         <Tabs defaultValue="manual" className="w-full" onValueChange={handleModeChange}>
@@ -353,7 +359,7 @@ export function InvoiceForm() {
                         const items = form.getValues("items") || [];
                         form.setValue("items", [
                           ...items,
-                          { description: "", quantity: "0", unitPrice: "0", totalPrice: "0" },
+                          { description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 },
                         ]);
                       }}
                     >
@@ -408,16 +414,21 @@ export function InvoiceForm() {
             <Button
               type="submit"
               className="w-full"
-              disabled={createInvoiceMutation.isPending}
+              disabled={updateInvoiceMutation.isPending}
             >
-              {createInvoiceMutation.isPending && (
+              {updateInvoiceMutation.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              Create Invoice
+              {editInvoice ? "Update" : "Create"} Invoice
             </Button>
           </form>
         </Tabs>
       </DialogContent>
     </Dialog>
   );
+}
+
+interface Invoice {
+  id: number;
+  name: string;
 }

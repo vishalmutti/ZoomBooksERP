@@ -1,4 +1,4 @@
-import { Invoice } from "@shared/schema";
+import { Invoice, Supplier } from "@shared/schema";
 import { DataTable } from "@/components/ui/data-table";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
@@ -11,11 +11,12 @@ import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Trash2, CalendarIcon, PlusCircle } from "lucide-react";
+import { Trash2, CalendarIcon, Edit } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { InvoiceForm } from "./invoice-form";
 
 interface InvoiceListProps {
   invoices: Invoice[];
@@ -28,21 +29,12 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
   const [isPaid, setIsPaid] = useState<boolean | undefined>(undefined);
   const [minAmount, setMinAmount] = useState<string>("");
   const [maxAmount, setMaxAmount] = useState<string>("");
-  const [selectedInvoiceId, setSelectedInvoiceId] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
-  const { data: suppliers = [] } = useQuery({
+  const { data: suppliers = [] } = useQuery<Supplier[]>({
     queryKey: ["/api/suppliers"],
-  });
-
-  const { data: payments = [] } = useQuery({
-    queryKey: ["/api/invoices", selectedInvoiceId, "payments"],
-    queryFn: async () => {
-      if (!selectedInvoiceId) return [];
-      const res = await fetch(`/api/invoices/${selectedInvoiceId}/payments`);
-      if (!res.ok) throw new Error("Failed to fetch payments");
-      return res.json();
-    },
-    enabled: !!selectedInvoiceId,
   });
 
   const deleteInvoiceMutation = useMutation({
@@ -79,24 +71,24 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
     },
   });
 
-  const addPaymentMutation = useMutation({
-    mutationFn: async ({ invoiceId, amount, paymentMethod }: { invoiceId: number; amount: string; paymentMethod: string }) => {
-      const res = await apiRequest("POST", `/api/invoices/${invoiceId}/payments`, {
-        amount,
-        paymentMethod,
-        paymentDate: new Date().toISOString(),
-      });
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices", selectedInvoiceId, "payments"] });
-      toast({
-        title: "Success",
-        description: "Payment added successfully",
-      });
-      setSelectedInvoiceId(null);
-    },
+  const filteredInvoices = invoices.filter(invoice => {
+    const supplier = suppliers.find(s => s.id === invoice.supplierId);
+    const searchString = searchTerm.toLowerCase();
+
+    const matchesSearch = searchTerm === "" || 
+      (invoice.invoiceNumber?.toLowerCase().includes(searchString)) ||
+      (supplier?.name.toLowerCase().includes(searchString)) ||
+      invoice.totalAmount.toString().includes(searchString);
+
+    const matchesDateRange = (!startDate || new Date(invoice.dueDate) >= startDate) &&
+      (!endDate || new Date(invoice.dueDate) <= endDate);
+
+    const matchesStatus = isPaid === undefined || invoice.isPaid === isPaid;
+
+    const matchesAmount = (!minAmount || Number(invoice.totalAmount) >= Number(minAmount)) &&
+      (!maxAmount || Number(invoice.totalAmount) <= Number(maxAmount));
+
+    return matchesSearch && matchesDateRange && matchesStatus && matchesAmount;
   });
 
   const columns: ColumnDef<Invoice>[] = [
@@ -109,7 +101,7 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
       header: "Supplier",
       cell: ({ row }) => {
         const invoice = row.original;
-        const supplier = suppliers.find((s: { id: number }) => s.id === invoice.supplierId);
+        const supplier = suppliers.find((s: Supplier) => s.id === invoice.supplierId);
         return supplier?.name || "N/A";
       },
     },
@@ -139,90 +131,25 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
         return (
           <div className="flex items-center gap-2">
             {!invoice.isPaid && (
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => setSelectedInvoiceId(invoice.id)}
-                  >
-                    Add Payment
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add Payment</DialogTitle>
-                  </DialogHeader>
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      const formData = new FormData(e.currentTarget);
-                      addPaymentMutation.mutate({
-                        invoiceId: invoice.id,
-                        amount: formData.get("amount") as string,
-                        paymentMethod: formData.get("paymentMethod") as string,
-                      });
-                    }}
-                    className="space-y-4"
-                  >
-                    <div>
-                      <Label htmlFor="amount">Amount</Label>
-                      <Input
-                        id="amount"
-                        name="amount"
-                        type="number"
-                        step="0.01"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="paymentMethod">Payment Method</Label>
-                      <Input
-                        id="paymentMethod"
-                        name="paymentMethod"
-                        required
-                      />
-                    </div>
-                    <Button type="submit" className="w-full">
-                      Add Payment
-                    </Button>
-                  </form>
-                </DialogContent>
-              </Dialog>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => markAsPaidMutation.mutate(invoice.id)}
+              >
+                Mark as Paid
+              </Button>
             )}
 
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedInvoiceId(invoice.id)}
-                >
-                  View Payments
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Payment History</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  {payments.map((payment: any) => (
-                    <div
-                      key={payment.id}
-                      className="flex justify-between items-center p-4 border rounded-lg"
-                    >
-                      <div>
-                        <p className="font-medium">${Number(payment.amount).toFixed(2)}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {format(new Date(payment.paymentDate), "MM/dd/yyyy")}
-                        </p>
-                      </div>
-                      <Badge>{payment.paymentMethod}</Badge>
-                    </div>
-                  ))}
-                </div>
-              </DialogContent>
-            </Dialog>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSelectedInvoice(invoice);
+                setEditDialogOpen(true);
+              }}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
 
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -259,7 +186,17 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+        <div className="col-span-2">
+          <Label>Search</Label>
+          <Input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search by invoice #, supplier, or amount"
+          />
+        </div>
+
         <div className="space-y-2">
           <Label>Start Date</Label>
           <Popover>
@@ -329,33 +266,44 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
         </div>
 
         <div className="space-y-2">
-          <Label>Min Amount</Label>
-          <Input
-            type="number"
-            step="0.01"
-            value={minAmount}
-            onChange={(e) => setMinAmount(e.target.value)}
-            placeholder="Min amount"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label>Max Amount</Label>
-          <Input
-            type="number"
-            step="0.01"
-            value={maxAmount}
-            onChange={(e) => setMaxAmount(e.target.value)}
-            placeholder="Max amount"
-          />
+          <Label>Amount Range</Label>
+          <div className="flex gap-2">
+            <Input
+              type="number"
+              step="0.01"
+              value={minAmount}
+              onChange={(e) => setMinAmount(e.target.value)}
+              placeholder="Min"
+              className="w-1/2"
+            />
+            <Input
+              type="number"
+              step="0.01"
+              value={maxAmount}
+              onChange={(e) => setMaxAmount(e.target.value)}
+              placeholder="Max"
+              className="w-1/2"
+            />
+          </div>
         </div>
       </div>
 
       <DataTable
         columns={columns}
-        data={invoices}
-        searchKey="invoiceNumber"
+        data={filteredInvoices}
       />
+
+      {/* Edit Invoice Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Invoice</DialogTitle>
+          </DialogHeader>
+          {selectedInvoice && (
+            <InvoiceForm editInvoice={selectedInvoice} onComplete={() => setEditDialogOpen(false)} />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
