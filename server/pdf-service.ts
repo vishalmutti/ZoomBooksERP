@@ -1,3 +1,4 @@
+
 import PDFDocument from 'pdfkit';
 import fs from 'fs';
 import path from 'path';
@@ -14,8 +15,8 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
   const filePath = path.join(process.cwd(), 'uploads', fileName);
   const writeStream = fs.createWriteStream(filePath);
 
-  // Company logo - updated path and size
-  doc.image('public/zoom-books-logo.png', 50, 45, { width: 150, height: 50 }) // Adjusted size
+  // Company logo
+  doc.image('public/logo.png', 50, 45, { width: 100 })
      .fontSize(20)
      .text('Zoom Books Company', 200, 45)
      .fontSize(10)
@@ -44,7 +45,7 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
   // Items table
   const tableTop = 350;
   doc.font('Helvetica-Bold');
-
+  
   // Table header
   doc.text('Description', 50, tableTop)
      .text('Quantity', 280, tableTop)
