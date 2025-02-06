@@ -57,16 +57,24 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   // Initialize form with edit invoice data when available
   useEffect(() => {
     if (editInvoice) {
-      const formData = {
-        ...editInvoice,
-        items: editInvoice.items?.map(item => ({
-          description: item.description || "",
-          quantity: item.quantity?.toString() || "0",
-          unitPrice: item.unitPrice?.toString() || "0",
-          totalPrice: item.totalPrice?.toString() || "0",
-          invoiceId: item.invoiceId
-        })) || [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: editInvoice.id }]
+      const formData: InsertInvoice = {
+        supplierId: editInvoice.supplierId,
+        invoiceNumber: editInvoice.invoiceNumber || "",
+        dueDate: editInvoice.dueDate ? new Date(editInvoice.dueDate).toISOString().split('T')[0] : "",
+        totalAmount: editInvoice.totalAmount?.toString() || "0",
+        notes: editInvoice.notes || "",
+        isPaid: editInvoice.isPaid || false,
+        items: editInvoice.items?.length 
+          ? editInvoice.items.map(item => ({
+              description: item.description || "",
+              quantity: item.quantity?.toString() || "0",
+              unitPrice: item.unitPrice?.toString() || "0",
+              totalPrice: item.totalPrice?.toString() || "0",
+              invoiceId: editInvoice.id
+            }))
+          : [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: editInvoice.id }]
       };
+      console.log('Form Data:', formData);
       form.reset(formData);
     }
   }, [editInvoice, form]);
