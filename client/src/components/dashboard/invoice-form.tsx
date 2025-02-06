@@ -52,7 +52,12 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     resolver: zodResolver(insertInvoiceSchema),
     defaultValues: {
       ...editInvoice,
-      items: editInvoice?.items || [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }],
+      items: editInvoice?.items?.map(item => ({
+        ...item,
+        quantity: item.quantity.toString(),
+        unitPrice: item.unitPrice.toString(),
+        totalPrice: item.totalPrice.toString()
+      })) || [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }],
     },
   });
 
