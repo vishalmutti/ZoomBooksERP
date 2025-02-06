@@ -1,4 +1,4 @@
-import { invoices, suppliers, invoiceItems, type User, type InsertUser, type Invoice, type InsertInvoice, type Supplier, type InsertSupplier } from "@shared/schema";
+import { invoices, suppliers, invoiceItems, users, type User, type InsertUser, type Invoice, type InsertInvoice, type Supplier, type InsertSupplier } from "@shared/schema";
 import { db } from "./db";
 import { eq, ilike } from "drizzle-orm";
 import session from "express-session";
