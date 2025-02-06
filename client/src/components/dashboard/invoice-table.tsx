@@ -16,6 +16,13 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function InvoiceTable({ invoices: initialInvoices }: { invoices: Invoice[] }) {
   const { toast } = useToast();
+  
+  // Add real-time query for invoices data
+  const { data: invoices = initialInvoices } = useQuery<Invoice[]>({
+    queryKey: ["/api/invoices"],
+    initialData: initialInvoices,
+    refetchInterval: 1000 // Refetch every second
+  });
 
   // Add real-time query for invoice data
   const { data: invoices } = useQuery<Invoice[]>({
@@ -56,7 +63,7 @@ export default function InvoiceTable({ invoices: initialInvoices }: { invoices: 
         </TableRow>
       </TableHeader>
       <TableBody>
-        {invoices.map((invoice) => (
+        {(invoices || []).map((invoice) => (
           <TableRow key={invoice.id}>
             <TableCell>{invoice.clientName}</TableCell>
             <TableCell>${invoice.amount.toString()}</TableCell>
