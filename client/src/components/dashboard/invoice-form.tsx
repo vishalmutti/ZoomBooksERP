@@ -50,31 +50,23 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   const form = useForm<InsertInvoice>({
     resolver: zodResolver(insertInvoiceSchema),
     defaultValues: {
-      items: [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }]
+      supplierId: editInvoice?.supplierId || 0,
+      invoiceNumber: editInvoice?.invoiceNumber || "",
+      dueDate: editInvoice?.dueDate ? new Date(editInvoice.dueDate).toISOString().split('T')[0] : "",
+      totalAmount: editInvoice?.totalAmount?.toString() || "0",
+      notes: editInvoice?.notes || "",
+      isPaid: editInvoice?.isPaid || false,
+      items: editInvoice?.items
+        ? editInvoice.items.map(item => ({
+            description: item.description || "",
+            quantity: item.quantity?.toString() || "0",
+            unitPrice: item.unitPrice?.toString() || "0",
+            totalPrice: item.totalPrice?.toString() || "0",
+            invoiceId: editInvoice.id
+          }))
+        : [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }]
     }
   });
-
-  // Initialize form with edit invoice data when available
-  useEffect(() => {
-    if (editInvoice && editInvoice.items) {
-      const formData: InsertInvoice = {
-        supplierId: editInvoice.supplierId,
-        invoiceNumber: editInvoice.invoiceNumber || "",
-        dueDate: editInvoice.dueDate ? new Date(editInvoice.dueDate).toISOString().split('T')[0] : "",
-        totalAmount: editInvoice.totalAmount?.toString() || "0",
-        notes: editInvoice.notes || "",
-        isPaid: editInvoice.isPaid || false,
-        items: editInvoice.items.map(item => ({
-          description: item.description,
-          quantity: item.quantity.toString(),
-          unitPrice: item.unitPrice.toString(),
-          totalPrice: (Number(item.quantity) * Number(item.unitPrice)).toString(),
-          invoiceId: editInvoice.id
-        }))
-      };
-      form.reset(formData);
-    }
-  }, [editInvoice, form]);
 
   const { data: suppliers = [] } = useQuery<Supplier[]>({
     queryKey: ["/api/suppliers", supplierSearch],
@@ -104,10 +96,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
 
       if (invoiceData.dueDate) {
         invoiceData.dueDate = new Date(invoiceData.dueDate).toISOString();
-      }
-      //Inferred fix for paymentDate - mirroring dueDate handling.
-      if (invoiceData.paymentDate) {
-        invoiceData.paymentDate = new Date(invoiceData.paymentDate).toISOString();
       }
 
       formData.append('invoiceData', JSON.stringify(invoiceData));

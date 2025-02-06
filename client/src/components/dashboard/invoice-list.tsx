@@ -75,7 +75,7 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
     const supplier = suppliers.find(s => s.id === invoice.supplierId);
     const searchString = searchTerm.toLowerCase();
 
-    const matchesSearch = searchTerm === "" || 
+    const matchesSearch = searchTerm === "" ||
       (invoice.invoiceNumber?.toLowerCase().includes(searchString)) ||
       (supplier?.name.toLowerCase().includes(searchString)) ||
       invoice.totalAmount.toString().includes(searchString);
@@ -334,8 +334,8 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
           <DialogHeader>
             <DialogTitle>Edit Invoice</DialogTitle>
           </DialogHeader>
-          {selectedInvoice && (
-            <InvoiceForm editInvoice={selectedInvoice} onComplete={() => setEditDialogOpen(false)} />
+          {selectedInvoice && selectedInvoiceData && (
+            <InvoiceForm editInvoice={selectedInvoiceData} onComplete={() => setEditDialogOpen(false)} />
           )}
         </DialogContent>
       </Dialog>
