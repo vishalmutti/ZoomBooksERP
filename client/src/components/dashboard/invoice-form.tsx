@@ -174,20 +174,23 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   });
 
   const handleItemChange = (index: number, field: keyof InsertInvoiceItem, value: string) => {
-    const items = form.getValues("items") || [];
-    const item = items[index];
+    const items = [...(form.getValues("items") || [])];
+    let item = items[index];
 
     if (item) {
-      form.setValue(`items.${index}.${field}`, value);
+      item = { ...item, [field]: value };
+      items[index] = item;
 
-      if ((field === "quantity" || field === "unitPrice")) {
-        const quantity = parseFloat(field === "quantity" ? value : item.quantity || "0");
-        const unitPrice = parseFloat(field === "unitPrice" ? value : item.unitPrice || "0");
+      if (field === "quantity" || field === "unitPrice") {
+        const quantity = parseFloat(item.quantity || "0");
+        const unitPrice = parseFloat(item.unitPrice || "0");
 
         if (!isNaN(quantity) && !isNaN(unitPrice)) {
-          form.setValue(`items.${index}.totalPrice`, (quantity * unitPrice).toString());
+          item.totalPrice = (quantity * unitPrice).toString();
         }
       }
+
+      form.setValue("items", items);
     }
   };
 
