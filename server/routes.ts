@@ -163,27 +163,10 @@ export function registerRoutes(app: Express): Server {
     try {
       const id = parseInt(req.params.id);
       const invoiceData = JSON.parse(req.body.invoiceData);
-      
-      // Clean up the data before validation
-      const cleanedData = {
-        ...invoiceData,
-        totalAmount: invoiceData.totalAmount?.toString() || "0",
-        items: invoiceData.items?.map(item => ({
-          description: item.description,
-          quantity: item.quantity?.toString() || "0",
-          unitPrice: item.unitPrice?.toString() || "0",
-          totalPrice: (Number(item.quantity || 0) * Number(item.unitPrice || 0)).toString()
-        }))
-      };
-
-      const parsed = insertInvoiceSchema.partial().safeParse(cleanedData);
+      const parsed = insertInvoiceSchema.partial().safeParse(invoiceData);
 
       if (!parsed.success) {
-        console.error('Validation error:', parsed.error);
-        return res.status(400).json({ 
-          message: 'Invalid invoice data',
-          errors: parsed.error.errors 
-        });
+        return res.status(400).json({ message: 'Invalid invoice data' });
       }
 
       let existingInvoice = await storage.getInvoice(id);
@@ -194,21 +177,14 @@ export function registerRoutes(app: Express): Server {
       let uploadedFile = req.file ? req.file.filename : undefined;
 
       // Generate PDF if it's a manual entry
-      if (!req.file && parsed.data.items?.length) {
+      if (!req.file && (parsed.data.items?.length || existingInvoice.items?.length)) {
         const supplier = await storage.getSupplier(parsed.data.supplierId || existingInvoice.supplierId);
         if (supplier) {
-          const itemsForPDF = parsed.data.items.map(item => ({
-            description: item.description,
-            quantity: item.quantity?.toString() || "0",
-            unitPrice: item.unitPrice?.toString() || "0",
-            totalPrice: (Number(item.quantity || 0) * Number(item.unitPrice || 0)).toString()
-          }));
-
           uploadedFile = await generateInvoicePDF({ 
             invoice: { 
               ...existingInvoice,
               ...parsed.data,
-              items: itemsForPDF,
+              items: parsed.data.items || existingInvoice.items,
               id,
               invoiceNumber: existingInvoice.invoiceNumber
             },
