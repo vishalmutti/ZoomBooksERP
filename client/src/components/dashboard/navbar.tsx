@@ -14,16 +14,19 @@ export function Navbar() {
 
   return (
     <header className="border-b">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+      <div className="container mx-auto flex h-20 items-center justify-between px-4">
+        <div 
+          className="cursor-pointer" 
+          onClick={() => window.location.href = '/'}
+        >
+          <img 
+            src="/logo.png" 
+            alt="Zoom Books Logo" 
+            className="h-24 w-auto -mt-2" 
+          />
+        </div>
+
         <div className="flex items-center gap-8">
-          {/* Fix nested anchor tag issue by using a div with onClick */}
-          <div className="cursor-pointer" onClick={() => window.location.href = '/'}>
-            <img 
-              src="/logo.png" 
-              alt="Zoom Books Logo" 
-              className="h-16 w-auto" 
-            />
-          </div>
           <nav className="flex items-center gap-6">
             {navItems.map((item) => (
               <a
@@ -37,15 +40,15 @@ export function Navbar() {
               </a>
             ))}
           </nav>
+          <Button 
+            variant="ghost" 
+            onClick={() => logoutMutation.mutate()}
+            className="gap-2"
+          >
+            <LogOut className="h-4 w-4" />
+            Logout
+          </Button>
         </div>
-        <Button 
-          variant="ghost" 
-          onClick={() => logoutMutation.mutate()}
-          className="gap-2"
-        >
-          <LogOut className="h-4 w-4" />
-          Logout
-        </Button>
       </div>
     </header>
   );
