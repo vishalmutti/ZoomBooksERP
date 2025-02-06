@@ -1,11 +1,9 @@
 import { Supplier } from "@shared/schema";
-import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { SupplierView } from "./supplier-view";
-import { Edit } from "lucide-react";
 
 interface SupplierListProps {
   suppliers: (Supplier & { outstandingAmount: string })[];
@@ -46,21 +44,6 @@ export function SupplierList({ suppliers }: SupplierListProps) {
         return Number(rowB.original.outstandingAmount) - Number(rowA.original.outstandingAmount);
       },
     },
-    {
-      id: "actions",
-      cell: ({ row }) => {
-        const supplier = row.original;
-        return (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setSelectedSupplier(supplier)}
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-        );
-      },
-    },
   ];
 
   return (
@@ -70,6 +53,7 @@ export function SupplierList({ suppliers }: SupplierListProps) {
         data={suppliers}
         defaultSort={[{ id: "outstandingAmount", desc: true }]}
         searchKey="name"
+        onRowClick={(row) => setSelectedSupplier(row.original)}
       />
 
       {selectedSupplier && (
