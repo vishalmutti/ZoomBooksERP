@@ -1,11 +1,19 @@
-import { invoices, suppliers, invoiceItems, users, type User, type InsertUser, type Invoice, type InsertInvoice, type Supplier, type InsertSupplier } from "@shared/schema";
+import { invoices, suppliers, invoiceItems, users, payments, type User, type InsertUser, type Invoice, type InsertInvoice, type Supplier, type InsertSupplier, type Payment, type InsertPayment } from "@shared/schema";
 import { db } from "./db";
-import { eq, ilike } from "drizzle-orm";
+import { eq, ilike, and, gte, lte, sql } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
 
 const PostgresSessionStore = connectPg(session);
+
+interface InvoiceFilters {
+  startDate?: Date;
+  endDate?: Date;
+  isPaid?: boolean;
+  minAmount?: number;
+  maxAmount?: number;
+}
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -15,14 +23,18 @@ export interface IStorage {
   getSuppliers(): Promise<Supplier[]>;
   searchSuppliers(query: string): Promise<Supplier[]>;
   createSupplier(supplier: InsertSupplier): Promise<Supplier>;
+  updateSupplier(id: number, updates: Partial<InsertSupplier>): Promise<Supplier | undefined>;
   getSupplier(id: number): Promise<Supplier | undefined>;
   deleteSupplier(id: number): Promise<void>;
 
-  getInvoices(): Promise<Invoice[]>;
+  getInvoices(filters?: InvoiceFilters): Promise<Invoice[]>;
   createInvoice(invoice: InsertInvoice): Promise<Invoice>;
   updateInvoice(id: number, updates: Partial<Invoice>): Promise<Invoice>;
   getInvoice(id: number): Promise<Invoice | undefined>;
   deleteInvoice(id: number): Promise<void>;
+
+  createPayment(payment: InsertPayment): Promise<Payment>;
+  getInvoicePayments(invoiceId: number): Promise<Payment[]>;
 
   sessionStore: session.SessionStore;
 }
@@ -69,6 +81,15 @@ export class DatabaseStorage implements IStorage {
     return newSupplier;
   }
 
+  async updateSupplier(id: number, updates: Partial<InsertSupplier>): Promise<Supplier | undefined> {
+    const [supplier] = await db
+      .update(suppliers)
+      .set(updates)
+      .where(eq(suppliers.id, id))
+      .returning();
+    return supplier;
+  }
+
   async getSupplier(id: number): Promise<Supplier | undefined> {
     const [supplier] = await db.select().from(suppliers).where(eq(suppliers.id, id));
     return supplier;
@@ -78,11 +99,30 @@ export class DatabaseStorage implements IStorage {
     await db.delete(suppliers).where(eq(suppliers.id, id));
   }
 
-  async getInvoices(): Promise<Invoice[]> {
-    return await db
-      .select()
-      .from(invoices)
-      .orderBy(invoices.createdAt);
+  async getInvoices(filters?: InvoiceFilters): Promise<Invoice[]> {
+    let conditions = [];
+
+    if (filters?.startDate) {
+      conditions.push(gte(invoices.dueDate, filters.startDate));
+    }
+    if (filters?.endDate) {
+      conditions.push(lte(invoices.dueDate, filters.endDate));
+    }
+    if (filters?.isPaid !== undefined) {
+      conditions.push(eq(invoices.isPaid, filters.isPaid));
+    }
+    if (filters?.minAmount !== undefined) {
+      conditions.push(gte(invoices.totalAmount, filters.minAmount.toString()));
+    }
+    if (filters?.maxAmount !== undefined) {
+      conditions.push(lte(invoices.totalAmount, filters.maxAmount.toString()));
+    }
+
+    const query = conditions.length > 0
+      ? db.select().from(invoices).where(and(...conditions)).orderBy(invoices.createdAt)
+      : db.select().from(invoices).orderBy(invoices.createdAt);
+
+    return await query;
   }
 
   async createInvoice(invoice: InsertInvoice): Promise<Invoice> {
@@ -137,6 +177,19 @@ export class DatabaseStorage implements IStorage {
       await tx.delete(invoiceItems).where(eq(invoiceItems.invoiceId, id));
       await tx.delete(invoices).where(eq(invoices.id, id));
     });
+  }
+
+  async createPayment(payment: InsertPayment): Promise<Payment> {
+    const [newPayment] = await db.insert(payments).values(payment).returning();
+    return newPayment;
+  }
+
+  async getInvoicePayments(invoiceId: number): Promise<Payment[]> {
+    return await db
+      .select()
+      .from(payments)
+      .where(eq(payments.invoiceId, invoiceId))
+      .orderBy(payments.paymentDate);
   }
 }
 

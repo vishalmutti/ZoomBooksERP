@@ -41,6 +41,17 @@ export const invoiceItems = pgTable("invoice_items", {
   totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
 });
 
+// Add new payments table
+export const payments = pgTable("payments", {
+  id: serial("id").primaryKey(),
+  invoiceId: integer("invoice_id").references(() => invoices.id).notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  paymentDate: timestamp("payment_date").defaultNow().notNull(),
+  paymentMethod: varchar("payment_method", { length: 50 }).notNull(),
+  reference: varchar("reference", { length: 100 }),
+  notes: text("notes"),
+});
+
 // Relations
 export const invoicesRelations = relations(invoices, ({ one, many }) => ({
   supplier: one(suppliers, {
@@ -48,6 +59,7 @@ export const invoicesRelations = relations(invoices, ({ one, many }) => ({
     references: [suppliers.id],
   }),
   items: many(invoiceItems),
+  payments: many(payments),
 }));
 
 export const invoiceItemsRelations = relations(invoiceItems, ({ one }) => ({
@@ -56,6 +68,14 @@ export const invoiceItemsRelations = relations(invoiceItems, ({ one }) => ({
     references: [invoices.id],
   }),
 }));
+
+export const paymentsRelations = relations(payments, ({ one }) => ({
+  invoice: one(invoices, {
+    fields: [payments.invoiceId],
+    references: [invoices.id],
+  }),
+}));
+
 
 // Schemas for inserts
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -82,6 +102,11 @@ export const insertInvoiceSchema = createInsertSchema(invoices)
     items: z.array(insertInvoiceItemSchema).optional(),
   });
 
+export const insertPaymentSchema = createInsertSchema(payments)
+  .omit({
+    id: true,
+  });
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -94,3 +119,6 @@ export type InvoiceItem = typeof invoiceItems.$inferSelect;
 
 export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
 export type Invoice = typeof invoices.$inferSelect;
+
+export type InsertPayment = z.infer<typeof insertPaymentSchema>;
+export type Payment = typeof payments.$inferSelect;

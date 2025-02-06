@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertInvoiceSchema, insertSupplierSchema } from "@shared/schema";
+import { insertInvoiceSchema, insertPaymentSchema, insertSupplierSchema } from "@shared/schema";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -40,6 +40,16 @@ export function registerRoutes(app: Express): Server {
     res.json(suppliers);
   });
 
+  app.get("/api/suppliers/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    const id = parseInt(req.params.id);
+    const supplier = await storage.getSupplier(id);
+
+    if (!supplier) return res.status(404).send("Supplier not found");
+    res.json(supplier);
+  });
+
   app.post("/api/suppliers", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
@@ -50,6 +60,22 @@ export function registerRoutes(app: Express): Server {
 
     const supplier = await storage.createSupplier(parsed.data);
     res.status(201).json(supplier);
+  });
+
+  app.patch("/api/suppliers/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    const id = parseInt(req.params.id);
+    const parsed = insertSupplierSchema.partial().safeParse(req.body);
+
+    if (!parsed.success) {
+      return res.status(400).json(parsed.error);
+    }
+
+    const supplier = await storage.updateSupplier(id, parsed.data);
+    if (!supplier) return res.status(404).send("Supplier not found");
+
+    res.json(supplier);
   });
 
   app.delete("/api/suppliers/:id", async (req, res) => {
@@ -66,7 +92,17 @@ export function registerRoutes(app: Express): Server {
   // Invoice routes
   app.get("/api/invoices", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    const invoices = await storage.getInvoices();
+
+    const { startDate, endDate, isPaid, minAmount, maxAmount } = req.query;
+    const filters = {
+      startDate: startDate ? new Date(startDate as string) : undefined,
+      endDate: endDate ? new Date(endDate as string) : undefined,
+      isPaid: isPaid === 'true' ? true : isPaid === 'false' ? false : undefined,
+      minAmount: minAmount ? parseFloat(minAmount as string) : undefined,
+      maxAmount: maxAmount ? parseFloat(maxAmount as string) : undefined,
+    };
+
+    const invoices = await storage.getInvoices(filters);
     res.json(invoices);
   });
 
@@ -119,6 +155,44 @@ export function registerRoutes(app: Express): Server {
 
     res.json(updatedInvoice);
   });
+
+  // Payment routes
+  app.post("/api/invoices/:id/payments", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    const invoiceId = parseInt(req.params.id);
+    const invoice = await storage.getInvoice(invoiceId);
+    if (!invoice) return res.status(404).send("Invoice not found");
+
+    const parsed = insertPaymentSchema.safeParse({ ...req.body, invoiceId });
+    if (!parsed.success) {
+      return res.status(400).json(parsed.error);
+    }
+
+    const payment = await storage.createPayment(parsed.data);
+
+    // Update invoice status if payment completes the total amount
+    const payments = await storage.getInvoicePayments(invoiceId);
+    const totalPaid = payments.reduce((sum, p) => sum + Number(p.amount), 0);
+
+    if (totalPaid >= Number(invoice.totalAmount)) {
+      await storage.updateInvoice(invoiceId, {
+        isPaid: true,
+        paymentDate: new Date().toISOString(),
+      });
+    }
+
+    res.status(201).json(payment);
+  });
+
+  app.get("/api/invoices/:id/payments", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    const invoiceId = parseInt(req.params.id);
+    const payments = await storage.getInvoicePayments(invoiceId);
+    res.json(payments);
+  });
+
 
   const httpServer = createServer(app);
   return httpServer;
