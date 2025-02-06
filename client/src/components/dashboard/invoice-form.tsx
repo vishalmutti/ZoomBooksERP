@@ -54,28 +54,19 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     }
   });
 
-  // Reset form when editInvoice changes
+  // Initialize form with edit invoice data when available
   useEffect(() => {
     if (editInvoice) {
-      console.log('Edit Invoice Data:', editInvoice); // Debug log
-      const formData: InsertInvoice = {
-        supplierId: editInvoice.supplierId,
-        invoiceNumber: editInvoice.invoiceNumber || "",
-        dueDate: editInvoice.dueDate ? new Date(editInvoice.dueDate).toISOString().split('T')[0] : "",
-        totalAmount: editInvoice.totalAmount?.toString() || "0",
-        notes: editInvoice.notes || "",
-        isPaid: editInvoice.isPaid || false,
-        items: editInvoice.items?.length 
-          ? editInvoice.items.map(item => ({
-              description: item.description || "",
-              quantity: item.quantity?.toString() || "0",
-              unitPrice: item.unitPrice?.toString() || "0",
-              totalPrice: item.totalPrice?.toString() || "0",
-              invoiceId: editInvoice.id
-            }))
-          : [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: editInvoice.id }]
+      const formData = {
+        ...editInvoice,
+        items: editInvoice.items?.map(item => ({
+          description: item.description || "",
+          quantity: item.quantity?.toString() || "0",
+          unitPrice: item.unitPrice?.toString() || "0",
+          totalPrice: item.totalPrice?.toString() || "0",
+          invoiceId: item.invoiceId
+        })) || [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: editInvoice.id }]
       };
-      console.log('Form Data:', formData); // Debug log
       form.reset(formData);
     }
   }, [editInvoice, form]);
@@ -109,6 +100,10 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       if (invoiceData.dueDate) {
         invoiceData.dueDate = new Date(invoiceData.dueDate).toISOString();
       }
+      //Inferred fix for paymentDate - mirroring dueDate handling.
+      if (invoiceData.paymentDate) {
+        invoiceData.paymentDate = new Date(invoiceData.paymentDate).toISOString();
+      }
 
       formData.append('invoiceData', JSON.stringify(invoiceData));
 
@@ -136,6 +131,10 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         title: "Success",
         description: `Invoice ${editInvoice ? "updated" : "created"} successfully`,
       });
+      form.reset({
+        isPaid: false,
+        items: [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }],
+      });
       if (editInvoice && onComplete) {
         onComplete();
       } else {
@@ -153,28 +152,21 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   });
 
   const handleItemChange = (index: number, field: keyof InsertInvoiceItem, value: string) => {
-    const currentItems = form.getValues("items") || [];
-    const updatedItems = [...currentItems];
+    const items = form.getValues("items") || [];
+    const item = items[index];
 
-    if (!updatedItems[index]) {
-      updatedItems[index] = { description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: editInvoice?.id || 0 };
-    }
+    if (item) {
+      form.setValue(`items.${index}.${field}`, value);
 
-    updatedItems[index] = {
-      ...updatedItems[index],
-      [field]: value
-    };
+      if ((field === "quantity" || field === "unitPrice")) {
+        const quantity = parseFloat(field === "quantity" ? value : item.quantity || "0");
+        const unitPrice = parseFloat(field === "unitPrice" ? value : item.unitPrice || "0");
 
-    if (field === "quantity" || field === "unitPrice") {
-      const quantity = parseFloat(field === "quantity" ? value : updatedItems[index].quantity || "0");
-      const unitPrice = parseFloat(field === "unitPrice" ? value : updatedItems[index].unitPrice || "0");
-
-      if (!isNaN(quantity) && !isNaN(unitPrice)) {
-        updatedItems[index].totalPrice = (quantity * unitPrice).toString();
+        if (!isNaN(quantity) && !isNaN(unitPrice)) {
+          form.setValue(`items.${index}.totalPrice`, (quantity * unitPrice).toString());
+        }
       }
     }
-
-    form.setValue("items", updatedItems, { shouldValidate: true });
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -382,8 +374,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                         <div className="col-span-6">
                           <Input
                             placeholder="Description"
-                            value={item.description}
-                            onChange={(e) => handleItemChange(index, "description", e.target.value)}
+                            {...form.register(`items.${index}.description`)}
                           />
                         </div>
                         <div className="col-span-2">
@@ -391,8 +382,17 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                             type="number"
                             step="0.01"
                             placeholder="Quantity"
-                            value={item.quantity}
-                            onChange={(e) => handleItemChange(index, "quantity", e.target.value)}
+                            {...form.register(`items.${index}.quantity`)}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              form.setValue(`items.${index}.quantity`, value);
+                              if (value && form.getValues(`items.${index}.unitPrice`)) {
+                                form.setValue(
+                                  `items.${index}.totalPrice`,
+                                  (Number(value) * Number(form.getValues(`items.${index}.unitPrice`))).toString()
+                                );
+                              }
+                            }}
                           />
                         </div>
                         <div className="col-span-2">
@@ -400,8 +400,17 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                             type="number"
                             step="0.01"
                             placeholder="Unit Price"
-                            value={item.unitPrice}
-                            onChange={(e) => handleItemChange(index, "unitPrice", e.target.value)}
+                            {...form.register(`items.${index}.unitPrice`)}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              form.setValue(`items.${index}.unitPrice`, value);
+                              if (value && form.getValues(`items.${index}.quantity`)) {
+                                form.setValue(
+                                  `items.${index}.totalPrice`,
+                                  (Number(value) * Number(form.getValues(`items.${index}.quantity`))).toString()
+                                );
+                              }
+                            }}
                           />
                         </div>
                         <div className="col-span-2">
@@ -409,8 +418,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                             type="number"
                             step="0.01"
                             placeholder="Total"
-                            value={item.totalPrice}
-                            readOnly
+                            {...form.register(`items.${index}.totalPrice`)}
                           />
                         </div>
                       </div>
@@ -422,7 +430,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                         const items = form.getValues("items") || [];
                         form.setValue("items", [
                           ...items,
-                          { description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: editInvoice?.id || 0 },
+                          { description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 },
                         ]);
                       }}
                     >

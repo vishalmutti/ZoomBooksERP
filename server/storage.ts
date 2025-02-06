@@ -232,7 +232,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getInvoice(id: number): Promise<(Invoice & { items?: InvoiceItem[] }) | undefined> {
-    // First, get the invoice
     const [invoice] = await db
       .select()
       .from(invoices)
@@ -240,16 +239,15 @@ export class DatabaseStorage implements IStorage {
 
     if (!invoice) return undefined;
 
-    // Then, get all items for this invoice
+    // Fetch invoice items
     const items = await db
       .select()
       .from(invoiceItems)
-      .where(eq(invoiceItems.invoiceId, id))
-      .orderBy(invoiceItems.id);
+      .where(eq(invoiceItems.invoiceId, id));
 
     return {
       ...invoice,
-      items: items
+      items
     };
   }
 
