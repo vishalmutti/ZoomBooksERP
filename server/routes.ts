@@ -178,17 +178,23 @@ export function registerRoutes(app: Express): Server {
       }
 
       let uploadedFile = req.file ? req.file.filename : undefined;
+      const existingInvoice = await storage.getInvoice(id);
+      
+      if (!existingInvoice) {
+        return res.status(404).json({ message: 'Invoice not found' });
+      }
 
-      // For manual entries, generate PDF before updating
-      if (!req.file && parsed.data.items?.length) {
-        const supplier = await storage.getSupplier(parsed.data.supplierId || (await storage.getInvoice(id))?.supplierId);
+      // Always generate new PDF for manual entries
+      if (parsed.data.items?.length || existingInvoice.items?.length) {
+        const supplier = await storage.getSupplier(parsed.data.supplierId || existingInvoice.supplierId);
         if (supplier) {
           uploadedFile = await generateInvoicePDF({ 
             invoice: { 
-              ...parsed.data, 
-              id, 
-              items: parsed.data.items,
-              invoiceNumber: parsed.data.invoiceNumber || `Invoice #${id}`
+              ...existingInvoice,
+              ...parsed.data,
+              id,
+              items: parsed.data.items || existingInvoice.items,
+              invoiceNumber: existingInvoice.invoiceNumber
             },
             supplier 
           });
