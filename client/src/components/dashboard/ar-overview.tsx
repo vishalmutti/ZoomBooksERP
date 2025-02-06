@@ -7,10 +7,10 @@ interface AROverviewProps {
 }
 
 export function AROverview({ invoices }: AROverviewProps) {
-  const totalAR = invoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
+  const totalAR = invoices.reduce((sum, inv) => sum + Number(inv.totalAmount), 0);
   const paidAR = invoices
     .filter((inv) => inv.isPaid)
-    .reduce((sum, inv) => sum + Number(inv.amount), 0);
+    .reduce((sum, inv) => sum + Number(inv.totalAmount), 0);
   const unpaidAR = totalAR - paidAR;
 
   const pieData = [

@@ -4,7 +4,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 
@@ -14,6 +14,10 @@ interface InvoiceListProps {
 
 export function InvoiceList({ invoices }: InvoiceListProps) {
   const { toast } = useToast();
+
+  const { data: suppliers = [] } = useQuery({
+    queryKey: ["/api/suppliers"],
+  });
 
   const markAsPaidMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -31,13 +35,22 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
 
   const columns: ColumnDef<Invoice>[] = [
     {
-      accessorKey: "clientName",
-      header: "Client",
+      accessorKey: "invoiceNumber",
+      header: "Invoice #",
     },
     {
-      accessorKey: "amount",
+      id: "supplier",
+      header: "Supplier",
+      cell: ({ row }) => {
+        const invoice = row.original;
+        const supplier = suppliers.find((s) => s.id === invoice.supplierId);
+        return supplier?.name || "N/A";
+      },
+    },
+    {
+      accessorKey: "totalAmount",
       header: "Amount",
-      cell: ({ row }) => `$${Number(row.getValue("amount")).toFixed(2)}`,
+      cell: ({ row }) => `$${Number(row.getValue("totalAmount")).toFixed(2)}`,
     },
     {
       accessorKey: "dueDate",
@@ -75,7 +88,7 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
     <DataTable
       columns={columns}
       data={invoices}
-      searchKey="clientName"
+      searchKey="invoiceNumber"
     />
   );
 }
