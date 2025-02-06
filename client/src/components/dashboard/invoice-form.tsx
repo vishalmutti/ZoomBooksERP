@@ -130,159 +130,161 @@ export function InvoiceForm() {
       <DialogTrigger asChild>
         <Button>Create Invoice</Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Invoice</DialogTitle>
         </DialogHeader>
-        <form onSubmit={form.handleSubmit((data) => createInvoiceMutation.mutate(data))} className="space-y-4">
-          <div>
-            <Label>Supplier</Label>
-            <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={open}
-                  className="w-full justify-between"
-                >
-                  {form.watch("supplierId")
-                    ? suppliers.find((supplier) => supplier.id === form.watch("supplierId"))?.name
-                    : "Select supplier..."}
+        <form onSubmit={form.handleSubmit((data) => createInvoiceMutation.mutate(data))} className="space-y-6">
+          <div className="space-y-4">
+            <div>
+              <Label>Supplier</Label>
+              <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={open}
+                    className="w-full justify-between"
+                  >
+                    {form.watch("supplierId")
+                      ? suppliers.find((supplier) => supplier.id === form.watch("supplierId"))?.name
+                      : "Select supplier..."}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0">
+                  <Command>
+                    <CommandInput
+                      placeholder="Search suppliers..."
+                      value={supplierSearch}
+                      onValueChange={setSupplierSearch}
+                    />
+                    <CommandEmpty>No suppliers found.</CommandEmpty>
+                    <CommandGroup>
+                      {suppliers.map((supplier) => (
+                        <CommandItem
+                          key={supplier.id}
+                          value={supplier.name}
+                          onSelect={() => {
+                            form.setValue("supplierId", supplier.id);
+                            setComboboxOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              form.watch("supplierId") === supplier.id
+                                ? "opacity-100"
+                                : "opacity-0"
+                            )}
+                          />
+                          {supplier.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div>
+              <Label htmlFor="invoiceNumber">Invoice Number</Label>
+              <Input {...form.register("invoiceNumber")} />
+            </div>
+
+            <div>
+              <Label htmlFor="dueDate">Due Date</Label>
+              <Input type="date" {...form.register("dueDate")} />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <Label>Items</Label>
+                <Button type="button" variant="outline" size="sm" onClick={addItem}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Item
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-full p-0">
-                <Command>
-                  <CommandInput
-                    placeholder="Search suppliers..."
-                    value={supplierSearch}
-                    onValueChange={setSupplierSearch}
-                  />
-                  <CommandEmpty>No suppliers found.</CommandEmpty>
-                  <CommandGroup>
-                    {suppliers.map((supplier) => (
-                      <CommandItem
-                        key={supplier.id}
-                        value={supplier.name}
-                        onSelect={() => {
-                          form.setValue("supplierId", supplier.id);
-                          setComboboxOpen(false);
-                        }}
+              </div>
+              <div className="space-y-2">
+                {form.watch("items")?.map((item, index) => (
+                  <div key={index} className="grid grid-cols-12 gap-2 items-start">
+                    <div className="col-span-4">
+                      <Input
+                        placeholder="Description"
+                        {...form.register(`items.${index}.description`)}
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="Qty"
+                        {...form.register(`items.${index}.quantity`, {
+                          valueAsNumber: true,
+                          onChange: (e) =>
+                            handleItemChange(index, "quantity", parseFloat(e.target.value)),
+                        })}
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="Price"
+                        {...form.register(`items.${index}.unitPrice`, {
+                          valueAsNumber: true,
+                          onChange: (e) =>
+                            handleItemChange(index, "unitPrice", parseFloat(e.target.value)),
+                        })}
+                      />
+                    </div>
+                    <div className="col-span-3">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="Total"
+                        value={form.watch(`items.${index}.totalPrice`)}
+                        disabled
+                      />
+                    </div>
+                    <div className="col-span-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeItem(index)}
                       >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            form.watch("supplierId") === supplier.id
-                              ? "opacity-100"
-                              : "opacity-0"
-                          )}
-                        />
-                        {supplier.name}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          <div>
-            <Label htmlFor="invoiceNumber">Invoice Number</Label>
-            <Input {...form.register("invoiceNumber")} />
-          </div>
-
-          <div>
-            <Label htmlFor="dueDate">Due Date</Label>
-            <Input type="date" {...form.register("dueDate")} />
-          </div>
-
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <Label>Items</Label>
-              <Button type="button" variant="outline" size="sm" onClick={addItem}>
-                <Plus className="h-4 w-4 mr-1" />
-                Add Item
-              </Button>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="space-y-2">
-              {form.watch("items")?.map((item, index) => (
-                <div key={index} className="grid grid-cols-12 gap-2 items-start">
-                  <div className="col-span-4">
-                    <Input
-                      placeholder="Description"
-                      {...form.register(`items.${index}.description`)}
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="Qty"
-                      {...form.register(`items.${index}.quantity`, {
-                        valueAsNumber: true,
-                        onChange: (e) =>
-                          handleItemChange(index, "quantity", parseFloat(e.target.value)),
-                      })}
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="Price"
-                      {...form.register(`items.${index}.unitPrice`, {
-                        valueAsNumber: true,
-                        onChange: (e) =>
-                          handleItemChange(index, "unitPrice", parseFloat(e.target.value)),
-                      })}
-                    />
-                  </div>
-                  <div className="col-span-3">
-                    <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="Total"
-                      value={form.watch(`items.${index}.totalPrice`)}
-                      disabled
-                    />
-                  </div>
-                  <div className="col-span-1">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeItem(index)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
 
-          <div>
-            <Label>Upload Invoice (Optional)</Label>
-            <div className="mt-2">
-              <label className="flex items-center gap-2 justify-center w-full h-32 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-md appearance-none cursor-pointer hover:border-gray-400 focus:outline-none">
-                <div className="flex flex-col items-center space-y-2">
-                  <Upload className="w-6 h-6 text-gray-400" />
-                  <span className="font-medium text-gray-600">
-                    {file ? file.name : "Drop files to Attach, or browse"}
-                  </span>
-                </div>
-                <input
-                  type="file"
-                  className="hidden"
-                  accept=".pdf,.png,.jpg,.jpeg"
-                  onChange={handleFileChange}
-                />
-              </label>
+            <div>
+              <Label>Upload Invoice (Optional)</Label>
+              <div className="mt-2">
+                <label className="flex items-center gap-2 justify-center w-full h-32 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-md appearance-none cursor-pointer hover:border-gray-400 focus:outline-none">
+                  <div className="flex flex-col items-center space-y-2">
+                    <Upload className="w-6 h-6 text-gray-400" />
+                    <span className="font-medium text-gray-600">
+                      {file ? file.name : "Drop files to Attach, or browse"}
+                    </span>
+                  </div>
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept=".pdf,.png,.jpg,.jpeg"
+                    onChange={handleFileChange}
+                  />
+                </label>
+              </div>
             </div>
-          </div>
 
-          <div>
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea {...form.register("notes")} />
+            <div>
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea {...form.register("notes")} />
+            </div>
           </div>
 
           <Button type="submit" className="w-full" disabled={createInvoiceMutation.isPending}>
