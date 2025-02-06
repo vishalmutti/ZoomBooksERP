@@ -7,13 +7,15 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 
+// Before upload middleware definition, add directory creation
+const uploadDir = path.join(process.cwd(), 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
 const upload = multer({
   storage: multer.diskStorage({
     destination: function (req, file, cb) {
-      const uploadDir = path.join(process.cwd(), 'uploads');
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
       cb(null, uploadDir);
     },
     filename: function (req, file, cb) {
@@ -68,53 +70,27 @@ export function registerRoutes(app: Express): Server {
     res.json(invoices);
   });
 
+  // Update the invoice creation route
   app.post("/api/invoices", upload.single('file'), async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     try {
-      // Log request information
-      console.log('Request body:', req.body);
-      console.log('Uploaded file:', req.file);
-
-      // Ensure invoiceData exists in the request
-      if (!req.body.invoiceData) {
-        throw new Error('Missing invoice data');
-      }
-
-      // Parse the invoice data
-      let invoiceData;
-      try {
-        invoiceData = JSON.parse(req.body.invoiceData);
-        console.log('Parsed invoice data:', invoiceData);
-      } catch (e) {
-        console.error('Error parsing invoice data:', e);
-        throw new Error('Invalid invoice data format');
-      }
-
-      // Validate the invoice data
+      const invoiceData = JSON.parse(req.body.invoiceData);
       const parsed = insertInvoiceSchema.safeParse(invoiceData);
+
       if (!parsed.success) {
-        console.error('Validation error:', parsed.error);
-        return res.status(400).json({
-          message: 'Invalid invoice data',
-          errors: parsed.error.errors
-        });
+        return res.status(400).json({ message: 'Invalid invoice data' });
       }
 
-      // Create the invoice
       const invoice = await storage.createInvoice({
         ...parsed.data,
         uploadedFile: req.file ? req.file.filename : undefined,
       });
 
-      console.log('Created invoice:', invoice);
       res.status(201).json(invoice);
     } catch (error) {
       console.error('Error creating invoice:', error);
-      res.status(400).json({ 
-        message: error instanceof Error ? error.message : 'Failed to create invoice',
-        error: error 
-      });
+      res.status(500).json({ message: 'Failed to create invoice' });
     }
   });
 

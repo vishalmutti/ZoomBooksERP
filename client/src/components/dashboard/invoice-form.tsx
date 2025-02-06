@@ -45,7 +45,7 @@ export function InvoiceForm() {
     resolver: zodResolver(insertInvoiceSchema),
     defaultValues: {
       isPaid: false,
-      items: mode === "manual" ? [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0" }] : undefined,
+      items: [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0" }],
     },
   });
 
@@ -70,22 +70,16 @@ export function InvoiceForm() {
         formData.append('file', file);
       }
 
-      // Prepare invoice data based on mode
+      // Add the invoice data
       const invoiceData = {
         ...data,
-        items: mode === "upload" ? undefined : data.items,
+        mode,
+        items: mode === "manual" ? data.items : undefined,
       };
 
-      // Add the invoice data
       formData.append('invoiceData', JSON.stringify(invoiceData));
-
-      try {
-        const res = await apiRequest("POST", "/api/invoices", formData);
-        return await res.json();
-      } catch (error) {
-        console.error('Invoice creation error:', error);
-        throw error;
-      }
+      const res = await apiRequest("POST", "/api/invoices", formData);
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
@@ -93,12 +87,15 @@ export function InvoiceForm() {
         title: "Success",
         description: "Invoice created successfully",
       });
-      form.reset();
+      form.reset({
+        isPaid: false,
+        items: [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0" }],
+      });
       setOpen(false);
       setFile(null);
+      setMode("manual");
     },
     onError: (error: Error) => {
-      console.error('Mutation error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to create invoice",
@@ -137,6 +134,7 @@ export function InvoiceForm() {
       isPaid: false,
       items: value === "manual" ? [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0" }] : undefined,
     });
+    setFile(null);
   };
 
   const handleSubmit = form.handleSubmit((data) => {
@@ -145,6 +143,24 @@ export function InvoiceForm() {
       toast({
         title: "Error",
         description: "Please select a supplier",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!data.invoiceNumber) {
+      toast({
+        title: "Error",
+        description: "Please enter an invoice number",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!data.dueDate) {
+      toast({
+        title: "Error",
+        description: "Please select a due date",
         variant: "destructive",
       });
       return;
@@ -159,10 +175,10 @@ export function InvoiceForm() {
         });
         return;
       }
-      if (!data.totalAmount) {
+      if (!data.totalAmount || isNaN(Number(data.totalAmount)) || Number(data.totalAmount) <= 0) {
         toast({
           title: "Error",
-          description: "Please enter the total amount",
+          description: "Please enter a valid total amount greater than 0",
           variant: "destructive",
         });
         return;
@@ -178,8 +194,26 @@ export function InvoiceForm() {
         return;
       }
 
+      // Validate items
+      const invalidItems = data.items.some(item =>
+        !item.description ||
+        isNaN(Number(item.quantity)) ||
+        Number(item.quantity) <= 0 ||
+        isNaN(Number(item.unitPrice)) ||
+        Number(item.unitPrice) <= 0
+      );
+
+      if (invalidItems) {
+        toast({
+          title: "Error",
+          description: "Please ensure all items have a description, valid quantity, and unit price",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Calculate total amount from items
-      const totalAmount = data.items.reduce((sum, item) => 
+      const totalAmount = data.items.reduce((sum, item) =>
         sum + (parseFloat(item.totalPrice) || 0), 0).toString();
       data.totalAmount = totalAmount;
     }

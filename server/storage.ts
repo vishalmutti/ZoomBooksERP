@@ -91,6 +91,7 @@ export class DatabaseStorage implements IStorage {
         .insert(invoices)
         .values({
           supplierId: invoice.supplierId,
+          invoiceNumber: invoice.invoiceNumber,
           totalAmount: invoice.totalAmount,
           dueDate: invoice.dueDate,
           isPaid: invoice.isPaid,
