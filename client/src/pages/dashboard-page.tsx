@@ -9,9 +9,10 @@ import { LogOut } from "lucide-react";
 
 export default function DashboardPage() {
   const { logoutMutation } = useAuth();
-  
+
   const { data: invoices = [], isLoading } = useQuery<Invoice[]>({
     queryKey: ["/api/invoices"],
+    refetchInterval: 2000, // Polling every 2 seconds
   });
 
   if (isLoading) {

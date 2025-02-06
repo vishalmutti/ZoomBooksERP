@@ -47,10 +47,11 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   const { toast } = useToast();
   const [file, setFile] = useState<File | null>(null);
 
-  // Fetch fresh invoice data when editing
+  // Add polling to invoice query
   const { data: currentInvoiceData } = useQuery<Invoice & { items?: InvoiceItem[] }>({
     queryKey: [`/api/invoices/${editInvoice?.id}`],
     enabled: !!editInvoice?.id,
+    refetchInterval: 2000, // Poll every 2 seconds when editing
     queryFn: async () => {
       const response = await fetch(`/api/invoices/${editInvoice?.id}`);
       if (!response.ok) throw new Error('Failed to fetch invoice');
@@ -58,7 +59,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     },
   });
 
-  // Initialize form with the latest invoice data
   const form = useForm<InsertInvoice>({
     resolver: zodResolver(insertInvoiceSchema),
     defaultValues: {
@@ -89,7 +89,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     }
   });
 
-  // Effect to handle dialog state and form reset when currentInvoiceData changes
   useEffect(() => {
     if (currentInvoiceData || editInvoice) {
       const invoiceData = currentInvoiceData || editInvoice;
@@ -163,7 +162,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       return res.json();
     },
     onSuccess: async (updatedInvoice) => {
-      // Update queries with new data
       await Promise.all([
         queryClient.invalidateQueries({ 
           queryKey: ["/api/invoices"],
@@ -175,7 +173,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         })
       ]);
 
-      // Update the form with fresh data
       if (updatedInvoice) {
         form.reset({
           ...updatedInvoice,
@@ -202,7 +199,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       setFile(null);
     },
     onError: (error: Error) => {
-      // Skip error toast for 500 status which indicates success
       if (!error.message.includes('Failed to update invoice')) {
         toast({
           title: "Error",
@@ -243,7 +239,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   const handleModeChange = (value: string) => {
     setMode(value as "manual" | "upload");
     const currentValues = form.getValues();
-    // Preserve the current form values when switching modes
     form.reset({
       ...currentValues,
       items: value === "manual"
@@ -336,7 +331,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         }
       }
 
-      // Calculate total amount from items
       data.totalAmount = data.items
         .reduce((sum, item) => sum + (Number(item.quantity) * Number(item.unitPrice)), 0)
         .toString();
