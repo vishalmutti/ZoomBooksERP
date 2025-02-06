@@ -149,6 +149,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/invoices/${editInvoice?.id}`] });
       queryClient.invalidateQueries({ queryKey: ["/api/suppliers"] });
       toast({
         title: "Success",
