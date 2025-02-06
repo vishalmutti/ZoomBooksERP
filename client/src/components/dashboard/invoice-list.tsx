@@ -33,6 +33,18 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
+  // Add a new query for fetching complete invoice data
+  const { data: completeInvoiceData } = useQuery({
+    queryKey: ["/api/invoices", selectedInvoice?.id],
+    queryFn: async () => {
+      if (!selectedInvoice?.id) return null;
+      const response = await fetch(`/api/invoices/${selectedInvoice.id}`);
+      if (!response.ok) throw new Error('Failed to fetch invoice details');
+      return response.json();
+    },
+    enabled: !!selectedInvoice?.id
+  });
+
   const { data: suppliers = [] } = useQuery<Supplier[]>({
     queryKey: ["/api/suppliers"],
   });
@@ -319,8 +331,14 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
           <DialogHeader>
             <DialogTitle>Edit Invoice</DialogTitle>
           </DialogHeader>
-          {selectedInvoice && (
-            <InvoiceForm editInvoice={selectedInvoice} onComplete={() => setEditDialogOpen(false)} />
+          {completeInvoiceData && (
+            <InvoiceForm 
+              editInvoice={completeInvoiceData} 
+              onComplete={() => {
+                setEditDialogOpen(false);
+                setSelectedInvoice(null);
+              }} 
+            />
           )}
         </DialogContent>
       </Dialog>
