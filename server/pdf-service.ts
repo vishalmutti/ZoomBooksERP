@@ -16,10 +16,13 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
   const writeStream = fs.createWriteStream(filePath);
 
   // Company logo
-  doc.image('attached_assets/Zoom Books Logo Final-02.jpg', 50, 45, { width: 100 })
+  doc.image('attached_assets/Zoom Books Logo Final-02.jpg', 50, 45, { width: 300 })
      .fontSize(20)
-     .text('Zoom Books Company', 200, 45)
+     .text('Zoom Books Company', 380, 45)
      .fontSize(10)
+     .text('Acirassi Books Ltd', 380, 65)
+     .text('507/508-19055 Airport Way', 380, 80)
+     .text('Pitt Meadows, BC V3Y 0G4', 380, 95)
      .text('Acirassi Books Ltd', 200, 65)
      .text('507/508-19055 Airport Way', 200, 80)
      .text('Pitt Meadows, BC V3Y 0G4', 200, 95)
