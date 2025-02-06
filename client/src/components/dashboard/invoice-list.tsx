@@ -42,10 +42,12 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
       const response = await fetch(`/api/invoices/${selectedInvoice.id}`);
       if (!response.ok) throw new Error('Failed to fetch invoice details');
       const data = await response.json();
-      // Ensure items array exists
+      
+      if (!data) throw new Error('No data received from server');
+      
       return {
         ...data,
-        items: data.items || [{
+        items: Array.isArray(data.items) ? data.items : [{
           description: "",
           quantity: "0",
           unitPrice: "0",
@@ -55,7 +57,8 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
       };
     },
     enabled: !!selectedInvoice?.id,
-    retry: 2
+    retry: 3,
+    retryDelay: 1000
   });
 
   const { data: suppliers = [] } = useQuery<Supplier[]>({
