@@ -163,9 +163,15 @@ export function SupplierView({ supplier, open, onOpenChange }: SupplierViewProps
                               ${Number(invoice.totalAmount).toFixed(2)}
                             </Badge>
                             {invoice.uploadedFile && (
-                              <p className="text-xs text-muted-foreground">
-                                Has attachment
-                              </p>
+                              <a
+                                href={`/uploads/${invoice.uploadedFile}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
+                                aria-label={`Download invoice attachment for ${invoice.invoiceNumber || `Invoice #${invoice.id}`}`}
+                              >
+                                <span>Download PDF</span>
+                              </a>
                             )}
                           </div>
                         </div>
@@ -198,9 +204,15 @@ export function SupplierView({ supplier, open, onOpenChange }: SupplierViewProps
                               ${Number(invoice.totalAmount).toFixed(2)}
                             </Badge>
                             {invoice.uploadedFile && (
-                              <p className="text-xs text-muted-foreground">
-                                Has attachment
-                              </p>
+                              <a
+                                href={`/uploads/${invoice.uploadedFile}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
+                                aria-label={`Download invoice attachment for ${invoice.invoiceNumber || `Invoice #${invoice.id}`}`}
+                              >
+                                <span>Download PDF</span>
+                              </a>
                             )}
                           </div>
                         </div>
