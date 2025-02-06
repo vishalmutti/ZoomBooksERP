@@ -221,7 +221,9 @@ export function registerRoutes(app: Express): Server {
         }
       });
 
-      res.json(invoice);
+      if (!res.headersSent) {
+        res.json(invoice);
+      }
     } catch (error) {
       console.error('Invoice update error:', error);
       res.status(500).json({ message: 'Failed to update invoice' });
