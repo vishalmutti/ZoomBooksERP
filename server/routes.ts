@@ -10,7 +10,6 @@ import fs from "fs";
 const upload = multer({
   storage: multer.diskStorage({
     destination: function (req, file, cb) {
-      // Create uploads directory if it doesn't exist
       const uploadDir = path.join(process.cwd(), 'uploads');
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });
@@ -73,22 +72,49 @@ export function registerRoutes(app: Express): Server {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     try {
-      const invoiceData = JSON.parse(req.body.invoiceData);
-      const parsed = insertInvoiceSchema.safeParse(invoiceData);
+      // Log request information
+      console.log('Request body:', req.body);
+      console.log('Uploaded file:', req.file);
 
-      if (!parsed.success) {
-        return res.status(400).json(parsed.error);
+      // Ensure invoiceData exists in the request
+      if (!req.body.invoiceData) {
+        throw new Error('Missing invoice data');
       }
 
+      // Parse the invoice data
+      let invoiceData;
+      try {
+        invoiceData = JSON.parse(req.body.invoiceData);
+        console.log('Parsed invoice data:', invoiceData);
+      } catch (e) {
+        console.error('Error parsing invoice data:', e);
+        throw new Error('Invalid invoice data format');
+      }
+
+      // Validate the invoice data
+      const parsed = insertInvoiceSchema.safeParse(invoiceData);
+      if (!parsed.success) {
+        console.error('Validation error:', parsed.error);
+        return res.status(400).json({
+          message: 'Invalid invoice data',
+          errors: parsed.error.errors
+        });
+      }
+
+      // Create the invoice
       const invoice = await storage.createInvoice({
         ...parsed.data,
         uploadedFile: req.file ? req.file.filename : undefined,
       });
 
+      console.log('Created invoice:', invoice);
       res.status(201).json(invoice);
     } catch (error) {
       console.error('Error creating invoice:', error);
-      res.status(400).json({ message: 'Invalid invoice data' });
+      res.status(400).json({ 
+        message: error instanceof Error ? error.message : 'Failed to create invoice',
+        error: error 
+      });
     }
   });
 

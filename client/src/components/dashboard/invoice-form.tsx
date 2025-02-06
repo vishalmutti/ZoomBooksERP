@@ -14,7 +14,7 @@ import { insertInvoiceSchema, type InsertInvoice } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useState } from "react";
-import { Loader2, Plus, Trash2, Upload } from "lucide-react";
+import { Loader2, Plus, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Command,
@@ -45,7 +45,7 @@ export function InvoiceForm() {
     resolver: zodResolver(insertInvoiceSchema),
     defaultValues: {
       isPaid: false,
-      items: [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0" }],
+      items: mode === "manual" ? [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0" }] : undefined,
     },
   });
 
@@ -63,31 +63,25 @@ export function InvoiceForm() {
 
   const createInvoiceMutation = useMutation({
     mutationFn: async (data: InsertInvoice) => {
-      try {
-        // Log the form data for debugging
-        console.log('Form data:', data);
-        
-        const formData = new FormData();
-        if (file) {
-          formData.append('file', file);
-        }
-        
-        const invoiceData = {
-          ...data,
-          items: mode === "upload" ? undefined : data.items
-        };
-        
-        // Log the prepared data
-        console.log('Prepared invoice data:', invoiceData);
-        
-        formData.append('invoiceData', JSON.stringify(invoiceData));
+      const formData = new FormData();
 
+      // If in upload mode, add the file
+      if (mode === "upload" && file) {
+        formData.append('file', file);
+      }
+
+      // Prepare invoice data based on mode
+      const invoiceData = {
+        ...data,
+        items: mode === "upload" ? undefined : data.items,
+      };
+
+      // Add the invoice data
+      formData.append('invoiceData', JSON.stringify(invoiceData));
+
+      try {
         const res = await apiRequest("POST", "/api/invoices", formData);
-        if (!res.ok) {
-          const error = await res.json();
-          throw new Error(error.message || 'Failed to create invoice');
-        }
-        return res.json();
+        return await res.json();
       } catch (error) {
         console.error('Invoice creation error:', error);
         throw error;
@@ -107,7 +101,7 @@ export function InvoiceForm() {
       console.error('Mutation error:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to create invoice. Please try again.",
+        description: error.message || "Failed to create invoice",
         variant: "destructive",
       });
     },
@@ -117,35 +111,18 @@ export function InvoiceForm() {
     const items = form.getValues("items") || [];
     const item = items[index];
 
-    // Update the field first
+    // Update the specified field
     form.setValue(`items.${index}.${field}`, value);
 
-    // Only auto-calculate if both quantity and unit price are valid numbers
-    if ((field === "quantity" || field === "unitPrice") && !item.totalPrice) {
+    // Only calculate total if both quantity and unit price have valid numbers
+    if ((field === "quantity" || field === "unitPrice") && item) {
       const quantity = parseFloat(field === "quantity" ? value : item.quantity);
       const unitPrice = parseFloat(field === "unitPrice" ? value : item.unitPrice);
 
       if (!isNaN(quantity) && !isNaN(unitPrice)) {
-        const totalPrice = (quantity * unitPrice).toString();
-        form.setValue(`items.${index}.totalPrice`, totalPrice);
+        form.setValue(`items.${index}.totalPrice`, (quantity * unitPrice).toString());
       }
     }
-  };
-
-  const addItem = () => {
-    const items = form.getValues("items") || [];
-    form.setValue("items", [
-      ...items,
-      { description: "", quantity: "0", unitPrice: "0", totalPrice: "0" },
-    ]);
-  };
-
-  const removeItem = (index: number) => {
-    const items = form.getValues("items") || [];
-    form.setValue(
-      "items",
-      items.filter((_, i) => i !== index)
-    );
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -156,26 +133,14 @@ export function InvoiceForm() {
 
   const handleModeChange = (value: string) => {
     setMode(value as "manual" | "upload");
-    // Reset form when changing modes
-    form.reset();
+    form.reset({
+      isPaid: false,
+      items: value === "manual" ? [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0" }] : undefined,
+    });
   };
 
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>Create Invoice</Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Create New Invoice</DialogTitle>
-        </DialogHeader>
-        <Tabs defaultValue="manual" className="w-full" onValueChange={handleModeChange}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="manual">Manual Entry</TabsTrigger>
-            <TabsTrigger value="upload">Upload Invoice</TabsTrigger>
-          </TabsList>
-
-          <form onSubmit={form.handleSubmit((data) => {
+  const handleSubmit = form.handleSubmit((data) => {
+    // Validation
     if (!data.supplierId) {
       toast({
         title: "Error",
@@ -184,14 +149,7 @@ export function InvoiceForm() {
       });
       return;
     }
-    if (mode === "manual" && (!data.items || data.items.length === 0)) {
-      toast({
-        title: "Error",
-        description: "Please add at least one item",
-        variant: "destructive",
-      });
-      return;
-    }
+
     if (mode === "upload") {
       if (!file) {
         toast({
@@ -210,25 +168,44 @@ export function InvoiceForm() {
         return;
       }
     } else {
-      // Calculate total amount for manual mode
-      const totalAmount = data.items?.reduce((sum, item) => 
+      // For manual mode, ensure there are items
+      if (!data.items?.length) {
+        toast({
+          title: "Error",
+          description: "Please add at least one item",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Calculate total amount from items
+      const totalAmount = data.items.reduce((sum, item) => 
         sum + (parseFloat(item.totalPrice) || 0), 0).toString();
       data.totalAmount = totalAmount;
     }
-    
-    try {
-      createInvoiceMutation.mutate(data);
-      setOpen(false); // Close dialog on success
-    } catch (error) {
-      console.error('Error submitting form:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create invoice. Please try again.",
-        variant: "destructive",
-      });
-    }
-  })} className="space-y-6 mt-4">
+
+    createInvoiceMutation.mutate(data);
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>Create Invoice</Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Create New Invoice</DialogTitle>
+        </DialogHeader>
+
+        <Tabs defaultValue="manual" className="w-full" onValueChange={handleModeChange}>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="manual">Manual Entry</TabsTrigger>
+            <TabsTrigger value="upload">Upload Invoice</TabsTrigger>
+          </TabsList>
+
+          <form onSubmit={handleSubmit} className="space-y-6 mt-4">
             <div className="space-y-4">
+              {/* Supplier Selection */}
               <div>
                 <Label>Supplier</Label>
                 <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
@@ -279,36 +256,26 @@ export function InvoiceForm() {
                 </Popover>
               </div>
 
+              {/* Invoice Number */}
               <div>
                 <Label htmlFor="invoiceNumber">Invoice Number</Label>
                 <Input {...form.register("invoiceNumber")} />
               </div>
 
+              {/* Due Date */}
               <div>
                 <Label htmlFor="dueDate">Due Date</Label>
                 <Input type="date" {...form.register("dueDate")} />
               </div>
 
+              {/* Mode specific content */}
               <TabsContent value="manual">
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <Label>Items</Label>
-                    <Button type="button" variant="outline" size="sm" onClick={addItem}>
-                      <Plus className="h-4 w-4 mr-1" />
-                      Add Item
-                    </Button>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="grid grid-cols-12 gap-2 items-start text-sm font-medium text-muted-foreground mb-1">
-                      <div className="col-span-4">Description</div>
-                      <div className="col-span-2">Quantity</div>
-                      <div className="col-span-2">Unit Price ($)</div>
-                      <div className="col-span-3">Total Amount ($)</div>
-                      <div className="col-span-1"></div>
-                    </div>
+                  <Label>Items</Label>
+                  <div className="mt-2 space-y-4">
                     {form.watch("items")?.map((item, index) => (
-                      <div key={index} className="grid grid-cols-12 gap-2 items-start">
-                        <div className="col-span-4">
+                      <div key={index} className="grid grid-cols-12 gap-2">
+                        <div className="col-span-6">
                           <Input
                             placeholder="Description"
                             {...form.register(`items.${index}.description`)}
@@ -318,10 +285,9 @@ export function InvoiceForm() {
                           <Input
                             type="number"
                             step="0.01"
-                            placeholder="Qty"
+                            placeholder="Quantity"
                             {...form.register(`items.${index}.quantity`, {
-                              onChange: (e) =>
-                                handleItemChange(index, "quantity", e.target.value),
+                              onChange: (e) => handleItemChange(index, "quantity", e.target.value),
                             })}
                           />
                         </div>
@@ -329,39 +295,43 @@ export function InvoiceForm() {
                           <Input
                             type="number"
                             step="0.01"
-                            placeholder="Price"
+                            placeholder="Unit Price"
                             {...form.register(`items.${index}.unitPrice`, {
-                              onChange: (e) =>
-                                handleItemChange(index, "unitPrice", e.target.value),
+                              onChange: (e) => handleItemChange(index, "unitPrice", e.target.value),
                             })}
                           />
                         </div>
-                        <div className="col-span-3">
+                        <div className="col-span-2">
                           <Input
                             type="number"
                             step="0.01"
                             placeholder="Total"
                             {...form.register(`items.${index}.totalPrice`)}
+                            readOnly
                           />
-                        </div>
-                        <div className="col-span-1">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeItem(index)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
                         </div>
                       </div>
                     ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        const items = form.getValues("items") || [];
+                        form.setValue("items", [
+                          ...items,
+                          { description: "", quantity: "0", unitPrice: "0", totalPrice: "0" },
+                        ]);
+                      }}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Item
+                    </Button>
                   </div>
                 </div>
               </TabsContent>
 
               <TabsContent value="upload">
-                <div>
+                <div className="space-y-4">
                   <div>
                     <Label>Total Amount ($)</Label>
                     <Input
@@ -371,21 +341,21 @@ export function InvoiceForm() {
                       {...form.register("totalAmount")}
                     />
                   </div>
-                  <div className="mt-4">
+                  <div>
                     <Label>Upload Invoice</Label>
                     <div className="mt-2">
-                      <label className="flex items-center gap-2 justify-center w-full h-32 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-md appearance-none cursor-pointer hover:border-gray-400 focus:outline-none">
-                        <div className="flex flex-col items-center space-y-2">
-                          <Upload className="w-6 h-6 text-gray-400" />
-                          <span className="font-medium text-gray-600">
-                            {file ? file.name : "Drop files to Attach, or browse"}
-                          </span>
+                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <Upload className="w-8 h-8 mb-2 text-gray-400" />
+                          <p className="mb-2 text-sm text-gray-500">
+                            {file ? file.name : "Click to upload or drag and drop"}
+                          </p>
                         </div>
                         <input
                           type="file"
                           className="hidden"
-                          accept=".pdf,.png,.jpg,.jpeg"
                           onChange={handleFileChange}
+                          accept=".pdf,.png,.jpg,.jpeg"
                         />
                       </label>
                     </div>
@@ -393,13 +363,19 @@ export function InvoiceForm() {
                 </div>
               </TabsContent>
 
+              {/* Notes */}
               <div>
                 <Label htmlFor="notes">Notes</Label>
                 <Textarea {...form.register("notes")} />
               </div>
             </div>
 
-            <Button type="submit" className="w-full" disabled={createInvoiceMutation.isPending}>
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={createInvoiceMutation.isPending}
+            >
               {createInvoiceMutation.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
