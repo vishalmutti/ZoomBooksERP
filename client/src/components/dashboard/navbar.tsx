@@ -14,9 +14,9 @@ export function Navbar() {
 
   return (
     <header className="border-b">
-      <div className="container mx-auto flex h-20 items-center justify-between px-4">
+      <div className="container mx-auto flex h-32 items-center justify-between px-4">
         <div 
-          className="cursor-pointer" 
+          className="cursor-pointer pt-4" 
           onClick={() => window.location.href = '/'}
         >
           <img 
