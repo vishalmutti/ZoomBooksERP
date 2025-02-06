@@ -2,7 +2,7 @@
 import express, { type Request, Response } from "express";
 import multer from "multer";
 import { storage } from "./storage";
-import { generatePdf } from "./pdf-service";
+import { generateInvoicePDF } from "./pdf-service";
 import path from "path";
 import { setupAuth } from "./auth";
 import { and, eq, sql } from "drizzle-orm";
@@ -294,7 +294,7 @@ export function registerRoutes(app: express.Application) {
       const items = await storage.getInvoiceItems(id);
       const supplier = await storage.getSupplierById(invoice.supplierId);
       
-      const pdfPath = await generatePdf({ ...invoice, items, supplier });
+      const pdfPath = await generateInvoicePDF({ invoice: { ...invoice, items }, supplier });
       
       await storage.db
         .update(storage.invoices)
