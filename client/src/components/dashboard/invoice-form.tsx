@@ -73,25 +73,23 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       setDialogOpen(true);
       setMode(editInvoice.uploadedFile ? "upload" : "manual");
 
-      console.log('Editing invoice with items:', editInvoice.items); // Debug log
-
-      form.reset({
+      const formData = {
         supplierId: editInvoice.supplierId,
         invoiceNumber: editInvoice.invoiceNumber,
         dueDate: new Date(editInvoice.dueDate).toISOString().split('T')[0],
         totalAmount: editInvoice.totalAmount.toString(),
         notes: editInvoice.notes || "",
         isPaid: editInvoice.isPaid,
-        items: editInvoice.items?.length
-          ? editInvoice.items.map(item => ({
-              description: item.description,
-              quantity: item.quantity?.toString() || "0",
-              unitPrice: item.unitPrice?.toString() || "0",
-              totalPrice: item.totalPrice?.toString() || "0",
-              invoiceId: editInvoice.id
-            }))
-          : [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }]
-      });
+        items: editInvoice.items?.map(item => ({
+          description: item.description,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          totalPrice: (Number(item.quantity) * Number(item.unitPrice)).toString(),
+          invoiceId: editInvoice.id
+        })) || [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }]
+      };
+
+      form.reset(formData);
     }
   }, [editInvoice, form]);
 
