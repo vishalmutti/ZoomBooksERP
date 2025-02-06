@@ -2,7 +2,6 @@ import { Supplier } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { ColumnDef } from "@tanstack/react-table";
-import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { SupplierView } from "./supplier-view";
@@ -42,6 +41,9 @@ export function SupplierList({ suppliers }: SupplierListProps) {
             ${amount.toFixed(2)}
           </Badge>
         );
+      },
+      sortingFn: (rowA, rowB) => {
+        return Number(rowB.original.outstandingAmount) - Number(rowA.original.outstandingAmount);
       },
     },
     {
