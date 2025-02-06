@@ -57,15 +57,13 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       totalAmount: editInvoice?.totalAmount?.toString() || "0",
       notes: editInvoice?.notes || "",
       isPaid: editInvoice?.isPaid || false,
-      items: editInvoice?.items?.length
-        ? editInvoice.items.map(item => ({
-            description: item.description,
-            quantity: item.quantity?.toString() || "0",
-            unitPrice: item.unitPrice?.toString() || "0",
-            totalPrice: item.totalPrice?.toString() || "0",
+      items: editInvoice?.items?.map(item => ({
+            description: item.description || "",
+            quantity: (item.quantity || "0").toString(),
+            unitPrice: (item.unitPrice || "0").toString(),
+            totalPrice: (item.totalPrice || "0").toString(),
             invoiceId: editInvoice.id
-          }))
-        : [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }]
+          })) || [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }]
     }
   });
 
