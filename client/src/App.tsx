@@ -25,11 +25,26 @@ function Router() {
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
+      <Route path="/dashboard">
+        {() => (
+          <AppLayout>
+            <ProtectedRoute component={DashboardPage} />
+          </AppLayout>
+        )}
+      </Route>
+      <Route path="/suppliers">
+        {() => (
+          <AppLayout>
+            <ProtectedRoute component={SuppliersPage} />
+          </AppLayout>
+        )}
+      </Route>
       <Route path="/">
-        <AppLayout>
-          <ProtectedRoute path="/" component={DashboardPage} />
-          <ProtectedRoute path="/suppliers" component={SuppliersPage} />
-        </AppLayout>
+        {() => (
+          <AppLayout>
+            <ProtectedRoute component={DashboardPage} />
+          </AppLayout>
+        )}
       </Route>
       <Route component={NotFound} />
     </Switch>
