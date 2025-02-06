@@ -1,23 +1,15 @@
 
-import { drizzle } from "drizzle-orm/better-sqlite3";
-import Database from "better-sqlite3";
-import * as schema from "@shared/schema";
-import SQLiteStore from "better-sqlite3-session-store";
+import { db } from './db';
 import session from "express-session";
-import { and, eq } from "drizzle-orm";
+import MemoryStore from "memorystore";
 
-const db = new Database("sqlite.db");
-const SessionStore = SQLiteStore(session);
-const sessionStore = new SessionStore({
-  client: db,
-  expired: {
-    clear: true,
-    intervalMs: 900000
-  }
+const MemoryStoreSession = MemoryStore(session);
+const sessionStore = new MemoryStoreSession({
+  checkPeriod: 86400000 // prune expired entries every 24h
 });
 
 class DatabaseStorage {
-  db = drizzle(db, { schema });
+  db = db;
   sessionStore = sessionStore;
 
   async getUser(id: number) {
