@@ -204,25 +204,39 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  async updateInvoice(id: number, updates: Partial<Invoice>): Promise<Invoice> {
+  async updateInvoice(id: number, updates: Partial<Invoice & { items?: InsertInvoiceItem[] }>): Promise<Invoice> {
     try {
-      const [invoice] = await db
-        .update(invoices)
-        .set({
-          ...updates,
-          // Ensure dates are properly formatted
-          dueDate: updates.dueDate ? new Date(updates.dueDate).toISOString() : undefined,
-          paymentDate: updates.paymentDate ? new Date(updates.paymentDate).toISOString() : undefined,
-          // Ensure other fields are properly typed
-          totalAmount: updates.totalAmount?.toString(),
-          isPaid: updates.isPaid ?? false,
-        })
-        .where(eq(invoices.id, id))
-        .returning();
+      return await db.transaction(async (tx) => {
+        const [invoice] = await tx
+          .update(invoices)
+          .set({
+            ...updates,
+            dueDate: updates.dueDate ? new Date(updates.dueDate).toISOString() : undefined,
+            paymentDate: updates.paymentDate ? new Date(updates.paymentDate).toISOString() : undefined,
+            totalAmount: updates.totalAmount?.toString(),
+            isPaid: updates.isPaid ?? false,
+          })
+          .where(eq(invoices.id, id))
+          .returning();
 
-      if (!invoice) {
-        throw new Error('Invoice not found');
-      }
+        if (!invoice) {
+          throw new Error('Invoice not found');
+        }
+
+        if (updates.items) {
+          // Delete existing items
+          await tx.delete(invoiceItems).where(eq(invoiceItems.invoiceId, id));
+          
+          // Insert new items
+          if (updates.items.length > 0) {
+            await tx.insert(invoiceItems).values(
+              updates.items.map(item => ({
+                ...item,
+                invoiceId: id
+              }))
+            );
+          }
+        }
 
       return invoice;
     } catch (error) {
