@@ -24,7 +24,7 @@ export const apiRequest = async (
   return response.json();
 };
 
-const getQueryFn = (options: { on401: "throw" | "redirect" }) => {
+export const getQueryFn = (options: { on401: "throw" | "redirect" }) => {
   return async ({ queryKey: [endpoint] }: { queryKey: string[] }) => {
     try {
       return await apiRequest(endpoint as string);
