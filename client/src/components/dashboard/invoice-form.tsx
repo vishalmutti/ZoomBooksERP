@@ -504,9 +504,10 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
 
             {/* Submit Button */}
             <Button
-              type="submit"
+              type="button"
               className="w-full"
               disabled={updateInvoiceMutation.isPending}
+              onClick={handleSubmit}
             >
               {updateInvoiceMutation.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
