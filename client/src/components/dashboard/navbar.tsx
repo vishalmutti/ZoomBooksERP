@@ -19,7 +19,7 @@ export function Navbar() {
         <div className="flex items-center gap-8">
           <Link href="/">
             <img 
-              src="/attached_assets/Zoom Books Logo Final-01.png" 
+              src="Zoom Books Logo Final-01.png" 
               alt="Zoom Books Logo" 
               className="h-12 w-auto" 
             />
