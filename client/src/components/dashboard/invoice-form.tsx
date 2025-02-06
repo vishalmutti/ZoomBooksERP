@@ -162,18 +162,32 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
 
       return res.json();
     },
-    onSuccess: () => {
-      // Force refetch all invoice queries
-      Promise.all([
+    onSuccess: async (updatedInvoice) => {
+      // Update queries with new data
+      await Promise.all([
         queryClient.invalidateQueries({ 
           queryKey: ["/api/invoices"],
           refetchType: "all"
         }),
-        editInvoice?.id && queryClient.invalidateQueries({ 
-          queryKey: [`/api/invoices/${editInvoice.id}`],
+        queryClient.invalidateQueries({ 
+          queryKey: [`/api/invoices/${updatedInvoice.id}`],
           refetchType: "all"
         })
       ]);
+
+      // Update the form with fresh data
+      if (updatedInvoice) {
+        form.reset({
+          ...updatedInvoice,
+          items: updatedInvoice.items?.map(item => ({
+            description: item.description,
+            quantity: item.quantity?.toString() || "0",
+            unitPrice: item.unitPrice?.toString() || "0",
+            totalPrice: item.totalPrice?.toString() || "0",
+            invoiceId: updatedInvoice.id
+          }))
+        });
+      }
 
       toast({
         title: "Success",

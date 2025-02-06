@@ -203,7 +203,8 @@ export function registerRoutes(app: Express): Server {
       }
 
       // Always update invoice items with the provided data
-      await storage.db.transaction(async (tx) => {
+      // Update invoice and items in a single transaction
+      const updatedInvoice = await storage.db.transaction(async (tx) => {
         // Delete existing items
         await tx.delete(storage.invoiceItems).where(eq(storage.invoiceItems.invoiceId, id));
         
@@ -219,9 +220,12 @@ export function registerRoutes(app: Express): Server {
             }))
           );
         }
+
+        // Get fresh invoice data with items
+        return await storage.getInvoice(id);
       });
 
-      res.json(invoice);
+      res.json(updatedInvoice);
     } catch (error) {
       console.error('Invoice update error:', error);
       res.status(500).json({ message: 'Failed to update invoice' });
