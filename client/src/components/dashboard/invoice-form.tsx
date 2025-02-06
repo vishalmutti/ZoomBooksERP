@@ -59,7 +59,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       isPaid: editInvoice?.isPaid || false,
       items: editInvoice?.items?.length
         ? editInvoice.items.map(item => ({
-            description: item.description || "",
+            description: item.description,
             quantity: item.quantity?.toString() || "0",
             unitPrice: item.unitPrice?.toString() || "0",
             totalPrice: item.totalPrice?.toString() || "0",
@@ -69,11 +69,13 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     }
   });
 
-  // Effect to handle dialog state when editInvoice changes
+  // Effect to handle dialog state and form reset when editInvoice changes
   useEffect(() => {
     if (editInvoice) {
       setDialogOpen(true);
       setMode(editInvoice.uploadedFile ? "upload" : "manual");
+
+      // Reset form with all invoice data including items
       form.reset({
         supplierId: editInvoice.supplierId,
         invoiceNumber: editInvoice.invoiceNumber,
@@ -83,7 +85,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         isPaid: editInvoice.isPaid,
         items: editInvoice.items?.length
           ? editInvoice.items.map(item => ({
-              description: item.description || "",
+              description: item.description,
               quantity: item.quantity?.toString() || "0",
               unitPrice: item.unitPrice?.toString() || "0",
               totalPrice: item.totalPrice?.toString() || "0",
