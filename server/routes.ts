@@ -204,19 +204,21 @@ export function registerRoutes(app: Express): Server {
 
       // Update invoice items if provided
       if (parsed.data.items?.length) {
-        // Delete existing items
-        await storage.db.delete(storage.invoiceItems).where(eq(storage.invoiceItems.invoiceId, id));
-        
-        // Insert new items
-        for (const item of parsed.data.items) {
-          await storage.db.insert(storage.invoiceItems).values({
-            invoiceId: id,
-            description: item.description,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            totalPrice: item.totalPrice,
-          });
-        }
+        await storage.db.transaction(async (tx) => {
+          // Delete existing items
+          await tx.delete(storage.invoiceItems).where(eq(storage.invoiceItems.invoiceId, id));
+          
+          // Insert new items
+          await tx.insert(storage.invoiceItems).values(
+            parsed.data.items.map(item => ({
+              invoiceId: id,
+              description: item.description,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              totalPrice: (Number(item.quantity) * Number(item.unitPrice)).toString(),
+            }))
+          );
+        });
       }
 
       res.json(invoice);
