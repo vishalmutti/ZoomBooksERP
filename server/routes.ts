@@ -143,6 +143,34 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.patch("/api/invoices/:id", upload.single('file'), async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const id = parseInt(req.params.id);
+      const invoiceData = JSON.parse(req.body.invoiceData);
+      const parsed = insertInvoiceSchema.partial().safeParse(invoiceData);
+
+      if (!parsed.success) {
+        return res.status(400).json({ message: 'Invalid invoice data' });
+      }
+
+      const invoice = await storage.updateInvoice(id, {
+        ...parsed.data,
+        uploadedFile: req.file ? req.file.filename : undefined,
+      });
+
+      if (!invoice) {
+        return res.status(404).json({ message: 'Invoice not found' });
+      }
+
+      res.json(invoice);
+    } catch (error) {
+      console.error('Invoice update error:', error);
+      res.status(500).json({ message: 'Failed to update invoice' });
+    }
+  });
+
   app.delete("/api/invoices/:id", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
