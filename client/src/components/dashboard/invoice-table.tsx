@@ -1,3 +1,4 @@
+
 import {
   Table,
   TableBody,
@@ -9,12 +10,19 @@ import {
 import { Button } from "@/components/ui/button";
 import { Invoice } from "@shared/schema";
 import { format } from "date-fns";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-export default function InvoiceTable({ invoices }: { invoices: Invoice[] }) {
+export default function InvoiceTable({ invoices: initialInvoices }: { invoices: Invoice[] }) {
   const { toast } = useToast();
+
+  // Add real-time query for invoice data
+  const { data: invoices } = useQuery<Invoice[]>({
+    queryKey: ["/api/invoices"],
+    initialData: initialInvoices,
+    refetchInterval: 1000, // Refetch every second
+  });
 
   const markPaidMutation = useMutation({
     mutationFn: async (id: number) => {
