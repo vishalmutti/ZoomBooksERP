@@ -39,7 +39,7 @@ interface InvoiceFormProps {
 }
 
 export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
-  const [open, setOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [supplierSearch, setSupplierSearch] = useState("");
   const [comboboxOpen, setComboboxOpen] = useState(false);
   const initialMode = editInvoice?.uploadedFile ? "upload" : "manual";
@@ -47,6 +47,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   const { toast } = useToast();
   const [file, setFile] = useState<File | null>(null);
 
+  // Initialize form with editInvoice data if available
   const form = useForm<InsertInvoice>({
     resolver: zodResolver(insertInvoiceSchema),
     defaultValues: {
@@ -56,7 +57,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       totalAmount: editInvoice?.totalAmount?.toString() || "0",
       notes: editInvoice?.notes || "",
       isPaid: editInvoice?.isPaid || false,
-      items: editInvoice?.items
+      items: editInvoice?.items?.length
         ? editInvoice.items.map(item => ({
             description: item.description || "",
             quantity: item.quantity?.toString() || "0",
@@ -67,6 +68,31 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         : [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }]
     }
   });
+
+  // Effect to handle dialog state when editInvoice changes
+  useEffect(() => {
+    if (editInvoice) {
+      setDialogOpen(true);
+      setMode(editInvoice.uploadedFile ? "upload" : "manual");
+      form.reset({
+        supplierId: editInvoice.supplierId,
+        invoiceNumber: editInvoice.invoiceNumber,
+        dueDate: new Date(editInvoice.dueDate).toISOString().split('T')[0],
+        totalAmount: editInvoice.totalAmount.toString(),
+        notes: editInvoice.notes || "",
+        isPaid: editInvoice.isPaid,
+        items: editInvoice.items?.length
+          ? editInvoice.items.map(item => ({
+              description: item.description || "",
+              quantity: item.quantity?.toString() || "0",
+              unitPrice: item.unitPrice?.toString() || "0",
+              totalPrice: item.totalPrice?.toString() || "0",
+              invoiceId: editInvoice.id
+            }))
+          : [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }]
+      });
+    }
+  }, [editInvoice, form]);
 
   const { data: suppliers = [] } = useQuery<Supplier[]>({
     queryKey: ["/api/suppliers", supplierSearch],
@@ -131,7 +157,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       if (editInvoice && onComplete) {
         onComplete();
       } else {
-        setOpen(false);
+        setDialogOpen(false);
       }
       setFile(null);
     },
@@ -275,10 +301,24 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   });
 
   return (
-    <Dialog open={editInvoice ? true : open} onOpenChange={editInvoice ? onComplete : setOpen}>
-      <DialogTrigger asChild>
-        {!editInvoice && <Button>Create Invoice</Button>}
-      </DialogTrigger>
+    <Dialog
+      open={editInvoice ? dialogOpen : open}
+      onOpenChange={(newOpen) => {
+        if (editInvoice) {
+          setDialogOpen(newOpen);
+          if (!newOpen && onComplete) {
+            onComplete();
+          }
+        } else {
+          setOpen(newOpen);
+        }
+      }}
+    >
+      {!editInvoice && (
+        <DialogTrigger asChild>
+          <Button>Create Invoice</Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{editInvoice ? "Edit" : "Create New"} Invoice</DialogTitle>

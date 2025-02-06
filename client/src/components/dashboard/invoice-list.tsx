@@ -31,7 +31,6 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
   const [maxAmount, setMaxAmount] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const { data: suppliers = [] } = useQuery<Supplier[]>({
     queryKey: ["/api/suppliers"],
@@ -165,7 +164,6 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
               size="sm"
               onClick={() => {
                 setSelectedInvoice(invoice);
-                setEditDialogOpen(true);
               }}
             >
               <Edit className="h-4 w-4" />
@@ -203,21 +201,6 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
       },
     },
   ];
-
-  const { data: selectedInvoiceData } = useQuery({
-    queryKey: [`/api/invoices/${selectedInvoice?.id}`],
-    queryFn: async () => {
-      console.log('Fetching complete invoice data for ID:', selectedInvoice?.id);
-      const response = await fetch(`/api/invoices/${selectedInvoice?.id}?include=items`);
-      if (!response.ok) throw new Error('Failed to fetch invoice details');
-      const data = await response.json();
-      console.log('Edit Invoice Data:', data);
-      return data;
-    },
-    enabled: !!selectedInvoice?.id,
-    retry: 3,
-    retryDelay: 1000
-  });
 
   return (
     <div className="space-y-4">
@@ -328,17 +311,12 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
         data={filteredInvoices}
       />
 
-      {/* Edit Invoice Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit Invoice</DialogTitle>
-          </DialogHeader>
-          {selectedInvoice && selectedInvoiceData && (
-            <InvoiceForm editInvoice={selectedInvoiceData} onComplete={() => setEditDialogOpen(false)} />
-          )}
-        </DialogContent>
-      </Dialog>
+      {selectedInvoice && (
+        <InvoiceForm 
+          editInvoice={selectedInvoice} 
+          onComplete={() => setSelectedInvoice(null)} 
+        />
+      )}
     </div>
   );
 }
