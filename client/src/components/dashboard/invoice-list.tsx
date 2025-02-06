@@ -334,7 +334,7 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
           <DialogHeader>
             <DialogTitle>Edit Invoice</DialogTitle>
           </DialogHeader>
-          {selectedInvoice && (
+          {selectedInvoiceData && (
             <InvoiceForm editInvoice={selectedInvoiceData} onComplete={() => setEditDialogOpen(false)} />
           )}
         </DialogContent>
