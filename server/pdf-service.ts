@@ -17,9 +17,9 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
   // Company logo and header
   doc.image('attached_assets/Zoom Books Logo Final-02.jpg', 50, 45, { width: 150 })
      .fontSize(10)
-     .text('Acirassi Books Ltd', 50, 100)
-     .text('507/508-19055 Airport Way', 50, 115)
-     .text('Pitt Meadows, BC V3Y 0G4', 50, 130)
+     .text('Acirassi Books Ltd', 50, 200)
+     .text('507/508-19055 Airport Way', 50, 215)
+     .text('Pitt Meadows, BC V3Y 0G4', 50, 230)
      .fontSize(24)
      .text('INVOICE', 450, 45, { align: 'right' })
      .fontSize(10)
@@ -30,16 +30,16 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
 
   // Supplier details
   doc.fontSize(12)
-     .text('Bill To:', 50, 150)
+     .text('Bill To:', 50, 250)
      .fontSize(10)
-     .text(data.supplier.name, 50, 170)
-     .text(data.supplier.address || '', 50, 185)
-     .text(`Contact: ${data.supplier.contactPerson || ''}`, 50, 200)
-     .text(`Email: ${data.supplier.email || ''}`, 50, 215)
+     .text(data.supplier.name, 50, 270)
+     .text(data.supplier.address || '', 50, 285)
+     .text(`Contact: ${data.supplier.contactPerson || ''}`, 50, 300)
+     .text(`Email: ${data.supplier.email || ''}`, 50, 315)
      .moveDown();
 
   // Items table
-  const tableTop = 250;
+  const tableTop = 350;
   doc.font('Helvetica-Bold');
 
   // Table header
