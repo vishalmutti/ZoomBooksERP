@@ -149,6 +149,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/suppliers"] });
       toast({
         title: "Success",
         description: `Invoice ${editInvoice ? "updated" : "created"} successfully`,
@@ -164,10 +165,11 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       }
       setFile(null);
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
+      const errorMessage = error?.message || "Failed to save invoice";
       toast({
         title: "Error",
-        description: error.message || "Failed to save invoice",
+        description: errorMessage,
         variant: "destructive",
       });
     },
