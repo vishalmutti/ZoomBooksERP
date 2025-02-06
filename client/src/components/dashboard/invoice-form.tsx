@@ -168,13 +168,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       });
       if (onComplete) onComplete();
       setDialogOpen(false);
-    },
-
-      const res = await apiRequest(
-        editInvoice ? "PATCH" : "POST",
-        editInvoice ? `/api/invoices/${editInvoice.id}` : "/api/invoices",
-        formData
-      );
+    }
 
       // For 500 status, just return empty object since we know it succeeded
       if (res.status === 500) {
