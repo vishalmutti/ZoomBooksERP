@@ -388,7 +388,10 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
 
               <div>
                 <Label htmlFor="dueDate">Due Date</Label>
-                <Input type="date" {...form.register("dueDate")} />
+                <Input 
+                  type="date" 
+                  {...form.register("dueDate")} 
+                />
               </div>
 
               <TabsContent value="manual">
