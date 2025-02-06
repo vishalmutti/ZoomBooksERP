@@ -1,4 +1,4 @@
-import { invoices, suppliers, invoiceItems, users, payments, type User, type InsertUser, type Invoice, type InsertInvoice, type Supplier, type InsertSupplier, type Payment, type InsertPayment } from "@shared/schema";
+import { invoices, suppliers, invoiceItems, users, payments, type User, type InsertUser, type Invoice, type InsertInvoice, type Supplier, type InsertSupplier, type Payment, type InsertPayment, type InvoiceItem } from "@shared/schema";
 import { db } from "./db";
 import { eq, ilike, and, gte, lte, sql, desc } from "drizzle-orm";
 import session from "express-session";
@@ -32,7 +32,7 @@ export interface IStorage {
   getInvoices(filters?: InvoiceFilters): Promise<Invoice[]>;
   createInvoice(invoice: InsertInvoice): Promise<Invoice>;
   updateInvoice(id: number, updates: Partial<Invoice>): Promise<Invoice>;
-  getInvoice(id: number): Promise<Invoice | undefined>;
+  getInvoice(id: number): Promise<(Invoice & { items?: InvoiceItem[] }) | undefined>;
   deleteInvoice(id: number): Promise<void>;
 
   createPayment(payment: InsertPayment): Promise<Payment>;
@@ -231,12 +231,24 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getInvoice(id: number): Promise<Invoice | undefined> {
+  async getInvoice(id: number): Promise<(Invoice & { items?: InvoiceItem[] }) | undefined> {
     const [invoice] = await db
       .select()
       .from(invoices)
       .where(eq(invoices.id, id));
-    return invoice;
+
+    if (!invoice) return undefined;
+
+    // Fetch invoice items
+    const items = await db
+      .select()
+      .from(invoiceItems)
+      .where(eq(invoiceItems.invoiceId, id));
+
+    return {
+      ...invoice,
+      items
+    };
   }
 
   async deleteInvoice(id: number): Promise<void> {

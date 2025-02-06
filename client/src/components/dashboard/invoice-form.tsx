@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertInvoiceSchema, type InsertInvoice, type InsertInvoiceItem, type Invoice } from "@shared/schema";
+import { insertInvoiceSchema, type InsertInvoice, type InsertInvoiceItem, type Invoice, type InvoiceItem } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useState } from "react";
@@ -34,7 +34,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface InvoiceFormProps {
-  editInvoice?: Invoice;
+  editInvoice?: Invoice & { items?: InvoiceItem[] };
   onComplete?: () => void;
 }
 
@@ -42,23 +42,28 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   const [open, setOpen] = useState(false);
   const [supplierSearch, setSupplierSearch] = useState("");
   const [comboboxOpen, setComboboxOpen] = useState(false);
-  // Initialize mode based on editInvoice state
   const initialMode = editInvoice?.uploadedFile ? "upload" : "manual";
   const [mode, setMode] = useState<"manual" | "upload">(initialMode);
   const { toast } = useToast();
   const [file, setFile] = useState<File | null>(null);
+
+  // Fetch invoice items if editing
+  const { data: invoiceItems = [] } = useQuery({
+    queryKey: ["/api/invoices", editInvoice?.id, "items"],
+    enabled: !!editInvoice?.id && mode === "manual",
+  });
 
   const form = useForm<InsertInvoice>({
     resolver: zodResolver(insertInvoiceSchema),
     values: editInvoice ? {
       ...editInvoice,
       items: editInvoice.items?.map(item => ({
-        description: item.description,
-        quantity: item.quantity.toString(),
-        unitPrice: item.unitPrice.toString(),
-        totalPrice: item.totalPrice.toString(),
+        description: item.description || "",
+        quantity: item.quantity?.toString() || "0",
+        unitPrice: item.unitPrice?.toString() || "0",
+        totalPrice: item.totalPrice?.toString() || "0",
         invoiceId: item.invoiceId
-      }))
+      })) || [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: editInvoice.id }]
     } : undefined,
     defaultValues: {
       items: [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }]
