@@ -1,3 +1,4 @@
+
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
@@ -120,7 +121,6 @@ export function registerRoutes(app: Express): Server {
     res.json(invoices);
   });
 
-  // Update the invoice creation route
   app.post("/api/invoices", upload.single('file'), async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
@@ -169,23 +169,34 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).json({ message: 'Invalid invoice data' });
       }
 
-      const invoice = await storage.updateInvoice(id, {
-        ...parsed.data,
-        uploadedFile: req.file ? req.file.filename : undefined,
-      });
+      let existingInvoice = await storage.getInvoice(id);
+      if (!existingInvoice) {
+        return res.status(404).json({ message: 'Invoice not found' });
+      }
+
+      let uploadedFile = req.file ? req.file.filename : undefined;
 
       // Generate PDF if it's a manual entry
-      if (!req.file && parsed.data.items?.length) {
-        const supplier = await storage.getSupplier(parsed.data.supplierId || invoice.supplierId);
-        if (supplier && invoice) {
-          const pdfFileName = await generateInvoicePDF({ 
-            invoice: { ...invoice, items: parsed.data.items },
+      if (!req.file && (parsed.data.items?.length || existingInvoice.items?.length)) {
+        const supplier = await storage.getSupplier(parsed.data.supplierId || existingInvoice.supplierId);
+        if (supplier) {
+          uploadedFile = await generateInvoicePDF({ 
+            invoice: { 
+              ...existingInvoice,
+              ...parsed.data,
+              items: parsed.data.items || existingInvoice.items,
+              id,
+              invoiceNumber: existingInvoice.invoiceNumber
+            },
             supplier 
           });
-          await storage.updateInvoice(invoice.id, { uploadedFile: pdfFileName });
-          invoice.uploadedFile = pdfFileName;
         }
       }
+
+      const invoice = await storage.updateInvoice(id, {
+        ...parsed.data,
+        uploadedFile,
+      });
 
       if (!invoice) {
         return res.status(404).json({ message: 'Invoice not found' });
@@ -269,7 +280,6 @@ export function registerRoutes(app: Express): Server {
     const payments = await storage.getInvoicePayments(invoiceId);
     res.json(payments);
   });
-
 
   const httpServer = createServer(app);
   return httpServer;
