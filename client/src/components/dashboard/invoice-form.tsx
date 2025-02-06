@@ -50,17 +50,19 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
 
   const form = useForm<InsertInvoice>({
     resolver: zodResolver(insertInvoiceSchema),
-    defaultValues: {
+    values: editInvoice ? {
       ...editInvoice,
-      items: editInvoice?.items?.map(item => ({
-        ...item,
-        description: item.description || "",
-        quantity: Number(item.quantity || 0).toString(),
-        unitPrice: Number(item.unitPrice || 0).toString(),
-        totalPrice: Number(item.totalPrice || 0).toString(),
-        invoiceId: item.invoiceId || 0
-      })) || [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }],
-    },
+      items: editInvoice.items?.map(item => ({
+        description: item.description,
+        quantity: item.quantity.toString(),
+        unitPrice: item.unitPrice.toString(),
+        totalPrice: item.totalPrice.toString(),
+        invoiceId: item.invoiceId
+      }))
+    } : undefined,
+    defaultValues: {
+      items: [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }]
+    }
   });
 
   const { data: suppliers = [] } = useQuery({
