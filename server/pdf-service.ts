@@ -16,13 +16,13 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
   const writeStream = fs.createWriteStream(filePath);
 
   // Company logo
-  doc.image('public/logo.png', 50, 45, { width: 100 })
+  doc.image('public/logo.png', 50, 45, { width: 300 })
      .fontSize(20)
-     .text('Zoom Books Company', 200, 45)
+     .text('Zoom Books Company', 360, 45)
      .fontSize(10)
-     .text('Acirassi Books Ltd', 200, 65)
-     .text('507/508-19055 Airport Way', 200, 80)
-     .text('Pitt Meadows, BC V3Y 0G4', 200, 95)
+     .text('Acirassi Books Ltd', 360, 65)
+     .text('507/508-19055 Airport Way', 360, 80)
+     .text('Pitt Meadows, BC V3Y 0G4', 360, 95)
      .moveDown();
 
   // Invoice details
@@ -44,7 +44,8 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
 
   // Items table
   const tableTop = 350;
-  doc.font('Helvetica-Bold');
+  doc.font('Helvetica-Bold')
+     .fontSize(12);
   
   // Table header
   doc.text('Description', 50, tableTop)
@@ -52,7 +53,8 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
      .text('Unit Price', 350, tableTop)
      .text('Total', 450, tableTop);
 
-  doc.font('Helvetica');
+  doc.font('Helvetica')
+     .fontSize(12);
   let position = tableTop + 25;
 
   // Table rows
@@ -61,7 +63,7 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
        .text(item.quantity.toString(), 280, position)
        .text(`$${Number(item.unitPrice).toFixed(2)}`, 350, position)
        .text(`$${Number(item.totalPrice).toFixed(2)}`, 450, position);
-    position += 20;
+    position += 25;
   });
 
   // Total and Footer
