@@ -192,23 +192,41 @@ export function InvoiceForm() {
       });
       return;
     }
-    if (mode === "upload" && !file) {
-      toast({
-        title: "Error",
-        description: "Please upload an invoice file",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Calculate total amount for manual mode
-    if (mode === "manual") {
+    if (mode === "upload") {
+      if (!file) {
+        toast({
+          title: "Error",
+          description: "Please upload an invoice file",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (!data.totalAmount) {
+        toast({
+          title: "Error",
+          description: "Please enter the total amount",
+          variant: "destructive",
+        });
+        return;
+      }
+    } else {
+      // Calculate total amount for manual mode
       const totalAmount = data.items?.reduce((sum, item) => 
         sum + (parseFloat(item.totalPrice) || 0), 0).toString();
       data.totalAmount = totalAmount;
     }
     
-    createInvoiceMutation.mutate(data);
+    try {
+      createInvoiceMutation.mutate(data);
+      setOpen(false); // Close dialog on success
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create invoice. Please try again.",
+        variant: "destructive",
+      });
+    }
   })} className="space-y-6 mt-4">
             <div className="space-y-4">
               <div>
