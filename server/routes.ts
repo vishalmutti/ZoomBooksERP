@@ -202,9 +202,8 @@ export function registerRoutes(app: Express): Server {
             uploadedFile = pdfFileName;
           }
         }
-      }
 
-      const invoice = await storage.updateInvoice(id, {
+        const invoice = await storage.updateInvoice(id, {
           ...parsed.data,
           uploadedFile,
         });
