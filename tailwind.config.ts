@@ -48,11 +48,6 @@ export default {
           "1": "hsl(var(--chart-1))",
           "2": "hsl(var(--chart-2))",
           "3": "hsl(var(--chart-3))",
-        },
-        brand: {
-          teal: "#00A499",
-          green: "#97FB00"
-        },
           "4": "hsl(var(--chart-4))",
           "5": "hsl(var(--chart-5))",
         },
