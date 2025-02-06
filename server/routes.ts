@@ -177,14 +177,14 @@ export function registerRoutes(app: Express): Server {
       let uploadedFile = req.file ? req.file.filename : undefined;
 
       // Generate PDF if it's a manual entry
-      if (!req.file && parsed.data.items?.length) {
+      if (!req.file && (parsed.data.items?.length || existingInvoice.items?.length)) {
         const supplier = await storage.getSupplier(parsed.data.supplierId || existingInvoice.supplierId);
         if (supplier) {
           uploadedFile = await generateInvoicePDF({ 
             invoice: { 
               ...existingInvoice,
               ...parsed.data,
-              items: parsed.data.items,
+              items: parsed.data.items || existingInvoice.items,
               id,
               invoiceNumber: existingInvoice.invoiceNumber
             },
@@ -221,9 +221,7 @@ export function registerRoutes(app: Express): Server {
         }
       });
 
-      if (!res.headersSent) {
-        res.json(invoice);
-      }
+      res.json(invoice);
     } catch (error) {
       console.error('Invoice update error:', error);
       res.status(500).json({ message: 'Failed to update invoice' });
