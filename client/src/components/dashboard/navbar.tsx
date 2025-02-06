@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
@@ -16,9 +17,9 @@ export function Navbar() {
     <header className="border-b">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center">
+          <Link href="/">
             <img 
-              src="/Zoom Books Logo Final-01.png" 
+              src="/attached_assets/Zoom Books Logo Final-01.png" 
               alt="Zoom Books Logo" 
               className="h-12 w-auto" 
             />
@@ -26,11 +27,11 @@ export function Navbar() {
           <nav className="flex items-center gap-6">
             {navItems.map((item) => (
               <Link key={item.href} href={item.href}>
-                <a className={`text-sm font-medium transition-colors hover:text-primary ${
+                <span className={`text-sm font-medium transition-colors hover:text-primary cursor-pointer ${
                   location === item.href ? "text-primary" : "text-muted-foreground"
                 }`}>
                   {item.label}
-                </a>
+                </span>
               </Link>
             ))}
           </nav>
