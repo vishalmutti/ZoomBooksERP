@@ -163,18 +163,23 @@ export function registerRoutes(app: Express): Server {
     try {
       const id = parseInt(req.params.id);
       const invoiceData = JSON.parse(req.body.invoiceData);
-      const parsed = insertInvoiceSchema.partial().safeParse({
+      
+      // Clean up the data before validation
+      const cleanedData = {
         ...invoiceData,
-        totalAmount: invoiceData.totalAmount?.toString(),
+        totalAmount: invoiceData.totalAmount?.toString() || "0",
         items: invoiceData.items?.map(item => ({
-          ...item,
-          quantity: item.quantity?.toString(),
-          unitPrice: item.unitPrice?.toString(),
-          totalPrice: item.totalPrice?.toString()
+          description: item.description,
+          quantity: item.quantity?.toString() || "0",
+          unitPrice: item.unitPrice?.toString() || "0",
+          totalPrice: (Number(item.quantity || 0) * Number(item.unitPrice || 0)).toString()
         }))
-      });
+      };
+
+      const parsed = insertInvoiceSchema.partial().safeParse(cleanedData);
 
       if (!parsed.success) {
+        console.error('Validation error:', parsed.error);
         return res.status(400).json({ 
           message: 'Invalid invoice data',
           errors: parsed.error.errors 
