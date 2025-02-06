@@ -162,8 +162,10 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => {
-                setSelectedInvoice(invoice);
+              onClick={async () => {
+                const response = await fetch(`/api/invoices/${invoice.id}`);
+                const fullInvoice = await response.json();
+                setSelectedInvoice(fullInvoice);
               }}
             >
               <Edit className="h-4 w-4" />
