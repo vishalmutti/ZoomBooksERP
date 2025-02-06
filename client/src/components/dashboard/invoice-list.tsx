@@ -204,6 +204,21 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
     },
   ];
 
+  const { data: selectedInvoiceData } = useQuery({
+    queryKey: [`/api/invoices/${selectedInvoice?.id}`],
+    queryFn: async () => {
+      console.log('Fetching complete invoice data for ID:', selectedInvoice?.id);
+      const response = await fetch(`/api/invoices/${selectedInvoice?.id}?include=items`);
+      if (!response.ok) throw new Error('Failed to fetch invoice details');
+      const data = await response.json();
+      console.log('Edit Invoice Data:', data);
+      return data;
+    },
+    enabled: !!selectedInvoice?.id,
+    retry: 3,
+    retryDelay: 1000
+  });
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
@@ -320,7 +335,7 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
             <DialogTitle>Edit Invoice</DialogTitle>
           </DialogHeader>
           {selectedInvoice && (
-            <InvoiceForm editInvoice={selectedInvoice} onComplete={() => setEditDialogOpen(false)} />
+            <InvoiceForm editInvoice={selectedInvoiceData} onComplete={() => setEditDialogOpen(false)} />
           )}
         </DialogContent>
       </Dialog>
