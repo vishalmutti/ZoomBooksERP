@@ -177,23 +177,28 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).json({ message: 'Invalid invoice data' });
       }
 
-      const invoice = await storage.updateInvoice(id, {
-        ...parsed.data,
-        uploadedFile: req.file ? req.file.filename : undefined,
-      });
+      let uploadedFile = req.file ? req.file.filename : undefined;
 
-      // Generate PDF if it's a manual entry
+      // For manual entries, generate PDF before updating
       if (!req.file && parsed.data.items?.length) {
-        const supplier = await storage.getSupplier(parsed.data.supplierId || invoice.supplierId);
-        if (supplier && invoice) {
-          const pdfFileName = await generateInvoicePDF({ 
-            invoice: { ...invoice, items: parsed.data.items },
+        const supplier = await storage.getSupplier(parsed.data.supplierId || (await storage.getInvoice(id))?.supplierId);
+        if (supplier) {
+          uploadedFile = await generateInvoicePDF({ 
+            invoice: { 
+              ...parsed.data, 
+              id, 
+              items: parsed.data.items,
+              invoiceNumber: parsed.data.invoiceNumber || `Invoice #${id}`
+            },
             supplier 
           });
-          await storage.updateInvoice(invoice.id, { uploadedFile: pdfFileName });
-          invoice.uploadedFile = pdfFileName;
         }
       }
+
+      const invoice = await storage.updateInvoice(id, {
+        ...parsed.data,
+        uploadedFile,
+      });
 
       if (!invoice) {
         return res.status(404).json({ message: 'Invoice not found' });
