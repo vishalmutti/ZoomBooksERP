@@ -1,3 +1,4 @@
+
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -11,8 +12,12 @@ export function Navbar() {
       <div className="container flex h-14 items-center">
         <div className="mr-4 hidden md:flex">
           <nav className="flex items-center space-x-6 text-sm font-medium">
-            <Link href="/dashboard" className="transition-colors hover:text-foreground/80 text-foreground">Dashboard</Link>
-            <Link href="/suppliers" className="transition-colors hover:text-foreground/80 text-foreground">Suppliers</Link>
+            <span className="transition-colors hover:text-foreground/80 text-foreground">
+              <Link href="/dashboard">Dashboard</Link>
+            </span>
+            <span className="transition-colors hover:text-foreground/80 text-foreground">
+              <Link href="/suppliers">Suppliers</Link>
+            </span>
           </nav>
         </div>
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
