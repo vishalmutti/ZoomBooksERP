@@ -56,7 +56,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
 
   // Initialize form with edit invoice data when available
   useEffect(() => {
-    if (editInvoice) {
+    if (editInvoice && editInvoice.items) {
       const formData: InsertInvoice = {
         supplierId: editInvoice.supplierId,
         invoiceNumber: editInvoice.invoiceNumber || "",
@@ -64,17 +64,14 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         totalAmount: editInvoice.totalAmount?.toString() || "0",
         notes: editInvoice.notes || "",
         isPaid: editInvoice.isPaid || false,
-        items: editInvoice.items?.length 
-          ? editInvoice.items.map(item => ({
-              description: item.description || "",
-              quantity: item.quantity?.toString() || "0",
-              unitPrice: item.unitPrice?.toString() || "0",
-              totalPrice: item.totalPrice?.toString() || "0",
-              invoiceId: editInvoice.id
-            }))
-          : [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: editInvoice.id }]
+        items: editInvoice.items.map(item => ({
+          description: item.description,
+          quantity: item.quantity.toString(),
+          unitPrice: item.unitPrice.toString(),
+          totalPrice: (Number(item.quantity) * Number(item.unitPrice)).toString(),
+          invoiceId: editInvoice.id
+        }))
       };
-      console.log('Form Data:', formData);
       form.reset(formData);
     }
   }, [editInvoice, form]);
