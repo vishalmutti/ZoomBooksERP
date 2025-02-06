@@ -49,11 +49,15 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
 
   const form = useForm<InsertInvoice>({
     resolver: zodResolver(insertInvoiceSchema),
+    defaultValues: {
+      items: [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }]
+    }
   });
 
   // Reset form when editInvoice changes
   useEffect(() => {
     if (editInvoice) {
+      console.log('Edit Invoice Data:', editInvoice); // Debug log
       const formData: InsertInvoice = {
         supplierId: editInvoice.supplierId,
         invoiceNumber: editInvoice.invoiceNumber || "",
@@ -71,6 +75,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
             }))
           : [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: editInvoice.id }]
       };
+      console.log('Form Data:', formData); // Debug log
       form.reset(formData);
     }
   }, [editInvoice, form]);
@@ -169,7 +174,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       }
     }
 
-    form.setValue("items", updatedItems);
+    form.setValue("items", updatedItems, { shouldValidate: true });
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
