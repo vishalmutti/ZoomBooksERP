@@ -1,8 +1,7 @@
-
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 
 const navItems = [
   { href: "/", label: "Dashboard" },
@@ -17,22 +16,25 @@ export function Navbar() {
     <header className="border-b">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-8">
-          <Link href="/">
+          {/* Fix nested anchor tag issue by using a div with onClick */}
+          <div className="cursor-pointer" onClick={() => window.location.href = '/'}>
             <img 
-              src="/Zoom Books Logo Final-01.png" 
+              src="/logo.png" 
               alt="Zoom Books Logo" 
-              className="h-12 w-auto" 
+              className="h-16 w-auto" 
             />
-          </Link>
+          </div>
           <nav className="flex items-center gap-6">
             {navItems.map((item) => (
-              <Link key={item.href} href={item.href}>
-                <span className={`text-sm font-medium transition-colors hover:text-primary cursor-pointer ${
+              <a
+                key={item.href}
+                href={item.href}
+                className={`text-sm font-medium transition-colors hover:text-primary ${
                   location === item.href ? "text-primary" : "text-muted-foreground"
-                }`}>
-                  {item.label}
-                </span>
-              </Link>
+                }`}
+              >
+                {item.label}
+              </a>
             ))}
           </nav>
         </div>
