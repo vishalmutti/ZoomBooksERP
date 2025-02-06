@@ -85,6 +85,10 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         editInvoice ? `/api/invoices/${editInvoice.id}` : "/api/invoices",
         formData
       );
+      if (!res.ok) {
+        const error = await res.text();
+        throw new Error(error || 'Failed to update invoice');
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -141,9 +145,9 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     const currentValues = form.getValues();
     form.reset({
       ...currentValues,
-      items: value === "manual" 
-        ? currentValues.items?.length 
-          ? currentValues.items 
+      items: value === "manual"
+        ? currentValues.items?.length
+          ? currentValues.items
           : [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }]
         : undefined,
     });
