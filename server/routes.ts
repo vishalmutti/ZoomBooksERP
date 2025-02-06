@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { insertInvoiceSchema, insertPaymentSchema, insertSupplierSchema } from "@shared/schema";
+import { generateInvoicePDF } from "./pdf-service";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -136,6 +137,19 @@ export function registerRoutes(app: Express): Server {
         uploadedFile: req.file ? req.file.filename : undefined,
       });
 
+      // Generate PDF if it's a manual entry
+      if (!req.file && parsed.data.items?.length) {
+        const supplier = await storage.getSupplier(parsed.data.supplierId);
+        if (supplier) {
+          const pdfFileName = await generateInvoicePDF({ 
+            invoice: { ...invoice, items: parsed.data.items },
+            supplier 
+          });
+          await storage.updateInvoice(invoice.id, { uploadedFile: pdfFileName });
+          invoice.uploadedFile = pdfFileName;
+        }
+      }
+
       res.status(201).json(invoice);
     } catch (error) {
       console.error('Error creating invoice:', error);
@@ -159,6 +173,19 @@ export function registerRoutes(app: Express): Server {
         ...parsed.data,
         uploadedFile: req.file ? req.file.filename : undefined,
       });
+
+      // Generate PDF if it's a manual entry
+      if (!req.file && parsed.data.items?.length) {
+        const supplier = await storage.getSupplier(parsed.data.supplierId || invoice.supplierId);
+        if (supplier && invoice) {
+          const pdfFileName = await generateInvoicePDF({ 
+            invoice: { ...invoice, items: parsed.data.items },
+            supplier 
+          });
+          await storage.updateInvoice(invoice.id, { uploadedFile: pdfFileName });
+          invoice.uploadedFile = pdfFileName;
+        }
+      }
 
       if (!invoice) {
         return res.status(404).json({ message: 'Invoice not found' });
