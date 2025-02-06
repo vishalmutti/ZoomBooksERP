@@ -1,0 +1,71 @@
+// Invoice routes
+app.patch("/api/invoices/:id", upload.single('file'), async (req, res) => {
+  if (!req.isAuthenticated()) return res.sendStatus(401);
+
+  try {
+    const id = parseInt(req.params.id);
+    const invoiceData = JSON.parse(req.body.invoiceData);
+    const parsed = insertInvoiceSchema.partial().safeParse(invoiceData);
+
+    if (!parsed.success) {
+      return res.status(400).json({ message: 'Invalid invoice data' });
+    }
+
+    let existingInvoice = await storage.getInvoice(id);
+    if (!existingInvoice) {
+      return res.status(404).json({ message: 'Invoice not found' });
+    }
+
+    let uploadedFile = req.file ? req.file.filename : undefined;
+
+    // Generate PDF if it's a manual entry
+    if (!req.file && parsed.data.items?.length) {
+      const supplier = await storage.getSupplier(parsed.data.supplierId || existingInvoice.supplierId);
+      if (supplier) {
+        uploadedFile = await generateInvoicePDF({ 
+          invoice: { 
+            ...existingInvoice,
+            ...parsed.data,
+            items: parsed.data.items,
+            id,
+            invoiceNumber: existingInvoice.invoiceNumber
+          },
+          supplier 
+        });
+      }
+    }
+
+    await storage.db.transaction(async (tx) => {
+      // Update invoice
+      const updatedInvoice = await storage.updateInvoice(id, {
+        ...parsed.data,
+        uploadedFile,
+      });
+
+      if (!updatedInvoice) {
+        throw new Error('Invoice not found');
+      }
+
+      // Always update invoice items with the provided data
+      await tx.delete(storage.invoiceItems).where(eq(storage.invoiceItems.invoiceId, id));
+
+      // Insert new items if provided
+      if (parsed.data.items?.length) {
+        await tx.insert(storage.invoiceItems).values(
+          parsed.data.items.map(item => ({
+            invoiceId: id,
+            description: item.description,
+            quantity: item.quantity.toString(),
+            unitPrice: item.unitPrice.toString(),
+            totalPrice: (Number(item.quantity) * Number(item.unitPrice)).toString(),
+          }))
+        );
+      }
+    });
+
+    res.json(existingInvoice); // Send back the updated invoice
+  } catch (error) {
+    console.error('Invoice update error:', error);
+    res.status(500).json({ message: 'Failed to update invoice' });
+  }
+});
