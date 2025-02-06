@@ -238,7 +238,8 @@ export class DatabaseStorage implements IStorage {
           }
         }
 
-      return invoice;
+        return invoice;
+      });
     } catch (error) {
       console.error('Error updating invoice:', error);
       throw error;
