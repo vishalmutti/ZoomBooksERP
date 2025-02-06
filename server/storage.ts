@@ -207,6 +207,17 @@ export class DatabaseStorage implements IStorage {
   async updateInvoice(id: number, updates: Partial<Invoice & { items?: InsertInvoiceItem[] }>): Promise<Invoice> {
     try {
       return await db.transaction(async (tx) => {
+        // First verify the invoice exists
+        const [existingInvoice] = await tx
+          .select()
+          .from(invoices)
+          .where(eq(invoices.id, id));
+
+        if (!existingInvoice) {
+          throw new Error('Invoice not found');
+        }
+
+        // Update invoice
         const [invoice] = await tx
           .update(invoices)
           .set({
@@ -219,19 +230,19 @@ export class DatabaseStorage implements IStorage {
           .where(eq(invoices.id, id))
           .returning();
 
-        if (!invoice) {
-          throw new Error('Invoice not found');
-        }
-
+        // Handle items update if present
         if (updates.items) {
           // Delete existing items
           await tx.delete(invoiceItems).where(eq(invoiceItems.invoiceId, id));
           
-          // Insert new items
+          // Insert new items with proper type conversion
           if (updates.items.length > 0) {
             await tx.insert(invoiceItems).values(
               updates.items.map(item => ({
-                ...item,
+                description: item.description,
+                quantity: item.quantity.toString(),
+                unitPrice: item.unitPrice.toString(),
+                totalPrice: item.totalPrice.toString(),
                 invoiceId: id
               }))
             );
