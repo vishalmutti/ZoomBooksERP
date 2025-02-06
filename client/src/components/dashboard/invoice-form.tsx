@@ -57,7 +57,9 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   // Reset form when editInvoice changes
   useEffect(() => {
     if (editInvoice) {
-      console.log('Edit Invoice Data:', editInvoice); // Debug log
+      console.log('Received editInvoice data:', editInvoice);
+      console.log('Items in editInvoice:', editInvoice.items);
+
       const formData: InsertInvoice = {
         supplierId: editInvoice.supplierId,
         invoiceNumber: editInvoice.invoiceNumber || "",
@@ -75,8 +77,14 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
             }))
           : [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: editInvoice.id }]
       };
-      console.log('Form Data:', formData); // Debug log
+
+      console.log('Setting form data:', formData);
       form.reset(formData);
+
+      // Verify form state after reset
+      setTimeout(() => {
+        console.log('Form values after reset:', form.getValues());
+      }, 0);
     }
   }, [editInvoice, form]);
 
