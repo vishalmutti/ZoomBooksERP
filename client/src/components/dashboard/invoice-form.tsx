@@ -42,7 +42,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   const [open, setOpen] = useState(false);
   const [supplierSearch, setSupplierSearch] = useState("");
   const [comboboxOpen, setComboboxOpen] = useState(false);
-  // Determine initial mode based on whether the invoice has items or an uploaded file
+  // Initialize mode based on editInvoice state
   const initialMode = editInvoice?.uploadedFile ? "upload" : "manual";
   const [mode, setMode] = useState<"manual" | "upload">(initialMode);
   const { toast } = useToast();
@@ -50,9 +50,9 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
 
   const form = useForm<InsertInvoice>({
     resolver: zodResolver(insertInvoiceSchema),
-    defaultValues: editInvoice || {
-      isPaid: false,
-      items: [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }],
+    defaultValues: {
+      ...editInvoice,
+      items: editInvoice?.items || [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }],
     },
   });
 
@@ -103,7 +103,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         setOpen(false);
       }
       setFile(null);
-      setMode("manual");
     },
     onError: (error: Error) => {
       toast({
@@ -138,9 +137,15 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
 
   const handleModeChange = (value: string) => {
     setMode(value as "manual" | "upload");
+    // Preserve existing form data when switching modes
+    const currentValues = form.getValues();
     form.reset({
-      ...form.getValues(),
-      items: value === "manual" ? [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }] : undefined,
+      ...currentValues,
+      items: value === "manual" 
+        ? currentValues.items?.length 
+          ? currentValues.items 
+          : [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }]
+        : undefined,
     });
     if (value === "manual") {
       setFile(null);
@@ -238,7 +243,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
           <DialogTitle>{editInvoice ? "Edit" : "Create New"} Invoice</DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue={initialMode} className="w-full" onValueChange={handleModeChange}>
+        <Tabs value={mode} className="w-full" onValueChange={handleModeChange}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="manual">Manual Entry</TabsTrigger>
             <TabsTrigger value="upload">Upload Invoice</TabsTrigger>

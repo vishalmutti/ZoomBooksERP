@@ -11,7 +11,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Trash2, CalendarIcon, Edit } from "lucide-react";
+import { Trash2, CalendarIcon, Edit, Download } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
@@ -123,6 +123,26 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
           {row.getValue("isPaid") ? "Paid" : "Unpaid"}
         </Badge>
       ),
+    },
+    {
+      accessorKey: "uploadedFile",
+      header: "File",
+      cell: ({ row }) => {
+        const invoice = row.original;
+        if (!invoice.uploadedFile) return null;
+
+        return (
+          <a
+            href={`/uploads/${invoice.uploadedFile}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500 hover:text-blue-700 flex items-center gap-1"
+          >
+            <Download className="h-4 w-4" />
+            View
+          </a>
+        );
+      },
     },
     {
       id: "actions",

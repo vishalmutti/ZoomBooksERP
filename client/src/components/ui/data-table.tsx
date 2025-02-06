@@ -5,6 +5,8 @@ import {
   useReactTable,
   getFilteredRowModel,
   getPaginationRowModel,
+  getSortedRowModel,
+  SortingState,
 } from "@tanstack/react-table"
 import {
   Table,
@@ -22,25 +24,32 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   searchKey?: string
+  defaultSort?: SortingState
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   searchKey,
+  defaultSort,
 }: DataTableProps<TData, TValue>) {
   const [filtering, setFiltering] = useState("")
-  
+  const [sorting, setSorting] = useState<SortingState>(defaultSort || [])
+
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     state: {
       globalFilter: filtering,
+      sorting,
     },
+    onSortingChange: setSorting,
     onGlobalFilterChange: setFiltering,
+    enableSorting: true,
   })
 
   return (
@@ -62,13 +71,21 @@ export function DataTable<TData, TValue>({
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead 
+                      key={header.id}
+                      className={header.column.getCanSort() ? "cursor-pointer select-none" : ""}
+                      onClick={header.column.getToggleSortingHandler()}
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
                             header.getContext()
                           )}
+                      {{
+                        asc: ' 🔼',
+                        desc: ' 🔽',
+                      }[header.column.getIsSorted() as string] ?? null}
                     </TableHead>
                   )
                 })}
