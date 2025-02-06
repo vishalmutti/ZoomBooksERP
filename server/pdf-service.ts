@@ -15,7 +15,11 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
   const writeStream = fs.createWriteStream(filePath);
 
   // Company logo and header
-  doc.image('attached_assets/Zoom Books Logo Final-02.jpg', 50, 45, { width: 450 })
+  doc.image('attached_assets/Zoom Books Logo Final-02.jpg', 20, 20, { 
+    width: 450,
+    align: 'left',
+    valign: 'top'
+  })
      .fontSize(10)
      .text('Acirassi Books Ltd', 50, 200)
      .text('507/508-19055 Airport Way', 50, 215)
