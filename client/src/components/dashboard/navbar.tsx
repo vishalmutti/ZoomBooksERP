@@ -16,9 +16,9 @@ export function Navbar() {
     <header className="border-b">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-8">
-          <Link href="/">
+          <Link href="/" className="flex items-center">
             <img 
-              src="/attached_assets/Zoom Books Logo Final-01.png" 
+              src="/Zoom Books Logo Final-01.png" 
               alt="Zoom Books Logo" 
               className="h-12 w-auto" 
             />
