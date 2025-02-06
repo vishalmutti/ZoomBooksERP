@@ -6,13 +6,31 @@ import NotFound from "@/pages/not-found";
 import { AuthProvider } from "@/hooks/use-auth";
 import AuthPage from "@/pages/auth-page";
 import DashboardPage from "@/pages/dashboard-page";
+import SuppliersPage from "@/pages/suppliers-page";
 import { ProtectedRoute } from "./lib/protected-route";
+import { Navbar } from "@/components/dashboard/navbar";
+
+function AppLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <main className="container mx-auto px-4 py-8">
+        {children}
+      </main>
+    </div>
+  );
+}
 
 function Router() {
   return (
     <Switch>
-      <ProtectedRoute path="/" component={DashboardPage} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/">
+        <AppLayout>
+          <ProtectedRoute path="/" component={DashboardPage} />
+          <ProtectedRoute path="/suppliers" component={SuppliersPage} />
+        </AppLayout>
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );

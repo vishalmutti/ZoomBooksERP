@@ -3,6 +3,26 @@ import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { insertInvoiceSchema, insertSupplierSchema } from "@shared/schema";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: function (req, file, cb) {
+      // Create uploads directory if it doesn't exist
+      const uploadDir = path.join(process.cwd(), 'uploads');
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+  })
+});
 
 export function registerRoutes(app: Express): Server {
   setupAuth(app);
@@ -38,16 +58,27 @@ export function registerRoutes(app: Express): Server {
     res.json(invoices);
   });
 
-  app.post("/api/invoices", async (req, res) => {
+  app.post("/api/invoices", upload.single('file'), async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
-    const parsed = insertInvoiceSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json(parsed.error);
-    }
+    try {
+      const invoiceData = JSON.parse(req.body.invoiceData);
+      const parsed = insertInvoiceSchema.safeParse(invoiceData);
 
-    const invoice = await storage.createInvoice(parsed.data);
-    res.status(201).json(invoice);
+      if (!parsed.success) {
+        return res.status(400).json(parsed.error);
+      }
+
+      const invoice = await storage.createInvoice({
+        ...parsed.data,
+        uploadedFile: req.file ? req.file.filename : undefined,
+      });
+
+      res.status(201).json(invoice);
+    } catch (error) {
+      console.error('Error creating invoice:', error);
+      res.status(400).json({ message: 'Invalid invoice data' });
+    }
   });
 
   app.patch("/api/invoices/:id/mark-paid", async (req, res) => {
@@ -59,7 +90,7 @@ export function registerRoutes(app: Express): Server {
 
     const updatedInvoice = await storage.updateInvoice(id, {
       isPaid: true,
-      paymentDate: new Date(),
+      paymentDate: new Date().toISOString(),
     });
 
     res.json(updatedInvoice);

@@ -16,26 +16,29 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useState } from "react";
 import { Loader2, Plus, Trash2, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { 
+import {
   Command,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
-} from "@/components/ui/command"
+} from "@/components/ui/command";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
+} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { Check } from "lucide-react"
+import { Check } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+
 
 export function InvoiceForm() {
   const [open, setOpen] = useState(false);
   const [supplierSearch, setSupplierSearch] = useState("");
   const [comboboxOpen, setComboboxOpen] = useState(false);
   const { toast } = useToast();
+  const [file, setFile] = useState<File | null>(null);
 
   const form = useForm<InsertInvoice>({
     resolver: zodResolver(insertInvoiceSchema),
@@ -59,7 +62,12 @@ export function InvoiceForm() {
 
   const createInvoiceMutation = useMutation({
     mutationFn: async (data: InsertInvoice) => {
-      const res = await apiRequest("POST", "/api/invoices", data);
+      const formData = new FormData();
+      if (file) {
+        formData.append('file', file);
+      }
+      formData.append('invoiceData', JSON.stringify(data));
+      const res = await apiRequest("POST", "/api/invoices", formData);
       return res.json();
     },
     onSuccess: () => {
@@ -70,6 +78,14 @@ export function InvoiceForm() {
       });
       form.reset();
       setOpen(false);
+      setFile(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -101,6 +117,12 @@ export function InvoiceForm() {
       "items",
       items.filter((_, i) => i !== index)
     );
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+    }
   };
 
   return (
@@ -239,8 +261,28 @@ export function InvoiceForm() {
           </div>
 
           <div>
+            <Label>Upload Invoice (Optional)</Label>
+            <div className="mt-2">
+              <label className="flex items-center gap-2 justify-center w-full h-32 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-md appearance-none cursor-pointer hover:border-gray-400 focus:outline-none">
+                <div className="flex flex-col items-center space-y-2">
+                  <Upload className="w-6 h-6 text-gray-400" />
+                  <span className="font-medium text-gray-600">
+                    {file ? file.name : "Drop files to Attach, or browse"}
+                  </span>
+                </div>
+                <input
+                  type="file"
+                  className="hidden"
+                  accept=".pdf,.png,.jpg,.jpeg"
+                  onChange={handleFileChange}
+                />
+              </label>
+            </div>
+          </div>
+
+          <div>
             <Label htmlFor="notes">Notes</Label>
-            <Input {...form.register("notes")} />
+            <Textarea {...form.register("notes")} />
           </div>
 
           <Button type="submit" className="w-full" disabled={createInvoiceMutation.isPending}>
