@@ -31,6 +31,10 @@ export function SupplierView({ supplier, open, onOpenChange }: SupplierViewProps
   const updateSupplierMutation = useMutation({
     mutationFn: async (data: InsertSupplier) => {
       const res = await apiRequest("PATCH", `/api/suppliers/${supplier.id}`, data);
+      if (!res.ok) {
+        const error = await res.text();
+        throw new Error(error || 'Failed to update supplier');
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -53,7 +57,10 @@ export function SupplierView({ supplier, open, onOpenChange }: SupplierViewProps
     queryKey: ["/api/suppliers", supplier.id, "invoices"],
     queryFn: async () => {
       const res = await fetch(`/api/suppliers/${supplier.id}/invoices`);
-      if (!res.ok) throw new Error("Failed to fetch invoices");
+      if (!res.ok) {
+        const error = await res.text();
+        throw new Error(error || 'Failed to fetch invoices');
+      }
       return res.json();
     },
   });
