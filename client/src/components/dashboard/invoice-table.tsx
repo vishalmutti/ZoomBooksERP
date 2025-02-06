@@ -21,11 +21,10 @@ export default function InvoiceTable({ invoices: initialInvoices }: { invoices: 
   const { data: invoices = initialInvoices } = useQuery<Invoice[]>({
     queryKey: ["/api/invoices"],
     initialData: initialInvoices,
-    refetchInterval: 1000 // Refetch every second
+    refetchInterval: 1000,
+    staleTime: 0,
+    cacheTime: 0
   });
-
-  // Add real-time query for invoice data
-  const { data: invoices } = useQuery<Invoice[]>({
     queryKey: ["/api/invoices"],
     initialData: initialInvoices,
     refetchInterval: 1000, // Refetch every second
