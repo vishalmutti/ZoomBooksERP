@@ -226,6 +226,15 @@ export function registerRoutes(app: Express): Server {
     res.status(201).json(payment);
   });
 
+  app.get("/api/invoices/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    console.log("Fetching invoice data for:", req.params.id);
+    const id = parseInt(req.params.id);
+    const invoice = await storage.getInvoice(id);
+    if (!invoice) return res.status(404).send("Invoice not found");
+    res.json(invoice);
+  });
+
   app.get("/api/invoices/:id/payments", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
