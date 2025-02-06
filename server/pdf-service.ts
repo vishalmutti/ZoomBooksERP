@@ -1,4 +1,3 @@
-
 import PDFDocument from 'pdfkit';
 import fs from 'fs';
 import path from 'path';
@@ -15,40 +14,34 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
   const filePath = path.join(process.cwd(), 'uploads', fileName);
   const writeStream = fs.createWriteStream(filePath);
 
-  // Company logo
-  doc.image('attached_assets/Zoom Books Logo Final-02.jpg', 50, 45, { width: 300 })
-     .fontSize(20)
-     .text('Zoom Books Company', 380, 45)
+  // Company logo and header
+  doc.image('attached_assets/Zoom Books Logo Final-02.jpg', 50, 45, { width: 150 })
      .fontSize(10)
-     .text('Acirassi Books Ltd', 380, 65)
-     .text('507/508-19055 Airport Way', 380, 80)
-     .text('Pitt Meadows, BC V3Y 0G4', 380, 95)
-     .text('Acirassi Books Ltd', 200, 65)
-     .text('507/508-19055 Airport Way', 200, 80)
-     .text('Pitt Meadows, BC V3Y 0G4', 200, 95)
-     .moveDown();
+     .text('Acirassi Books Ltd', 50, 100)
+     .text('507/508-19055 Airport Way', 50, 115)
+     .text('Pitt Meadows, BC V3Y 0G4', 50, 130)
+     .fontSize(24)
+     .text('INVOICE', 450, 45, { align: 'right' })
+     .fontSize(10)
+     .text(`Invoice Number: ${data.invoice.invoiceNumber}`, 450, 80, { align: 'right' })
+     .text(`Date: ${new Date().toLocaleDateString()}`, 450, 95, { align: 'right' })
+     .text(`Due Date: ${new Date(data.invoice.dueDate).toLocaleDateString()}`, 450, 110, { align: 'right' });
 
-  // Invoice details
-  doc.fontSize(16)
-     .text('INVOICE', 50, 150)
-     .fontSize(10)
-     .text(`Invoice Number: ${data.invoice.invoiceNumber}`, 50, 180)
-     .text(`Due Date: ${new Date(data.invoice.dueDate).toLocaleDateString()}`, 50, 195);
 
   // Supplier details
   doc.fontSize(12)
-     .text('Bill To:', 50, 230)
+     .text('Bill To:', 50, 150)
      .fontSize(10)
-     .text(data.supplier.name, 50, 250)
-     .text(data.supplier.address || '', 50, 265)
-     .text(`Contact: ${data.supplier.contactPerson || ''}`, 50, 280)
-     .text(`Email: ${data.supplier.email || ''}`, 50, 295)
+     .text(data.supplier.name, 50, 170)
+     .text(data.supplier.address || '', 50, 185)
+     .text(`Contact: ${data.supplier.contactPerson || ''}`, 50, 200)
+     .text(`Email: ${data.supplier.email || ''}`, 50, 215)
      .moveDown();
 
   // Items table
-  const tableTop = 350;
+  const tableTop = 250;
   doc.font('Helvetica-Bold');
-  
+
   // Table header
   doc.text('Description', 50, tableTop)
      .text('Quantity', 280, tableTop)
