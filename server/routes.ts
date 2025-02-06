@@ -193,20 +193,20 @@ export function registerRoutes(app: Express): Server {
         }
       }
 
-      const invoice = await storage.updateInvoice(id, {
-        ...parsed.data,
-        uploadedFile,
-      });
-
-      if (!invoice) {
-        return res.status(404).json({ message: 'Invoice not found' });
-      }
-
-      // Always update invoice items with the provided data
       await storage.db.transaction(async (tx) => {
-        // Delete existing items
+        // Update invoice
+        const updatedInvoice = await storage.updateInvoice(id, {
+          ...parsed.data,
+          uploadedFile,
+        });
+
+        if (!updatedInvoice) {
+          throw new Error('Invoice not found');
+        }
+
+        // Always update invoice items with the provided data
         await tx.delete(storage.invoiceItems).where(eq(storage.invoiceItems.invoiceId, id));
-        
+
         // Insert new items if provided
         if (parsed.data.items?.length) {
           await tx.insert(storage.invoiceItems).values(
@@ -221,9 +221,7 @@ export function registerRoutes(app: Express): Server {
         }
       });
 
-      if (!res.headersSent) {
-        res.json(invoice);
-      }
+      res.json(existingInvoice); // Send back the updated invoice
     } catch (error) {
       console.error('Invoice update error:', error);
       res.status(500).json({ message: 'Failed to update invoice' });
