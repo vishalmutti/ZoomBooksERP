@@ -63,18 +63,35 @@ export function InvoiceForm() {
 
   const createInvoiceMutation = useMutation({
     mutationFn: async (data: InsertInvoice) => {
-      const formData = new FormData();
-      if (file) {
-        formData.append('file', file);
-      }
-      formData.append('invoiceData', JSON.stringify({
-        ...data,
-        // Clear items if in upload mode
-        items: mode === "upload" ? undefined : data.items
-      }));
+      try {
+        // Log the form data for debugging
+        console.log('Form data:', data);
+        
+        const formData = new FormData();
+        if (file) {
+          formData.append('file', file);
+        }
+        
+        const invoiceData = {
+          ...data,
+          items: mode === "upload" ? undefined : data.items
+        };
+        
+        // Log the prepared data
+        console.log('Prepared invoice data:', invoiceData);
+        
+        formData.append('invoiceData', JSON.stringify(invoiceData));
 
-      const res = await apiRequest("POST", "/api/invoices", formData);
-      return res.json();
+        const res = await apiRequest("POST", "/api/invoices", formData);
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.message || 'Failed to create invoice');
+        }
+        return res.json();
+      } catch (error) {
+        console.error('Invoice creation error:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
@@ -87,9 +104,10 @@ export function InvoiceForm() {
       setFile(null);
     },
     onError: (error: Error) => {
+      console.error('Mutation error:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to create invoice. Please try again.",
         variant: "destructive",
       });
     },
