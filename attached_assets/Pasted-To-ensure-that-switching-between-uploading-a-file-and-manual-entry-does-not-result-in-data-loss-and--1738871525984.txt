@@ -1,0 +1,96 @@
+To ensure that switching between uploading a file and manual entry does not result in data loss and that changes to invoice items are persisted properly to the database, we can enhance how the form handles mode switching and data fetching.
+
+Suggested Enhancements
+Update the handleModeChange Method: Ensure that the form retains the values when switching between modes.
+
+Let useEffect Manage State Appropriately: Ensure that when the invoice data is fetched or updated, we always set the form values correctly based on the latest updates.
+
+Here’s how you can modify the invoice-form.tsx:
+
+// Add this code where the handleModeChange function is defined within `InvoiceForm`
+const handleModeChange = (value: string) => {
+  setMode(value as "manual" | "upload");
+  const currentValues = form.getValues();
+  // Preserve the current form values when switching modes
+  form.reset({
+    ...currentValues,
+    items: value === "manual"
+      ? currentValues.items?.length
+        ? currentValues.items
+        : [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }]
+      : currentValues.items
+  });
+};
+// In the effect where you initialize the form, ensure you don't lose existing values
+useEffect(() => {
+  if (currentInvoiceData || editInvoice) {
+    const invoiceData = currentInvoiceData || editInvoice;
+    if (!invoiceData) return;
+    setDialogOpen(true);
+    if (!dialogOpen) {
+      setMode(invoiceData.uploadedFile ? "upload" : "manual");
+    }
+    form.reset({
+      supplierId: invoiceData.supplierId,
+      invoiceNumber: invoiceData.invoiceNumber,
+      dueDate: new Date(invoiceData.dueDate).toISOString().split('T')[0],
+      totalAmount: invoiceData.totalAmount.toString(),
+      notes: invoiceData.notes || "",
+      isPaid: invoiceData.isPaid,
+      items: invoiceData.items?.map(item => ({
+        description: item.description || "",
+        quantity: (item.quantity || "0").toString(),
+        unitPrice: (item.unitPrice || "0").toString(),
+        totalPrice: (Number(item.quantity) * Number(item.unitPrice)).toString(),
+        invoiceId: invoiceData.id
+      })) || [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }]
+    });
+  }
+}, [currentInvoiceData, editInvoice, form, dialogOpen]);
+Server Side Changes
+Ensure the database correctly captures any updates made when the invoice is edited, specifically in the PATCH route in routes.ts:
+
+app.patch("/api/invoices/:id", upload.single('file'), async (req, res) => {
+  if (!req.isAuthenticated()) return res.sendStatus(401);
+  try {
+    const id = parseInt(req.params.id);
+    const invoiceData = JSON.parse(req.body.invoiceData);
+    const parsed = insertInvoiceSchema.partial().safeParse(invoiceData);
+    if (!parsed.success) {
+      return res.status(400).json({ message: 'Invalid invoice data' });
+    }
+    let uploadedFile = req.file ? req.file.filename : undefined;
+    // Handle items update separately to ensure accuracy
+    await storage.db.transaction(async (tx) => {
+      // Clear old items
+      await tx.delete(storage.invoiceItems).where(eq(storage.invoiceItems.invoiceId, id));
+      // Insert new items
+      if (parsed.data.items?.length) {
+        await tx.insert(storage.invoiceItems).values(
+          parsed.data.items.map(item => ({
+            invoiceId: id,
+            description: item.description,
+            quantity: item.quantity.toString(),
+            unitPrice: item.unitPrice.toString(),
+            totalPrice: (Number(item.quantity) * Number(item.unitPrice)).toString(),
+          }))
+        );
+      }
+    });
+    // Update the invoice without losing other data
+    const invoice = await storage.updateInvoice(id, {
+      ...parsed.data,
+      uploadedFile,
+    });
+    res.json(invoice);
+  } catch (error) {
+    console.error('Invoice update error:', error);
+    res.status(500).json({ message: 'Failed to update invoice' });
+  }
+});
+Conclusion
+These changes ensure that:
+
+Switching modes retains form values, preventing data loss.
+Updating the invoice correctly persists the changes to the database.
+Try implementing this and let me know if the issue persists!
