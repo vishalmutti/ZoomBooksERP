@@ -30,6 +30,10 @@ export function SupplierList({ suppliers }: SupplierListProps) {
       header: "Phone",
     },
     {
+      accessorKey: "address",
+      header: "Address",
+    },
+    {
       accessorKey: "outstandingAmount",
       header: "Outstanding Amount",
       cell: ({ row }) => {
