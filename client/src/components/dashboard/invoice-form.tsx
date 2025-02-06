@@ -233,32 +233,23 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   };
 
   const handleSubmit = form.handleSubmit((data) => {
-    if (!data.supplierId) {
-      toast({
-        title: "Error",
-        description: "Please select a supplier",
-        variant: "destructive",
-      });
-      return;
+    const formData = new FormData();
+    if (file) {
+      formData.append('file', file);
     }
 
-    if (!data.invoiceNumber) {
-      toast({
-        title: "Error",
-        description: "Please enter an invoice number",
-        variant: "destructive",
-      });
-      return;
-    }
+    const cleanedData = {
+      ...data,
+      totalAmount: data.totalAmount?.toString(),
+      items: data.items?.map(item => ({
+        description: item.description,
+        quantity: item.quantity?.toString(),
+        unitPrice: item.unitPrice?.toString(),
+        totalPrice: (Number(item.quantity || 0) * Number(item.unitPrice || 0)).toString()
+      }))
+    };
 
-    if (!data.dueDate) {
-      toast({
-        title: "Error",
-        description: "Please select a due date",
-        variant: "destructive",
-      });
-      return;
-    }
+    formData.append('invoiceData', JSON.stringify(cleanedData));
 
     if (mode === "upload") {
       if (!file && !editInvoice?.uploadedFile) {
@@ -269,7 +260,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         });
         return;
       }
-      if (!data.totalAmount || isNaN(Number(data.totalAmount)) || Number(data.totalAmount) <= 0) {
+      if (!cleanedData.totalAmount || isNaN(Number(cleanedData.totalAmount)) || Number(cleanedData.totalAmount) <= 0) {
         toast({
           title: "Error",
           description: "Please enter a valid total amount greater than 0",
@@ -278,7 +269,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         return;
       }
     } else {
-      if (!data.items || data.items.length === 0) {
+      if (!cleanedData.items || cleanedData.items.length === 0) {
         toast({
           title: "Error",
           description: "Please add at least one item",
@@ -287,7 +278,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         return;
       }
 
-      for (const item of data.items) {
+      for (const item of cleanedData.items) {
         if (!item.description) {
           toast({
             title: "Error",
@@ -315,12 +306,12 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       }
 
       // Calculate total amount from items
-      data.totalAmount = data.items
-        .reduce((sum, item) => sum + (Number(item.quantity) * Number(item.unitPrice)), 0)
+      cleanedData.totalAmount = cleanedData.items
+        .reduce((sum, item) => sum + (Number(item.quantity || 0) * Number(item.unitPrice || 0)), 0)
         .toString();
     }
 
-    updateInvoiceMutation.mutate(data);
+    updateInvoiceMutation.mutate(cleanedData);
   });
 
   return (
