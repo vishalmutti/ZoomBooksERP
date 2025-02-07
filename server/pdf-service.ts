@@ -107,21 +107,38 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
 
         try {
           // Add BOL directly to the page
-          if (['.jpg', '.jpeg', '.png', '.pdf'].includes(ext)) {
+          const ext = path.extname(bolPath).toLowerCase();
+          
+          // Verify file exists and is readable
+          if (!fs.existsSync(bolPath)) {
+            throw new Error('BOL file not found');
+          }
+
+          if (['.jpg', '.jpeg', '.png'].includes(ext)) {
+            // Handle image formats
             doc.image(bolPath, {
               fit: [doc.page.width - 100, doc.page.height - 150],
               align: 'center',
               valign: 'center'
             });
-          } else {
-            // For unsupported file types, add a note
+          } else if (ext === '.pdf') {
+            // For PDF files, add a note since PDFKit doesn't support direct PDF embedding
             doc.fontSize(12)
-               .text(`BOL file format ${ext} not supported. Please upload JPG, JPEG, PNG, or PDF files.`, {
+               .text('BOL file is in PDF format. Please access it separately.', {
+                 align: 'center'
+               });
+          } else {
+            doc.fontSize(12)
+               .text(`BOL file format ${ext} not supported. Please upload JPG, JPEG, or PNG files.`, {
                  align: 'center'
                });
           }
         } catch (pdfError) {
           console.error('Error embedding BOL:', pdfError);
+          doc.fontSize(12)
+             .text('Unable to embed BOL file. Please check file format and permissions.', {
+               align: 'center'
+             });
           doc.fontSize(12)
              .text('Error embedding Bill of Lading', { align: 'center' });
         }
