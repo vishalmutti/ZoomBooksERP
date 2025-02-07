@@ -62,12 +62,20 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
      .text('Thank you for your business!', 50, position + 50)
      .moveDown(); // Added vertical spacing before adding the logo
 
-  // Adding the logo
-  doc.image(path.join(process.cwd(), 'attached_assets', 'Zoom Books Logo Final-01.png'), {
-    fit: [500, 150], // Increased size
-    align: 'center', // Centered the logo
-    valign: 'bottom',
-  });
+  // Adding the logo at the bottom of the page
+  const pageHeight = doc.page.height;
+  const logoHeight = 100;
+  const logoWidth = 300;
+  const marginBottom = 50;
+
+  doc.image(
+    path.join(process.cwd(), 'attached_assets', 'Zoom Books Logo Final-01.png'),
+    (doc.page.width - logoWidth) / 2,
+    pageHeight - logoHeight - marginBottom,
+    {
+      fit: [logoWidth, logoHeight],
+    }
+  );
 
   return new Promise((resolve, reject) => {
     doc.pipe(writeStream);
@@ -146,12 +154,20 @@ export async function generateAccountStatementPDF(supplier: Supplier, invoices: 
        .text('No outstanding invoices at this time.', 40, doc.y);
   }
 
-  // Adding the logo
-  doc.image(path.join(process.cwd(), 'attached_assets', 'Zoom Books Logo Final-01.png'), {
-    fit: [500, 150], // Increased size
-    align: 'center', // Centered the logo
-    valign: 'bottom',
-  });
+  // Adding the logo at the bottom of the page
+  const pageHeight2 = doc.page.height;
+  const logoHeight2 = 100;
+  const logoWidth2 = 300;
+  const marginBottom2 = 50;
+
+  doc.image(
+    path.join(process.cwd(), 'attached_assets', 'Zoom Books Logo Final-01.png'),
+    (doc.page.width - logoWidth2) / 2,
+    pageHeight2 - logoHeight2 - marginBottom2,
+    {
+      fit: [logoWidth2, logoHeight2],
+    }
+  );
 
   return new Promise((resolve, reject) => {
     writeStream.on('finish', () => resolve(fileName));
