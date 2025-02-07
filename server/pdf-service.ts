@@ -14,41 +14,30 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
   const filePath = path.join(process.cwd(), 'uploads', fileName);
   const writeStream = fs.createWriteStream(filePath);
 
-  // Company logo and header
-  try {
-    doc.image('attached_assets/Zoom Books Logo Final-02.png', 0, 0, { 
-      width: 225
-    });
-  } catch (error) {
-    console.warn('Could not load company logo:', error);
-    // Continue without the logo
-  }
   doc.fontSize(10)
-     .text('Acirassi Books Ltd', 50, 200)
-     .text('507/508-19055 Airport Way', 50, 215)
-     .text('Pitt Meadows, BC V3Y 0G4', 50, 230)
+     .text('Acirassi Books Ltd (Zoom Books Co)', 50, 80)
+     .text('507/508-19055 Airport Way', 50, 95)
+     .text('Pitt Meadows, BC V3Y 0G4', 50, 110)
      .fontSize(24)
      .text('INVOICE', 450, 45, { align: 'right' })
      .fontSize(10)
-     .text(`Invoice Number: ${data.invoice.invoiceNumber}`, 350, 80, { align: 'right' })
-     .text(`Date: ${new Date().toLocaleDateString()}`, 450, 95, { align: 'right' })
-     .text(`Due Date: ${new Date(data.invoice.dueDate).toLocaleDateString()}`, 450, 110, { align: 'right' });
+     .text(`Invoice Number: ${data.invoice.invoiceNumber}`, 350, 130, { align: 'right' })
+     .text(`Date: ${new Date().toLocaleDateString()}`, 450, 145, { align: 'right' })
+     .text(`Due Date: ${new Date(data.invoice.dueDate).toLocaleDateString()}`, 450, 160, { align: 'right' });
 
   // Supplier details
   doc.fontSize(12)
-     .text('Bill To:', 50, 250)
+     .text('Bill To:', 50, 180)
      .fontSize(10)
-     .text(data.supplier.name, 50, 270)
-     .text(data.supplier.address || '', 50, 285)
-     .text(`Contact: ${data.supplier.contactPerson || ''}`, 50, 300)
-     .text(`Email: ${data.supplier.email || ''}`, 50, 315)
+     .text(data.supplier.name, 50, 200)
+     .text(data.supplier.address || '', 50, 215)
+     .text(`Contact: ${data.supplier.contactPerson || ''}`, 50, 230)
+     .text(`Email: ${data.supplier.email || ''}`, 50, 245)
      .moveDown();
 
   // Items table
-  const tableTop = 350;
+  const tableTop = 270;
   doc.font('Helvetica-Bold');
-
-  // Table header
   doc.text('Description', 50, tableTop)
      .text('Quantity', 280, tableTop)
      .text('Unit Price', 350, tableTop)
@@ -57,7 +46,6 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
   doc.font('Helvetica');
   let position = tableTop + 25;
 
-  // Table rows
   data.invoice.items?.forEach(item => {
     doc.text(item.description, 50, position)
        .text(item.quantity?.toString() || "0", 280, position)
@@ -66,7 +54,6 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
     position += 20;
   });
 
-  // Total and Footer
   doc.font('Helvetica-Bold')
      .text('Total Amount:', 350, position + 20)
      .text(`$${Number(data.invoice.totalAmount).toFixed(2)}`, 450, position + 20)
@@ -91,46 +78,42 @@ export async function generateAccountStatementPDF(supplier: Supplier, invoices: 
   // Filter for unpaid invoices only
   const outstandingInvoices = invoices.filter(inv => !inv.isPaid);
 
-  // Company logo and header
-  try {
-    doc.image('attached_assets/Zoom Books Logo Final-02.png', 0, 0, { 
-      width: 225
-    });
-  } catch (error) {
-    console.warn('Could not load company logo:', error);
-    // Continue without the logo
-  }
-
+  // Company and Statement Title
   doc.fontSize(24)
-     .text('OUTSTANDING BALANCE STATEMENT', 450, 45, { align: 'right' })
-     .fontSize(10)
-     .text(`Date: ${new Date().toLocaleDateString()}`, 450, 80, { align: 'right' });
+     .text('OUTSTANDING BALANCE STATEMENT', { align: 'center' })
+     .moveDown(1);
+
+  doc.fontSize(10)
+     .text(`Date: ${new Date().toLocaleDateString()}`, { align: 'right' })
+     .moveDown(1);
 
   // Company details
   doc.fontSize(10)
-     .text('Acirassi Books Ltd', 50, 120)
-     .text('507/508-19055 Airport Way', 50, 135)
-     .text('Pitt Meadows, BC V3Y 0G4', 50, 150);
+     .text('Acirassi Books Ltd (Zoom Books Co)', 50, 80)
+     .text('507/508-19055 Airport Way', 50, 95)
+     .text('Pitt Meadows, BC V3Y 0G4', 50, 110)
+     .moveDown(3);
 
   // Supplier details
   doc.fontSize(12)
-     .text('Statement For:', 50, 200)
+     .text('Statement For:', { continued: true })
+     .text(supplier.name, { align: 'left', underline: true })
+     .moveDown(1)
      .fontSize(10)
-     .text(supplier.name, 50, 220)
-     .text(supplier.address || '', 50, 235)
-     .text(`Contact: ${supplier.contactPerson || ''}`, 50, 250)
-     .text(`Email: ${supplier.email || ''}`, 50, 265)
-     .moveDown();
+     .text(supplier.address || '', { align: 'left' })
+     .text(`Contact: ${supplier.contactPerson || ''}`, { align: 'left' })
+     .text(`Email: ${supplier.email || ''}`, { align: 'left' })
+     .moveDown(1); // Adjusted for less spacing
 
   // Outstanding balance
   const totalOutstanding = outstandingInvoices.reduce((sum, inv) => sum + Number(inv.totalAmount), 0);
   doc.fontSize(12)
-     .text(`Total Outstanding Balance: $${totalOutstanding.toFixed(2)}`, 50, 300, { bold: true })
-     .moveDown();
+     .text(`Total Outstanding Balance: $${totalOutstanding.toFixed(2)}`, 50, doc.y)
+     .moveDown(1); // Less spacing before table
 
   if (outstandingInvoices.length > 0) {
     // Invoices table
-    const tableTop = 350;
+    const tableTop = doc.y;
     doc.font('Helvetica-Bold');
 
     // Table header
@@ -142,7 +125,6 @@ export async function generateAccountStatementPDF(supplier: Supplier, invoices: 
     doc.font('Helvetica');
     let position = tableTop + 25;
 
-    // Table rows
     outstandingInvoices.forEach(invoice => {
       const dueDate = new Date(invoice.dueDate);
       const today = new Date();
@@ -155,24 +137,18 @@ export async function generateAccountStatementPDF(supplier: Supplier, invoices: 
       position += 20;
     });
 
-    // Payment instructions
-    doc.fontSize(10)
-       .text('Payment Instructions:', 50, position + 40)
-       .text('Please reference invoice numbers when making payments.', 50, position + 60)
-       .text('For questions about this statement, please contact accounts@acirassi.com', 50, position + 80);
+    // Footer at the bottom of the page
+    doc.fontSize(8)
+       .text('This statement reflects all outstanding invoices as of the date shown above.', 50, doc.page.height - 50);
   } else {
     doc.fontSize(12)
-       .text('No outstanding invoices at this time.', 50, 350);
+       .text('No outstanding invoices at this time.', 50, doc.y);
   }
 
-  // Footer
-  doc.fontSize(8)
-     .text('This statement reflects all outstanding invoices as of the date shown above.', 50, doc.page.height - 50);
-
   return new Promise((resolve, reject) => {
-    doc.pipe(writeStream);
-    doc.end();
     writeStream.on('finish', () => resolve(fileName));
     writeStream.on('error', reject);
+    doc.pipe(writeStream);
+    doc.end();
   });
 }

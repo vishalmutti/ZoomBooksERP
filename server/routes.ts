@@ -1,14 +1,14 @@
-
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { insertInvoiceSchema, insertPaymentSchema, insertSupplierSchema } from "@shared/schema";
-import { generateInvoicePDF } from "./pdf-service";
+import { generateAccountStatementPDF, generateInvoicePDF } from "./pdf-service";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import express from "express"; 
+import express from "express";
+import { eq } from "drizzle-orm";
 
 const uploadDir = path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(uploadDir)) {
@@ -37,7 +37,7 @@ export function registerRoutes(app: Express): Server {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     const query = req.query.q as string;
-    const suppliers = query 
+    const suppliers = query
       ? await storage.searchSuppliers(query)
       : await storage.getSuppliers();
 
@@ -141,9 +141,9 @@ export function registerRoutes(app: Express): Server {
       if (!req.file && parsed.data.items?.length) {
         const supplier = await storage.getSupplier(parsed.data.supplierId);
         if (supplier) {
-          const pdfFileName = await generateInvoicePDF({ 
+          const pdfFileName = await generateInvoicePDF({
             invoice: { ...invoice, items: parsed.data.items },
-            supplier 
+            supplier
           });
           await storage.updateInvoice(invoice.id, { uploadedFile: pdfFileName });
           invoice.uploadedFile = pdfFileName;
@@ -180,15 +180,15 @@ export function registerRoutes(app: Express): Server {
       if (!req.file && (parsed.data.items?.length || existingInvoice.items?.length)) {
         const supplier = await storage.getSupplier(parsed.data.supplierId || existingInvoice.supplierId);
         if (supplier) {
-          uploadedFile = await generateInvoicePDF({ 
-            invoice: { 
+          uploadedFile = await generateInvoicePDF({
+            invoice: {
               ...existingInvoice,
               ...parsed.data,
               items: parsed.data.items || existingInvoice.items,
               id,
               invoiceNumber: existingInvoice.invoiceNumber
             },
-            supplier 
+            supplier
           });
         }
       }
@@ -207,7 +207,7 @@ export function registerRoutes(app: Express): Server {
       const updatedInvoice = await storage.db.transaction(async (tx) => {
         // Delete existing items
         await tx.delete(storage.invoiceItems).where(eq(storage.invoiceItems.invoiceId, id));
-        
+
         // Insert new items if provided
         if (parsed.data.items?.length) {
           await tx.insert(storage.invoiceItems).values(
@@ -314,12 +314,17 @@ export function registerRoutes(app: Express): Server {
       if (!supplier) return res.status(404).send("Supplier not found");
 
       const invoices = await storage.getSupplierInvoices(id);
+
+      // Generate the PDF
       const pdfFileName = await generateAccountStatementPDF(supplier, invoices);
-      
+
       res.json({ fileName: pdfFileName });
     } catch (error) {
       console.error('Error generating account statement:', error instanceof Error ? error.stack : error);
-      res.status(500).json({ message: 'Failed to generate account statement: ' + (error instanceof Error ? error.message : 'Unknown error') });
+      res.status(500).json({ 
+        message: 'Failed to generate account statement: ' + 
+          (error instanceof Error ? error.message : 'Unknown error') 
+      });
     }
   });
 
