@@ -65,15 +65,16 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
   // Adding the logo at the bottom of the page
   const pageHeight = doc.page.height;
   const logoHeight = 300;
-  const logoWidth = 900;
+  const logoWidth = 600;  // Reduced width to prevent overflow
   const marginBottom = 50;
 
   doc.image(
     path.join(process.cwd(), 'attached_assets', 'Zoom Books Logo Final-01.png'),
-    (doc.page.width - logoWidth) / 2,
+    (doc.page.width - logoWidth) / 2,  // Center horizontally
     pageHeight - logoHeight - marginBottom,
     {
       fit: [logoWidth, logoHeight],
+      align: 'center',
     }
   );
 
@@ -157,15 +158,16 @@ export async function generateAccountStatementPDF(supplier: Supplier, invoices: 
   // Adding the logo at the bottom of the page
   const pageHeight2 = doc.page.height;
   const logoHeight2 = 300;
-  const logoWidth2 = 900;
+  const logoWidth2 = 600;  // Reduced width to prevent overflow
   const marginBottom2 = 50;
 
   doc.image(
     path.join(process.cwd(), 'attached_assets', 'Zoom Books Logo Final-01.png'),
-    (doc.page.width - logoWidth2) / 2,
+    (doc.page.width - logoWidth2) / 2,  // Center horizontally
     pageHeight2 - logoHeight2 - marginBottom2,
     {
       fit: [logoWidth2, logoHeight2],
+      align: 'center',
     }
   );
 
