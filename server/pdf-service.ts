@@ -33,7 +33,7 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
      .text(data.supplier.address || '', 50, 215)
      .text(`Contact: ${data.supplier.contactPerson || ''}`, 50, 230)
      .text(`Email: ${data.supplier.email || ''}`, 50, 245)
-     .moveDown();
+     .moveDown(2); // Added vertical spacing
 
   // Items table
   const tableTop = 270;
@@ -51,7 +51,7 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
        .text(item.quantity?.toString() || "0", 280, position)
        .text(`$${Number(item.unitPrice).toFixed(2)}`, 350, position)
        .text(`$${Number(item.totalPrice).toFixed(2)}`, 450, position);
-    position += 20;
+    position += 25; // Increased spacing between items
   });
 
   doc.font('Helvetica-Bold')
@@ -59,7 +59,17 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
      .text(`$${Number(data.invoice.totalAmount).toFixed(2)}`, 450, position + 20)
      .fontSize(8)
      .font('Helvetica')
-     .text('Thank you for your business!', 50, position + 50);
+     .text('Thank you for your business!', 50, position + 50)
+     .moveDown(); // Added vertical spacing before adding the logo
+
+  // Adding the logo
+  doc.image(path.join(process.cwd(), 'uploads', 'Zoom Books Logo Final-01.png'), {
+    fit: [150, 50],
+    align: 'center',
+    valign: 'bottom',
+    width: 150, // Set desired width
+    height: 50, // Set desired height
+  });
 
   return new Promise((resolve, reject) => {
     doc.pipe(writeStream);
@@ -100,10 +110,12 @@ export async function generateAccountStatementPDF(supplier: Supplier, invoices: 
      .text(`Contact: ${supplier.contactPerson || ''}`, 40, 147)
      .text(`Email: ${supplier.email || ''}`, 40, 159); // Adjusted for less spacing
 
-  // Outstanding balance
-  const totalOutstanding = outstandingInvoices.reduce((sum, inv) => sum + Number(inv.totalAmount), 0);
-  doc.fontSize(10)
-     .text(`Total Outstanding Balance: $${totalOutstanding.toFixed(2)}`, 40, 185);
+   // Outstanding balance
+   const totalOutstanding = outstandingInvoices.reduce((sum, inv) => sum + Number(inv.totalAmount), 0);
+   doc.fontSize(12)
+      .font('Helvetica-Bold')  // Set the font to bold
+      .text(`Total Outstanding Balance: $${totalOutstanding.toFixed(2)}`, 40, 185)
+      .font('Helvetica');
 
   if (outstandingInvoices.length > 0) {
     // Invoices table
@@ -118,7 +130,7 @@ export async function generateAccountStatementPDF(supplier: Supplier, invoices: 
        .text('Days Overdue', 400, tableTop);
 
     doc.font('Helvetica');
-    let position = tableTop + 20;
+    let position = tableTop + 25; // Increased vertical spacing
 
     outstandingInvoices.forEach(invoice => {
       const dueDate = new Date(invoice.dueDate);
@@ -129,12 +141,21 @@ export async function generateAccountStatementPDF(supplier: Supplier, invoices: 
          .text(dueDate.toLocaleDateString(), 160, position)
          .text(`$${Number(invoice.totalAmount).toFixed(2)}`, 280, position)
          .text(daysOverdue.toString(), 400, position);
-      position += 25; // Increased spacing between invoices
+      position += 30; // Increased spacing between invoices
     });
   } else {
     doc.fontSize(10)
        .text('No outstanding invoices at this time.', 40, doc.y);
   }
+
+  // Adding the logo
+  doc.image(path.join(process.cwd(), 'uploads', 'Zoom Books Logo Final-01.png'), {
+    fit: [150, 50],
+    align: 'center',
+    valign: 'bottom',
+    width: 150,
+    height: 50,
+  });
 
   return new Promise((resolve, reject) => {
     writeStream.on('finish', () => resolve(fileName));
