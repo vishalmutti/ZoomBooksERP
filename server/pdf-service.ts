@@ -97,7 +97,8 @@ export async function generateAccountStatementPDF(supplier: Supplier, invoices: 
     console.warn('Could not load company logo:', error);
     // Continue without the logo
   }
-     .fontSize(24)
+  
+  doc.fontSize(24)
      .text('ACCOUNT STATEMENT', 450, 45, { align: 'right' })
      .fontSize(10)
      .text(`Date: ${new Date().toLocaleDateString()}`, 450, 80, { align: 'right' });
