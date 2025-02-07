@@ -351,7 +351,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     >
       {!editInvoice && (
         <DialogTrigger asChild>
-          <Button>Create Invoice</Button>
+          <Button className="w-full text-lg">Create Invoice</Button>
         </DialogTrigger>
       )}
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">

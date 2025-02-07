@@ -23,7 +23,7 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-background">
       <header className="border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Zoom Books AR</h1>
+          <h1 className="text-2xl font-bold text-center flex-grow">Accounts Receivable Dashboard</h1>
           <Button variant="ghost" onClick={() => logoutMutation.mutate()}>
             <LogOut className="h-4 w-4 mr-2" />
             Logout
@@ -34,7 +34,7 @@ export default function DashboardPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-8">
           <div className="flex justify-between items-center">
-            <h2 className="text-3xl font-bold">Dashboard</h2>
+            <h2 className="text-3xl font-bold"></h2>
             <InvoiceForm />
           </div>
 
