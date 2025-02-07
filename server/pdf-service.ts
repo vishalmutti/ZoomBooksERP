@@ -103,19 +103,24 @@ export async function generateAccountStatementPDF(supplier: Supplier, invoices: 
      .text(`Date: ${new Date().toLocaleDateString()}`, { align: 'right' });
 
   // Company details
-  doc.fontSize(9)
+  doc.fontSize(12)
+     .font('Helvetica-Bold')
      .text('Acirassi Books Ltd (Zoom Books Co)', 40, 70)
-     .text('507/508-19055 Airport Way', 40, 82)
-     .text('Pitt Meadows, BC V3Y 0G4', 40, 94);
+     .font('Helvetica')
+     .fontSize(10)
+     .text('507/508-19055 Airport Way', 40, 85)
+     .text('Pitt Meadows, BC V3Y 0G4', 40, 100);
 
   // Supplier details
-  doc.fontSize(10)
-     .text('Statement For:', 40, 120, { continued: true })
-     .text(supplier.name, { underline: true })
-     .fontSize(9)
-     .text(supplier.address || '', 40, 135)
-     .text(`Contact: ${supplier.contactPerson || ''}`, 40, 147)
-     .text(`Email: ${supplier.email || ''}`, 40, 159); // Adjusted for less spacing
+  doc.fontSize(12)
+     .text('Statement For: ', 40, 120, { continued: true })
+     .font('Helvetica-Bold')
+     .text(supplier.name)
+     .font('Helvetica')
+     .fontSize(10)
+     .text(supplier.address || '', 40, 140)
+     .text(`Contact: ${supplier.contactPerson || ''}`, 40, 155)
+     .text(`Email: ${supplier.email || ''}`, 40, 170); // Adjusted for less spacing
 
   // Outstanding balance
   const totalOutstanding = outstandingInvoices.reduce((sum, inv) => sum + Number(inv.totalAmount), 0);
