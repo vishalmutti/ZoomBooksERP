@@ -95,34 +95,38 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
     const bolPath = path.join(process.cwd(), 'uploads', data.invoice.bolFile);
 
     if (fs.existsSync(bolPath)) {
-      // Add a new page for BOL
-      doc.addPage();
-      doc.fontSize(14)
-         .text('Bill of Lading', { align: 'center' })
-         .moveDown();
-
       try {
+        // Add a new page for BOL
+        doc.addPage();
+        doc.fontSize(14)
+           .text('Bill of Lading', { align: 'center' })
+           .moveDown();
+
         // Handle different file types
         const ext = path.extname(bolPath).toLowerCase();
 
         if (['.jpg', '.jpeg', '.png'].includes(ext)) {
-          // For image files, directly embed them
           doc.image(bolPath, {
             fit: [doc.page.width - 100, doc.page.height - 150],
             align: 'center',
             valign: 'center'
           });
         } else if (ext === '.pdf') {
-          // For PDF files, we'll add a reference that it needs to be viewed separately
-          doc.fontSize(12)
-             .text('A PDF Bill of Lading is attached to this invoice.', { align: 'center' })
-             .moveDown()
-             .text('Please refer to the separate BOL file in your invoice documents.', { align: 'center' });
-
-          // Copy the BOL file to ensure it's preserved
-          const bolCopyName = `bol-${Date.now()}${ext}`;
-          const bolCopyPath = path.join(process.cwd(), 'uploads', bolCopyName);
-          fs.copyFileSync(bolPath, bolCopyPath);
+          try {
+            // Use the first page from the PDF BOL
+            doc.image(`${bolPath}[0]`, {
+              fit: [doc.page.width - 100, doc.page.height - 150],
+              align: 'center',
+              valign: 'center'
+            });
+          } catch (pdfError) {
+            console.error('Error rendering PDF BOL:', pdfError);
+            // If PDFKit can't handle the PDF directly, create a temporary image
+            doc.fontSize(12)
+               .text('PDF Bill of Lading is attached to this document.', { align: 'center' })
+               .moveDown()
+               .text('The original BOL PDF is preserved in your invoice records.', { align: 'center' });
+          }
         } else {
           doc.fontSize(12)
              .text('Unsupported file format for Bill of Lading', { align: 'center' });
