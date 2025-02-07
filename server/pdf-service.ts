@@ -63,7 +63,7 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
      .moveDown(); // Added vertical spacing before adding the logo
 
   // Adding the logo
-  doc.image(path.join(process.cwd(), 'uploads', 'Zoom Books Logo Final-01.png'), {
+  doc.image(path.join(process.cwd(), 'attached_assets', 'Zoom Books Logo Final-01.png'), {
     fit: [150, 50],
     align: 'center',
     valign: 'bottom',
@@ -149,7 +149,7 @@ export async function generateAccountStatementPDF(supplier: Supplier, invoices: 
   }
 
   // Adding the logo
-  doc.image(path.join(process.cwd(), 'uploads', 'Zoom Books Logo Final-01.png'), {
+  doc.image(path.join(process.cwd(), 'attached_assets', 'Zoom Books Logo Final-01.png'), {
     fit: [150, 50],
     align: 'center',
     valign: 'bottom',
