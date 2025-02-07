@@ -107,20 +107,9 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
 
         try {
           // Add BOL directly to the page
-          const ext = path.extname(bolPath).toLowerCase();
-          
-          // Verify file exists and is readable
-          if (!fs.existsSync(bolPath)) {
-            throw new Error('BOL file not found');
-          }
-
           if (['.jpg', '.jpeg', '.png', '.pdf'].includes(ext)) {
-            // Add a new page for BOL
+            // Add a single page for BOL
             doc.addPage();
-            
-            doc.fontSize(14)
-               .text('Bill of Lading', { align: 'center' })
-               .moveDown();
 
             // Handle image formats
             if (['.jpg', '.jpeg', '.png'].includes(ext)) {
@@ -130,19 +119,15 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
                 valign: 'center'
               });
             } else if (ext === '.pdf') {
-              // For PDF files, combine with the current document
               try {
-                // Add the external PDF pages
-                doc.addPage();
-                doc.fontSize(14)
-                   .text('Bill of Lading', { align: 'center' })
-                   .moveDown();
-                   
-                // Read and combine the PDF
-                doc.file(bolPath, {
-                  fit: [doc.page.width - 100, doc.page.height - 150],
-                  align: 'center'
-                });
+                const fs = require('fs');
+                doc.save();
+                doc.scale(0.8); // Scale down slightly to fit better
+                doc.translate(50, 50); // Adjust position
+                doc.path('M 0,0 L 500,0 L 500,700 L 0,700 Z')
+                   .clip();
+                doc.restore();
+                doc.file(bolPath);
               } catch (error) {
                 console.error('Error embedding PDF BOL:', error);
                 doc.fontSize(12)
