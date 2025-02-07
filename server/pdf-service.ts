@@ -64,11 +64,9 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
 
   // Adding the logo
   doc.image(path.join(process.cwd(), 'attached_assets', 'Zoom Books Logo Final-01.png'), {
-    fit: [150, 50],
-    align: 'center',
+    fit: [500, 150], // Increased size
+    align: 'center', // Centered the logo
     valign: 'bottom',
-    width: 150, // Set desired width
-    height: 50, // Set desired height
   });
 
   return new Promise((resolve, reject) => {
@@ -110,12 +108,12 @@ export async function generateAccountStatementPDF(supplier: Supplier, invoices: 
      .text(`Contact: ${supplier.contactPerson || ''}`, 40, 147)
      .text(`Email: ${supplier.email || ''}`, 40, 159); // Adjusted for less spacing
 
-   // Outstanding balance
-   const totalOutstanding = outstandingInvoices.reduce((sum, inv) => sum + Number(inv.totalAmount), 0);
-   doc.fontSize(12)
-      .font('Helvetica-Bold')  // Set the font to bold
-      .text(`Total Outstanding Balance: $${totalOutstanding.toFixed(2)}`, 40, 185)
-      .font('Helvetica');
+  // Outstanding balance
+  const totalOutstanding = outstandingInvoices.reduce((sum, inv) => sum + Number(inv.totalAmount), 0);
+  doc.fontSize(12)
+     .font('Helvetica-Bold')  // Set the font to bold
+     .text(`Total Outstanding Balance: $${totalOutstanding.toFixed(2)}`, 40, 185)
+     .font('Helvetica');
 
   if (outstandingInvoices.length > 0) {
     // Invoices table
@@ -150,11 +148,9 @@ export async function generateAccountStatementPDF(supplier: Supplier, invoices: 
 
   // Adding the logo
   doc.image(path.join(process.cwd(), 'attached_assets', 'Zoom Books Logo Final-01.png'), {
-    fit: [150, 50],
-    align: 'center',
+    fit: [500, 150], // Increased size
+    align: 'center', // Centered the logo
     valign: 'bottom',
-    width: 150,
-    height: 50,
   });
 
   return new Promise((resolve, reject) => {
