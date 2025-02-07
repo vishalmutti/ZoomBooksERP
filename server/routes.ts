@@ -318,8 +318,8 @@ export function registerRoutes(app: Express): Server {
       
       res.json({ fileName: pdfFileName });
     } catch (error) {
-      console.error('Error generating account statement:', error);
-      res.status(500).json({ message: 'Failed to generate account statement' });
+      console.error('Error generating account statement:', error instanceof Error ? error.stack : error);
+      res.status(500).json({ message: 'Failed to generate account statement: ' + (error instanceof Error ? error.message : 'Unknown error') });
     }
   });
 

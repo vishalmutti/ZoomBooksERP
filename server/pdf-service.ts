@@ -15,9 +15,14 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
   const writeStream = fs.createWriteStream(filePath);
 
   // Company logo and header
-  doc.image('attached_assets/Zoom Books Logo Final-02.png', 0, 0, { 
-    width: 225
-  })
+  try {
+    doc.image('attached_assets/Zoom Books Logo Final-02.png', 0, 0, { 
+      width: 225
+    });
+  } catch (error) {
+    console.warn('Could not load company logo:', error);
+    // Continue without the logo
+  }
      .fontSize(10)
      .text('Acirassi Books Ltd', 50, 200)
      .text('507/508-19055 Airport Way', 50, 215)
@@ -84,9 +89,14 @@ export async function generateAccountStatementPDF(supplier: Supplier, invoices: 
   const writeStream = fs.createWriteStream(filePath);
 
   // Company logo and header
-  doc.image('attached_assets/Zoom Books Logo Final-02.png', 0, 0, { 
-    width: 225
-  })
+  try {
+    doc.image('attached_assets/Zoom Books Logo Final-02.png', 0, 0, { 
+      width: 225
+    });
+  } catch (error) {
+    console.warn('Could not load company logo:', error);
+    // Continue without the logo
+  }
      .fontSize(24)
      .text('ACCOUNT STATEMENT', 450, 45, { align: 'right' })
      .fontSize(10)
