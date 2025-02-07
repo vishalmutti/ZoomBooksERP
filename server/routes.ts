@@ -305,9 +305,26 @@ export function registerRoutes(app: Express): Server {
   });
 
   const httpServer = createServer(app);
+  app.get("/api/suppliers/:id/account-statement", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const id = parseInt(req.params.id);
+      const supplier = await storage.getSupplier(id);
+      if (!supplier) return res.status(404).send("Supplier not found");
+
+      const invoices = await storage.getSupplierInvoices(id);
+      const pdfFileName = await generateAccountStatementPDF(supplier, invoices);
+      
+      res.json({ fileName: pdfFileName });
+    } catch (error) {
+      console.error('Error generating account statement:', error);
+      res.status(500).json({ message: 'Failed to generate account statement' });
+    }
+  });
+
   return httpServer;
 }
-app.get("/api/suppliers/:id/account-statement", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     try {
