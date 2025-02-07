@@ -1,3 +1,4 @@
+
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
@@ -29,18 +30,6 @@ const upload = multer({
   { name: 'file', maxCount: 1 },
   { name: 'bolFile', maxCount: 1 }
 ]);
-
-app.post("/api/invoices", upload, async (req, res) => {
-  storage: multer.diskStorage({
-    destination: function (req, file, cb) {
-      cb(null, uploadDir);
-    },
-    filename: function (req, file, cb) {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-      cb(null, uniqueSuffix + path.extname(file.originalname));
-    }
-  })
-});
 
 export function registerRoutes(app: Express): Server {
   app.use('/uploads', express.static(uploadDir));
@@ -136,7 +125,7 @@ export function registerRoutes(app: Express): Server {
     res.json(invoices);
   });
 
-  app.post("/api/invoices", upload.single('file'), async (req, res) => {
+  app.post("/api/invoices", upload, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     try {
@@ -172,7 +161,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.patch("/api/invoices/:id", upload.single('file'), async (req, res) => {
+  app.patch("/api/invoices/:id", upload, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     try {
