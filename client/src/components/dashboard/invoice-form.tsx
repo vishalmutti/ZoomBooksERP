@@ -46,7 +46,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   const [mode, setMode] = useState<"manual" | "upload">(initialMode);
   const { toast } = useToast();
   const [file, setFile] = useState<File | null>(null);
-  const [bolFile, setBolFile] = useState<File | null>(null); // Added state for BOL file
+  const [bolFile, setBolFile] = useState<File | null>(null);
 
   // Add polling to invoice query
   const { data: currentInvoiceData } = useQuery<Invoice & { items?: InvoiceItem[] }>({
@@ -133,10 +133,13 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     mutationFn: async (data: InsertInvoice) => {
       const formData = new FormData();
 
+      // Handle invoice file upload
       if (mode === "upload" && file) {
         formData.append('file', file);
       }
-      if (bolFile) { // Added BOL file handling
+
+      // Always append BOL file if present, regardless of mode
+      if (bolFile) {
         formData.append('bolFile', bolFile);
       }
 
@@ -158,7 +161,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         formData
       );
 
-      // For 500 status, just return empty object since we know it succeeded
       if (res.status === 500) {
         return {};
       }
@@ -201,7 +203,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         setDialogOpen(false);
       }
       setFile(null);
-      setBolFile(null); // Clear BOL file after submission
+      setBolFile(null);
     },
     onError: (error: Error) => {
       if (!error.message.includes('Failed to update invoice')) {
@@ -241,7 +243,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     }
   };
 
-  const handleBolFileChange = (e: React.ChangeEvent<HTMLInputElement>) => { // Added handler for BOL file
+  const handleBolFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setBolFile(e.target.files[0]);
     }
@@ -553,7 +555,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                       </div>
                     )}
                   </div>
-                  <div> {/* Added BOL file upload */}
+                  <div>
                     <Label>Upload BOL</Label>
                     <div className="mt-2">
                       <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50">

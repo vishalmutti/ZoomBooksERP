@@ -216,6 +216,10 @@ export class DatabaseStorage implements IStorage {
           // Ensure other fields are properly typed
           totalAmount: updates.totalAmount?.toString(),
           isPaid: updates.isPaid ?? false,
+          // Preserve BOL file if not being updated
+          bolFile: updates.bolFile === undefined ? 
+            (await this.getInvoice(id))?.bolFile : 
+            updates.bolFile
         })
         .where(eq(invoices.id, id))
         .returning();

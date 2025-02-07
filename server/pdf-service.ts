@@ -14,7 +14,7 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
   const filePath = path.join(process.cwd(), 'uploads', fileName);
   const writeStream = fs.createWriteStream(filePath);
 
-  // Company details
+  // Company details and invoice header
   doc.fontSize(12)
      .font('Helvetica-Bold')
      .text('Acirassi Books Ltd (Zoom Books Co)', 50, 70)
@@ -57,7 +57,7 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
        .text(item.quantity?.toString() || "0", 280, position)
        .text(`$${Number(item.unitPrice).toFixed(2)}`, 350, position)
        .text(`$${Number(item.totalPrice).toFixed(2)}`, 450, position);
-    position += 25; // Increased spacing between items
+    position += 25; 
   });
 
   doc.font('Helvetica-Bold')
@@ -72,17 +72,17 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
      .moveDown()
      .fontSize(8)
      .text('Thank you for your business!', 50, position + 100)
-     .moveDown(); // Added vertical spacing before adding the logo
+     .moveDown(); 
 
   // Adding the logo at the bottom of the page
   const pageHeight = doc.page.height;
   const logoHeight = 300;
-  const logoWidth = 600;  // Reduced width to prevent overflow
+  const logoWidth = 600;
   const marginBottom = 50;
 
   doc.image(
     path.join(process.cwd(), 'attached_assets', 'Zoom Books Logo Final-01.png'),
-    (doc.page.width - logoWidth) / 2,  // Center horizontally
+    (doc.page.width - logoWidth) / 2,
     pageHeight - logoHeight - marginBottom,
     {
       fit: [logoWidth, logoHeight],
@@ -95,32 +95,69 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
       // If there's a BOL file, append it to the invoice
       if (data.invoice.bolFile) {
         const bolPath = path.join(process.cwd(), 'uploads', data.invoice.bolFile);
-        
-        // Add a new page for BOL
-        doc.addPage();
-        doc.fontSize(14)
-           .text('Bill of Lading', { align: 'center' })
-           .moveDown();
-        
-        try {
-          doc.image(bolPath, {
-            fit: [doc.page.width - 100, doc.page.height - 150],
-            align: 'center',
-            valign: 'center'
-          });
-        } catch (error) {
-          console.error('Error adding BOL to PDF:', error);
-          doc.text('Error loading Bill of Lading image', { align: 'center' });
+
+        if (fs.existsSync(bolPath)) {
+          // Add a new page for BOL
+          doc.addPage();
+          doc.fontSize(14)
+             .text('Bill of Lading', { align: 'center' })
+             .moveDown();
+
+          try {
+            // Get file extension
+            const ext = path.extname(bolPath).toLowerCase();
+
+            // Check if file is supported by PDFKit
+            if (['.jpg', '.jpeg', '.png'].includes(ext)) {
+              doc.image(bolPath, {
+                fit: [doc.page.width - 100, doc.page.height - 150],
+                align: 'center',
+                valign: 'center'
+              });
+            } else if (ext === '.pdf') {
+              // For PDF files, add a note about the attachment
+              doc.fontSize(12)
+                 .text('PDF Bill of Lading document is attached.', {
+                   align: 'center'
+                 });
+
+              // Copy the PDF file to preserve it
+              const newBolPath = path.join(process.cwd(), 'uploads', `bol-${Date.now()}${ext}`);
+              fs.copyFileSync(bolPath, newBolPath);
+            } else {
+              doc.fontSize(12)
+                 .text('Unsupported file format for Bill of Lading', { align: 'center' });
+            }
+          } catch (error) {
+            console.error('Error adding BOL to PDF:', error);
+            doc.fontSize(12)
+               .text('Error loading Bill of Lading file', { align: 'center' })
+               .moveDown()
+               .text(`Please ensure the file is a valid image or PDF. Error: ${error instanceof Error ? error.message : 'Unknown error'}`, { 
+                 align: 'center',
+                 width: 400
+               });
+          }
+        } else {
+          console.error('BOL file not found:', bolPath);
+          doc.addPage();
+          doc.fontSize(12)
+             .text('Bill of Lading file is missing from the system', { align: 'center' });
         }
       }
-      
-      // Always pipe and end the document
+
+      // Finalize the document
       doc.pipe(writeStream);
       doc.end();
-      
+
       writeStream.on('finish', () => resolve(fileName));
+      writeStream.on('error', (err) => {
+        console.error('Error writing PDF:', err);
+        reject(err);
+      });
     } catch (error) {
-      reject(error);
+      console.error('Error generating PDF:', error);
+      reject(error instanceof Error ? error : new Error('Unknown error generating PDF'));
     }
   });
 }
@@ -159,12 +196,12 @@ export async function generateAccountStatementPDF(supplier: Supplier, invoices: 
      .fontSize(10)
      .text(supplier.address || '', 40, 140)
      .text(`Contact: ${supplier.contactPerson || ''}`, 40, 155)
-     .text(`Email: ${supplier.email || ''}`, 40, 170); // Adjusted for less spacing
+     .text(`Email: ${supplier.email || ''}`, 40, 170); 
 
   // Outstanding balance
   const totalOutstanding = outstandingInvoices.reduce((sum, inv) => sum + Number(inv.totalAmount), 0);
   doc.fontSize(12)
-     .font('Helvetica-Bold')  // Set the font to bold
+     .font('Helvetica-Bold')  
      .text(`Total Outstanding Balance: $${totalOutstanding.toFixed(2)}`, 40, 185)
      .font('Helvetica');
 
@@ -181,7 +218,7 @@ export async function generateAccountStatementPDF(supplier: Supplier, invoices: 
        .text('Days Overdue', 400, tableTop);
 
     doc.font('Helvetica');
-    let position = tableTop + 25; // Increased vertical spacing
+    let position = tableTop + 25; 
 
     outstandingInvoices.forEach(invoice => {
       const dueDate = new Date(invoice.dueDate);
@@ -192,7 +229,7 @@ export async function generateAccountStatementPDF(supplier: Supplier, invoices: 
          .text(dueDate.toLocaleDateString(), 160, position)
          .text(`$${Number(invoice.totalAmount).toFixed(2)}`, 280, position)
          .text(daysOverdue.toString(), 400, position);
-      position += 30; // Increased spacing between invoices
+      position += 30; 
     });
   } else {
     doc.fontSize(10)
@@ -202,12 +239,12 @@ export async function generateAccountStatementPDF(supplier: Supplier, invoices: 
   // Adding the logo at the bottom of the page
   const pageHeight2 = doc.page.height;
   const logoHeight2 = 300;
-  const logoWidth2 = 600;  // Reduced width to prevent overflow
+  const logoWidth2 = 600;  
   const marginBottom2 = 50;
 
   doc.image(
     path.join(process.cwd(), 'attached_assets', 'Zoom Books Logo Final-01.png'),
-    (doc.page.width - logoWidth2) / 2,  // Center horizontally
+    (doc.page.width - logoWidth2) / 2,  
     pageHeight2 - logoHeight2 - marginBottom2,
     {
       fit: [logoWidth2, logoHeight2],

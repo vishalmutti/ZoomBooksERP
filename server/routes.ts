@@ -1,4 +1,3 @@
-
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
@@ -136,20 +135,29 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).json({ message: 'Invalid invoice data' });
       }
 
+      // Get uploaded files
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      const uploadedFile = files?.file?.[0]?.filename;
+      const bolFile = files?.bolFile?.[0]?.filename;
+
       const invoice = await storage.createInvoice({
         ...parsed.data,
-        uploadedFile: req.file ? req.file.filename : undefined,
+        uploadedFile: uploadedFile,
+        bolFile: bolFile
       });
 
       // Generate PDF if it's a manual entry
-      if (!req.file && parsed.data.items?.length) {
+      if (!uploadedFile && parsed.data.items?.length) {
         const supplier = await storage.getSupplier(parsed.data.supplierId);
         if (supplier) {
           const pdfFileName = await generateInvoicePDF({
             invoice: { ...invoice, items: parsed.data.items },
             supplier
           });
-          await storage.updateInvoice(invoice.id, { uploadedFile: pdfFileName });
+          await storage.updateInvoice(invoice.id, {
+            uploadedFile: pdfFileName,
+            bolFile: invoice.bolFile
+          });
           invoice.uploadedFile = pdfFileName;
         }
       }
@@ -178,61 +186,65 @@ export function registerRoutes(app: Express): Server {
         return res.status(404).json({ message: 'Invoice not found' });
       }
 
+      // Get uploaded files
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-      let uploadedFile = files?.file?.[0]?.filename || existingInvoice.uploadedFile;
-      let bolFile = files?.bolFile?.[0]?.filename || existingInvoice.bolFile;
+      const uploadedFile = files?.file?.[0]?.filename;
+      const bolFile = files?.bolFile?.[0]?.filename;
 
-      // Generate PDF if it's a manual entry
-      if (!files?.file?.[0] && (parsed.data.items?.length || existingInvoice.items?.length)) {
+      // Update invoice with new data including BOL file
+      const updatedInvoice = await storage.updateInvoice(id, {
+        ...parsed.data,
+        uploadedFile: uploadedFile || existingInvoice.uploadedFile,
+        bolFile: bolFile || existingInvoice.bolFile
+      });
+
+      // If this is a manual entry and we have items, generate a new PDF
+      if (!uploadedFile && (parsed.data.items?.length || existingInvoice.items?.length)) {
         const supplier = await storage.getSupplier(parsed.data.supplierId || existingInvoice.supplierId);
         if (supplier) {
-          uploadedFile = await generateInvoicePDF({
+          const pdfFileName = await generateInvoicePDF({
             invoice: {
-              ...existingInvoice,
-              ...parsed.data,
+              ...updatedInvoice,
               items: parsed.data.items || existingInvoice.items,
-              id,
-              invoiceNumber: existingInvoice.invoiceNumber
             },
             supplier
           });
+          await storage.updateInvoice(id, {
+            uploadedFile: pdfFileName,
+            bolFile: bolFile || existingInvoice.bolFile
+          });
+          updatedInvoice.uploadedFile = pdfFileName;
         }
       }
 
-      const invoice = await storage.updateInvoice(id, {
-        ...parsed.data,
-        uploadedFile,
-        bolFile
-      });
-
-      if (!invoice) {
-        return res.status(404).json({ message: 'Invoice not found' });
-      }
-
       // Always update invoice items with the provided data
-      // Update invoice and items in a single transaction
-      const updatedInvoice = await storage.db.transaction(async (tx) => {
-        // Delete existing items
-        await tx.delete(storage.invoiceItems).where(eq(storage.invoiceItems.invoiceId, id));
+      if (parsed.data.items?.length) {
+        // Update invoice and items in a single transaction
+        const finalInvoice = await storage.db.transaction(async (tx) => {
+          // Delete existing items
+          await tx.delete(storage.invoiceItems).where(eq(storage.invoiceItems.invoiceId, id));
 
-        // Insert new items if provided
-        if (parsed.data.items?.length) {
+          // Insert new items
           await tx.insert(storage.invoiceItems).values(
             parsed.data.items.map(item => ({
               invoiceId: id,
               description: item.description,
-              quantity: item.quantity.toString(),
-              unitPrice: item.unitPrice.toString(),
-              totalPrice: (Number(item.quantity) * Number(item.unitPrice)).toString(),
+              quantity: item.quantity || "0",
+              unitPrice: item.unitPrice || "0",
+              totalPrice: ((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0)).toString(),
             }))
           );
-        }
 
-        // Get fresh invoice data with items
-        return await storage.getInvoice(id);
-      });
+          // Get fresh invoice data with items
+          return await storage.getInvoice(id);
+        });
 
-      res.json(updatedInvoice);
+        res.json(finalInvoice);
+      } else {
+        // If no items to update, return the updated invoice
+        const invoice = await storage.getInvoice(id);
+        res.json(invoice);
+      }
     } catch (error) {
       console.error('Invoice update error:', error);
       res.status(500).json({ message: 'Failed to update invoice' });
@@ -328,9 +340,9 @@ export function registerRoutes(app: Express): Server {
       res.json({ fileName: pdfFileName });
     } catch (error) {
       console.error('Error generating account statement:', error instanceof Error ? error.stack : error);
-      res.status(500).json({ 
-        message: 'Failed to generate account statement: ' + 
-          (error instanceof Error ? error.message : 'Unknown error') 
+      res.status(500).json({
+        message: 'Failed to generate account statement: ' +
+          (error instanceof Error ? error.message : 'Unknown error')
       });
     }
   });
