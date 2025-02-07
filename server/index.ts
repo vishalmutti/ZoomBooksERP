@@ -56,22 +56,26 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   // Try ports starting from 5000 until we find an available one
   const tryPort = (port: number): Promise<number> => {
     return new Promise((resolve, reject) => {
-      server.listen(port, "0.0.0.0")
-        .once('listening', () => {
-          log(`✨ Server running at http://0.0.0.0:${port}`);
-          log(`🔒 API available at http://0.0.0.0:${port}/api`);
-          resolve(port);
-        })
-        .once('error', (err: any) => {
-          if (err.code === 'EADDRINUSE') {
-            log(`Port ${port} in use, trying ${port + 1}`);
-            server.close(() => {
-              tryPort(port + 1).then(resolve).catch(reject);
-            });
-          } else {
-            reject(err);
-          }
+      const cleanupAndRetry = () => {
+        server.close(() => {
+          tryPort(port + 1).then(resolve).catch(reject);
         });
+      };
+
+      server.once('error', (err: any) => {
+        if (err.code === 'EADDRINUSE') {
+          log(`Port ${port} in use, trying ${port + 1}`);
+          cleanupAndRetry();
+        } else {
+          reject(err);
+        }
+      });
+
+      server.listen(port, "0.0.0.0", () => {
+        log(`✨ Server running at http://0.0.0.0:${port}`);
+        log(`🔒 API available at http://0.0.0.0:${port}/api`);
+        resolve(port);
+      });
     });
   };
 
