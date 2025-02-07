@@ -114,32 +114,40 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
             throw new Error('BOL file not found');
           }
 
-          if (['.jpg', '.jpeg', '.png'].includes(ext)) {
+          if (['.jpg', '.jpeg', '.png', '.pdf'].includes(ext)) {
+            // Add a new page for BOL
+            doc.addPage();
+            
+            doc.fontSize(14)
+               .text('Bill of Lading', { align: 'center' })
+               .moveDown();
+
             // Handle image formats
-            doc.image(bolPath, {
-              fit: [doc.page.width - 100, doc.page.height - 150],
-              align: 'center',
-              valign: 'center'
-            });
-          } else if (ext === '.pdf') {
-            try {
-              // For PDF files, create a more informative display
-              doc.fontSize(14)
-                 .text('Bill of Lading (PDF)', { align: 'center' })
-                 .moveDown()
-                 .fontSize(10)
-                 .text(`A PDF Bill of Lading has been included with invoice #${data.invoice.invoiceNumber}.`, {
-                   align: 'center'
-                 })
-                 .moveDown()
-                 .text('The BOL file is available in your document storage system.', {
-                   align: 'center',
-                   color: 'gray'
-                 });
-            } catch (error) {
-              console.error('Error handling PDF BOL:', error);
-              doc.fontSize(12)
-                 .text('Error processing PDF Bill of Lading', { align: 'center' });
+            if (['.jpg', '.jpeg', '.png'].includes(ext)) {
+              doc.image(bolPath, {
+                fit: [doc.page.width - 100, doc.page.height - 150],
+                align: 'center',
+                valign: 'center'
+              });
+            } else if (ext === '.pdf') {
+              // For PDF files, read and embed the content
+              try {
+                const PDFDocument = require('pdfkit');
+                const fs = require('fs');
+                
+                // Read the BOL PDF file
+                const bolContent = fs.readFileSync(bolPath);
+                
+                // Embed the PDF content
+                doc.image(bolContent, {
+                  fit: [doc.page.width - 100, doc.page.height - 150],
+                  align: 'center'
+                });
+              } catch (error) {
+                console.error('Error embedding PDF BOL:', error);
+                doc.fontSize(12)
+                   .text('Error embedding Bill of Lading PDF', { align: 'center' });
+              }
             }
           } else {
             doc.fontSize(12)
