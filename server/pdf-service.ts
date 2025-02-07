@@ -114,10 +114,9 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
         }
       }
       
-      if (!data.invoice.bolFile) {
-        doc.pipe(writeStream);
-        doc.end();
-      }
+      // Always pipe and end the document
+      doc.pipe(writeStream);
+      doc.end();
       
       writeStream.on('finish', () => resolve(fileName));
     } catch (error) {

@@ -179,11 +179,11 @@ export function registerRoutes(app: Express): Server {
       }
 
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-      let uploadedFile = files?.file?.[0]?.filename;
-      let bolFile = files?.bolFile?.[0]?.filename;
+      let uploadedFile = files?.file?.[0]?.filename || existingInvoice.uploadedFile;
+      let bolFile = files?.bolFile?.[0]?.filename || existingInvoice.bolFile;
 
       // Generate PDF if it's a manual entry
-      if (!req.file && (parsed.data.items?.length || existingInvoice.items?.length)) {
+      if (!files?.file?.[0] && (parsed.data.items?.length || existingInvoice.items?.length)) {
         const supplier = await storage.getSupplier(parsed.data.supplierId || existingInvoice.supplierId);
         if (supplier) {
           uploadedFile = await generateInvoicePDF({
