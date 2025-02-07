@@ -90,11 +90,56 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
     }
   );
 
-  return new Promise((resolve, reject) => {
-    doc.pipe(writeStream);
-    doc.end();
-    writeStream.on('finish', () => resolve(fileName));
-    writeStream.on('error', reject);
+  return new Promise(async (resolve, reject) => {
+    try {
+      // If there's a BOL file, append it to the invoice
+      if (data.invoice.bolFile) {
+        const bolPath = path.join(process.cwd(), 'uploads', data.invoice.bolFile);
+        const bolExt = path.extname(data.invoice.bolFile).toLowerCase();
+        
+        // If BOL is not PDF, convert it to PDF first
+        if (bolExt !== '.pdf') {
+          const PDFDocument = require('pdfkit');
+          doc.addPage();
+          doc.image(bolPath, {
+            fit: [doc.page.width - 100, doc.page.height - 100],
+            align: 'center',
+            valign: 'center'
+          });
+        } else {
+          // If BOL is PDF, merge it directly
+          const fs = require('fs');
+          const pdftk = require('node-pdftk');
+          
+          await new Promise((resolve) => {
+            doc.pipe(writeStream);
+            doc.end();
+            writeStream.on('finish', resolve);
+          });
+
+          const mergedFileName = `merged-${fileName}`;
+          const mergedFilePath = path.join(process.cwd(), 'uploads', mergedFileName);
+          
+          await pdftk
+            .input([filePath, bolPath])
+            .cat()
+            .output(mergedFilePath);
+
+          // Replace original file with merged file
+          fs.unlinkSync(filePath);
+          fs.renameSync(mergedFilePath, filePath);
+        }
+      }
+      
+      if (!data.invoice.bolFile) {
+        doc.pipe(writeStream);
+        doc.end();
+      }
+      
+      writeStream.on('finish', () => resolve(fileName));
+    } catch (error) {
+      reject(error);
+    }
   });
 }
 

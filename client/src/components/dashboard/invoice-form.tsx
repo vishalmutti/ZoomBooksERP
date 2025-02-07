@@ -46,6 +46,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   const [mode, setMode] = useState<"manual" | "upload">(initialMode);
   const { toast } = useToast();
   const [file, setFile] = useState<File | null>(null);
+  const [bolFile, setBolFile] = useState<File | null>(null); // Added state for BOL file
 
   // Add polling to invoice query
   const { data: currentInvoiceData } = useQuery<Invoice & { items?: InvoiceItem[] }>({
@@ -135,6 +136,9 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       if (mode === "upload" && file) {
         formData.append('file', file);
       }
+      if (bolFile) { // Added BOL file handling
+        formData.append('bolFile', bolFile);
+      }
 
       const invoiceData = {
         ...data,
@@ -197,6 +201,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         setDialogOpen(false);
       }
       setFile(null);
+      setBolFile(null); // Clear BOL file after submission
     },
     onError: (error: Error) => {
       if (!error.message.includes('Failed to update invoice')) {
@@ -233,6 +238,12 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
+    }
+  };
+
+  const handleBolFileChange = (e: React.ChangeEvent<HTMLInputElement>) => { // Added handler for BOL file
+    if (e.target.files && e.target.files[0]) {
+      setBolFile(e.target.files[0]);
     }
   };
 
@@ -541,6 +552,25 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                         </div>
                       </div>
                     )}
+                  </div>
+                  <div> {/* Added BOL file upload */}
+                    <Label>Upload BOL</Label>
+                    <div className="mt-2">
+                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <Upload className="w-8 h-8 mb-2 text-gray-400" />
+                          <p className="mb-2 text-sm text-gray-500">
+                            {bolFile ? bolFile.name : "Click to upload BOL or drag and drop"}
+                          </p>
+                        </div>
+                        <input
+                          type="file"
+                          className="hidden"
+                          onChange={handleBolFileChange}
+                          accept=".pdf,.png,.jpg,.jpeg"
+                        />
+                      </label>
+                    </div>
                   </div>
                 </div>
               </TabsContent>
