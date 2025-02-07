@@ -120,7 +120,6 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
               });
             } else if (ext === '.pdf') {
               try {
-                const fs = require('fs');
                 doc.save();
                 doc.scale(0.8); // Scale down slightly to fit better
                 doc.translate(50, 50); // Adjust position
