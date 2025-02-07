@@ -63,9 +63,15 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
   doc.font('Helvetica-Bold')
      .text('Total Amount:', 350, position + 20)
      .text(`$${Number(data.invoice.totalAmount).toFixed(2)}`, 450, position + 20)
-     .fontSize(8)
+     .moveDown()
+     .font('Helvetica-Bold')
+     .fontSize(10)
+     .text('Notes:', 50, position + 50)
      .font('Helvetica')
-     .text('Thank you for your business!', 50, position + 50)
+     .text(data.invoice.notes || 'No notes provided', 50, position + 70)
+     .moveDown()
+     .fontSize(8)
+     .text('Thank you for your business!', 50, position + 100)
      .moveDown(); // Added vertical spacing before adding the logo
 
   // Adding the logo at the bottom of the page
