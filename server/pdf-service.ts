@@ -14,9 +14,13 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
   const filePath = path.join(process.cwd(), 'uploads', fileName);
   const writeStream = fs.createWriteStream(filePath);
 
-  doc.fontSize(10)
-     .text('Acirassi Books Ltd (Zoom Books Co)', 50, 80)
-     .text('507/508-19055 Airport Way', 50, 95)
+  // Company details
+  doc.fontSize(12)
+     .font('Helvetica-Bold')
+     .text('Acirassi Books Ltd (Zoom Books Co)', 50, 70)
+     .font('Helvetica')
+     .fontSize(10)
+     .text('507/508-19055 Airport Way', 50, 90)
      .text('Pitt Meadows, BC V3Y 0G4', 50, 110)
      .fontSize(24)
      .text('INVOICE', 450, 45, { align: 'right' })
@@ -28,12 +32,14 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
   // Supplier details
   doc.fontSize(12)
      .text('Bill To:', 50, 180)
-     .fontSize(10)
+     .font('Helvetica-Bold')
      .text(data.supplier.name, 50, 200)
+     .font('Helvetica')
+     .fontSize(10)
      .text(data.supplier.address || '', 50, 215)
      .text(`Contact: ${data.supplier.contactPerson || ''}`, 50, 230)
      .text(`Email: ${data.supplier.email || ''}`, 50, 245)
-     .moveDown(2); // Added vertical spacing
+     .moveDown(2);
 
   // Items table
   const tableTop = 270;
