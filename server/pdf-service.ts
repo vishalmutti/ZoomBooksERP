@@ -14,7 +14,7 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
   const filePath = path.join(process.cwd(), 'uploads', fileName);
   const writeStream = fs.createWriteStream(filePath);
 
-  // Company details and invoice header
+  // Create invoice first page content
   doc.fontSize(12)
      .font('Helvetica-Bold')
      .text('Acirassi Books Ltd (Zoom Books Co)', 50, 70)
@@ -72,9 +72,9 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
      .moveDown()
      .fontSize(8)
      .text('Thank you for your business!', 50, position + 100)
-     .moveDown(); 
+     .moveDown();
 
-  // Adding the logo at the bottom of the page
+  // Adding the logo
   const pageHeight = doc.page.height;
   const logoHeight = 300;
   const logoWidth = 600;
@@ -90,75 +90,63 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
     }
   );
 
-  return new Promise(async (resolve, reject) => {
-    try {
-      // If there's a BOL file, append it to the invoice
-      if (data.invoice.bolFile) {
-        const bolPath = path.join(process.cwd(), 'uploads', data.invoice.bolFile);
+  // If there's a BOL file, append it
+  if (data.invoice.bolFile) {
+    const bolPath = path.join(process.cwd(), 'uploads', data.invoice.bolFile);
 
-        if (fs.existsSync(bolPath)) {
-          // Add a new page for BOL
-          doc.addPage();
-          doc.fontSize(14)
-             .text('Bill of Lading', { align: 'center' })
-             .moveDown();
+    if (fs.existsSync(bolPath)) {
+      // Add a new page for BOL
+      doc.addPage();
+      doc.fontSize(14)
+         .text('Bill of Lading', { align: 'center' })
+         .moveDown();
 
-          try {
-            // Get file extension
-            const ext = path.extname(bolPath).toLowerCase();
+      try {
+        // Handle different file types
+        const ext = path.extname(bolPath).toLowerCase();
 
-            // Check if file is supported by PDFKit
-            if (['.jpg', '.jpeg', '.png'].includes(ext)) {
-              doc.image(bolPath, {
-                fit: [doc.page.width - 100, doc.page.height - 150],
-                align: 'center',
-                valign: 'center'
-              });
-            } else if (ext === '.pdf') {
-              // For PDF files, add a note about the attachment
-              doc.fontSize(12)
-                 .text('PDF Bill of Lading document is attached.', {
-                   align: 'center'
-                 });
-
-              // Copy the PDF file to preserve it
-              const newBolPath = path.join(process.cwd(), 'uploads', `bol-${Date.now()}${ext}`);
-              fs.copyFileSync(bolPath, newBolPath);
-            } else {
-              doc.fontSize(12)
-                 .text('Unsupported file format for Bill of Lading', { align: 'center' });
-            }
-          } catch (error) {
-            console.error('Error adding BOL to PDF:', error);
-            doc.fontSize(12)
-               .text('Error loading Bill of Lading file', { align: 'center' })
-               .moveDown()
-               .text(`Please ensure the file is a valid image or PDF. Error: ${error instanceof Error ? error.message : 'Unknown error'}`, { 
-                 align: 'center',
-                 width: 400
-               });
-          }
-        } else {
-          console.error('BOL file not found:', bolPath);
-          doc.addPage();
+        if (['.jpg', '.jpeg', '.png'].includes(ext)) {
+          // For image files, directly embed them
+          doc.image(bolPath, {
+            fit: [doc.page.width - 100, doc.page.height - 150],
+            align: 'center',
+            valign: 'center'
+          });
+        } else if (ext === '.pdf') {
+          // For PDF files, we'll add a reference that it needs to be viewed separately
           doc.fontSize(12)
-             .text('Bill of Lading file is missing from the system', { align: 'center' });
+             .text('A PDF Bill of Lading is attached to this invoice.', { align: 'center' })
+             .moveDown()
+             .text('Please refer to the separate BOL file in your invoice documents.', { align: 'center' });
+
+          // Copy the BOL file to ensure it's preserved
+          const bolCopyName = `bol-${Date.now()}${ext}`;
+          const bolCopyPath = path.join(process.cwd(), 'uploads', bolCopyName);
+          fs.copyFileSync(bolPath, bolCopyPath);
+        } else {
+          doc.fontSize(12)
+             .text('Unsupported file format for Bill of Lading', { align: 'center' });
         }
+      } catch (error) {
+        console.error('Error adding BOL to PDF:', error);
+        doc.fontSize(12)
+           .text('Error loading Bill of Lading file', { align: 'center' })
+           .moveDown()
+           .text(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`, { 
+             align: 'center',
+             width: 400
+           });
       }
-
-      // Finalize the document
-      doc.pipe(writeStream);
-      doc.end();
-
-      writeStream.on('finish', () => resolve(fileName));
-      writeStream.on('error', (err) => {
-        console.error('Error writing PDF:', err);
-        reject(err);
-      });
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      reject(error instanceof Error ? error : new Error('Unknown error generating PDF'));
     }
+  }
+
+  // Finalize the document
+  doc.pipe(writeStream);
+  doc.end();
+
+  return new Promise((resolve, reject) => {
+    writeStream.on('finish', () => resolve(fileName));
+    writeStream.on('error', reject);
   });
 }
 

@@ -2,13 +2,14 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertInvoiceSchema, insertPaymentSchema, insertSupplierSchema } from "@shared/schema";
+import { insertInvoiceSchema, insertPaymentSchema, insertSupplierSchema, invoiceItems } from "@shared/schema";
 import { generateAccountStatementPDF, generateInvoicePDF } from "./pdf-service";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
 import express from "express";
 import { eq } from "drizzle-orm";
+import { db } from "./db";
 
 const uploadDir = path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(uploadDir)) {
@@ -188,18 +189,19 @@ export function registerRoutes(app: Express): Server {
 
       // Get uploaded files
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-      const uploadedFile = files?.file?.[0]?.filename;
-      const bolFile = files?.bolFile?.[0]?.filename;
 
-      // Update invoice with new data including BOL file
-      const updatedInvoice = await storage.updateInvoice(id, {
+      // Only update file paths if new files are uploaded
+      const updateData = {
         ...parsed.data,
-        uploadedFile: uploadedFile || existingInvoice.uploadedFile,
-        bolFile: bolFile || existingInvoice.bolFile
-      });
+        uploadedFile: files?.file?.[0]?.filename || existingInvoice.uploadedFile,
+        bolFile: files?.bolFile?.[0]?.filename || existingInvoice.bolFile
+      };
+
+      // Update invoice with new data
+      const updatedInvoice = await storage.updateInvoice(id, updateData);
 
       // If this is a manual entry and we have items, generate a new PDF
-      if (!uploadedFile && (parsed.data.items?.length || existingInvoice.items?.length)) {
+      if (!files?.file?.[0] && (parsed.data.items?.length || existingInvoice.items?.length)) {
         const supplier = await storage.getSupplier(parsed.data.supplierId || existingInvoice.supplierId);
         if (supplier) {
           const pdfFileName = await generateInvoicePDF({
@@ -209,23 +211,25 @@ export function registerRoutes(app: Express): Server {
             },
             supplier
           });
+
+          // Update the invoice with the new PDF file name but preserve the BOL file
           await storage.updateInvoice(id, {
             uploadedFile: pdfFileName,
-            bolFile: bolFile || existingInvoice.bolFile
+            bolFile: updateData.bolFile // Preserve the BOL file
           });
+
           updatedInvoice.uploadedFile = pdfFileName;
         }
       }
 
-      // Always update invoice items with the provided data
+      // Handle invoice items update if needed
       if (parsed.data.items?.length) {
-        // Update invoice and items in a single transaction
-        const finalInvoice = await storage.db.transaction(async (tx) => {
+        const finalInvoice = await db.transaction(async (tx) => {
           // Delete existing items
-          await tx.delete(storage.invoiceItems).where(eq(storage.invoiceItems.invoiceId, id));
+          await tx.delete(invoiceItems).where(eq(invoiceItems.invoiceId, id));
 
           // Insert new items
-          await tx.insert(storage.invoiceItems).values(
+          await tx.insert(invoiceItems).values(
             parsed.data.items.map(item => ({
               invoiceId: id,
               description: item.description,

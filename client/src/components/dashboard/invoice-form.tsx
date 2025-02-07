@@ -562,7 +562,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
                           <Upload className="w-8 h-8 mb-2 text-gray-400" />
                           <p className="mb-2 text-sm text-gray-500">
-                            {bolFile ? bolFile.name : "Click to upload BOL or drag and drop"}
+                            {bolFile ? bolFile.name : editInvoice?.bolFile ? "Replace current file" : "Click to upload BOL or drag and drop"}
                           </p>
                         </div>
                         <input
@@ -573,6 +573,23 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                         />
                       </label>
                     </div>
+                    {editInvoice?.bolFile && (
+                      <div className="mt-4">
+                        <Label>Current BOL File</Label>
+                        <div className="flex items-center justify-between p-2 mt-1 border rounded">
+                          <span className="text-sm">{editInvoice.bolFile}</span>
+                          <a
+                            href={`/uploads/${editInvoice.bolFile}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center text-blue-600 hover:text-blue-800"
+                          >
+                            <Download className="h-4 w-4 mr-1" />
+                            Download
+                          </a>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </TabsContent>
