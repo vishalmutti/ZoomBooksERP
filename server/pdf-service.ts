@@ -129,12 +129,8 @@ export async function generateAccountStatementPDF(supplier: Supplier, invoices: 
          .text(dueDate.toLocaleDateString(), 160, position)
          .text(`$${Number(invoice.totalAmount).toFixed(2)}`, 280, position)
          .text(daysOverdue.toString(), 400, position);
-      position += 15;
+      position += 25; // Increased spacing between invoices
     });
-
-    // Footer
-    doc.fontSize(8)
-       .text('This statement reflects all outstanding invoices as of the date shown above.', 40, 700);
   } else {
     doc.fontSize(10)
        .text('No outstanding invoices at this time.', 40, doc.y);
