@@ -91,11 +91,10 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   });
 
   useEffect(() => {
-    if (currentInvoiceData || editInvoice) {
+    if (!dialogOpen && (currentInvoiceData || editInvoice)) {
       const invoiceData = currentInvoiceData || editInvoice;
       if (!invoiceData) return;
 
-      console.log("Editing invoice with items:", invoiceData.items);
       setDialogOpen(true);
       setMode(invoiceData.uploadedFile ? "upload" : "manual");
 
