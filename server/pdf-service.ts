@@ -130,16 +130,16 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
                 valign: 'center'
               });
             } else if (ext === '.pdf') {
-              // For PDF files, read and embed the content
+              // For PDF files, combine with the current document
               try {
-                const PDFDocument = require('pdfkit');
-                const fs = require('fs');
-                
-                // Read the BOL PDF file
-                const bolContent = fs.readFileSync(bolPath);
-                
-                // Embed the PDF content
-                doc.image(bolContent, {
+                // Add the external PDF pages
+                doc.addPage();
+                doc.fontSize(14)
+                   .text('Bill of Lading', { align: 'center' })
+                   .moveDown();
+                   
+                // Read and combine the PDF
+                doc.file(bolPath, {
                   fit: [doc.page.width - 100, doc.page.height - 150],
                   align: 'center'
                 });
