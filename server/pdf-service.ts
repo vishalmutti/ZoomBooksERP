@@ -112,21 +112,19 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
             valign: 'center'
           });
         } else if (ext === '.pdf') {
-          try {
-            // Use the first page from the PDF BOL
-            doc.image(`${bolPath}[0]`, {
-              fit: [doc.page.width - 100, doc.page.height - 150],
-              align: 'center',
-              valign: 'center'
-            });
-          } catch (pdfError) {
-            console.error('Error rendering PDF BOL:', pdfError);
-            // If PDFKit can't handle the PDF directly, create a temporary image
-            doc.fontSize(12)
-               .text('PDF Bill of Lading is attached to this document.', { align: 'center' })
-               .moveDown()
-               .text('The original BOL PDF is preserved in your invoice records.', { align: 'center' });
-          }
+          // For PDF files, add a reference and link
+          doc.fontSize(12)
+             .text('The Bill of Lading is available as a separate PDF file.', {
+               align: 'center',
+               link: `/uploads/${data.invoice.bolFile}`,
+               underline: true,
+               color: 'blue'
+             })
+             .moveDown()
+             .text(`Filename: ${data.invoice.bolFile}`, {
+               align: 'center',
+               color: 'gray'
+             });
         } else {
           doc.fontSize(12)
              .text('Unsupported file format for Bill of Lading', { align: 'center' });
@@ -134,9 +132,7 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
       } catch (error) {
         console.error('Error adding BOL to PDF:', error);
         doc.fontSize(12)
-           .text('Error loading Bill of Lading file', { align: 'center' })
-           .moveDown()
-           .text(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`, { 
+           .text('The Bill of Lading file is available separately in your invoice documents.', { 
              align: 'center',
              width: 400
            });
