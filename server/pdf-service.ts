@@ -95,39 +95,22 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
       // If there's a BOL file, append it to the invoice
       if (data.invoice.bolFile) {
         const bolPath = path.join(process.cwd(), 'uploads', data.invoice.bolFile);
-        const bolExt = path.extname(data.invoice.bolFile).toLowerCase();
         
-        // If BOL is not PDF, convert it to PDF first
-        if (bolExt !== '.pdf') {
-          const PDFDocument = require('pdfkit');
-          doc.addPage();
+        // Add a new page for BOL
+        doc.addPage();
+        doc.fontSize(14)
+           .text('Bill of Lading', { align: 'center' })
+           .moveDown();
+        
+        try {
           doc.image(bolPath, {
-            fit: [doc.page.width - 100, doc.page.height - 100],
+            fit: [doc.page.width - 100, doc.page.height - 150],
             align: 'center',
             valign: 'center'
           });
-        } else {
-          // If BOL is PDF, merge it directly
-          const fs = require('fs');
-          const pdftk = require('node-pdftk');
-          
-          await new Promise((resolve) => {
-            doc.pipe(writeStream);
-            doc.end();
-            writeStream.on('finish', resolve);
-          });
-
-          const mergedFileName = `merged-${fileName}`;
-          const mergedFilePath = path.join(process.cwd(), 'uploads', mergedFileName);
-          
-          await pdftk
-            .input([filePath, bolPath])
-            .cat()
-            .output(mergedFilePath);
-
-          // Replace original file with merged file
-          fs.unlinkSync(filePath);
-          fs.renameSync(mergedFilePath, filePath);
+        } catch (error) {
+          console.error('Error adding BOL to PDF:', error);
+          doc.text('Error loading Bill of Lading image', { align: 'center' });
         }
       }
       

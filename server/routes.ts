@@ -178,7 +178,9 @@ export function registerRoutes(app: Express): Server {
         return res.status(404).json({ message: 'Invoice not found' });
       }
 
-      let uploadedFile = req.file ? req.file.filename : undefined;
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      let uploadedFile = files?.file?.[0]?.filename;
+      let bolFile = files?.bolFile?.[0]?.filename;
 
       // Generate PDF if it's a manual entry
       if (!req.file && (parsed.data.items?.length || existingInvoice.items?.length)) {
@@ -200,6 +202,7 @@ export function registerRoutes(app: Express): Server {
       const invoice = await storage.updateInvoice(id, {
         ...parsed.data,
         uploadedFile,
+        bolFile
       });
 
       if (!invoice) {
