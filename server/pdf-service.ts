@@ -70,7 +70,7 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
 }
 
 export async function generateAccountStatementPDF(supplier: Supplier, invoices: Invoice[]): Promise<string> {
-  const doc = new PDFDocument({ margin: 50 });
+  const doc = new PDFDocument({ margin: 40 });
   const fileName = `account-statement-${supplier.id}-${Date.now()}.pdf`;
   const filePath = path.join(process.cwd(), 'uploads', fileName);
   const writeStream = fs.createWriteStream(filePath);
@@ -79,81 +79,65 @@ export async function generateAccountStatementPDF(supplier: Supplier, invoices: 
   const outstandingInvoices = invoices.filter(inv => !inv.isPaid);
 
   // Company and Statement Title
-  doc.fontSize(24)
-     .text('OUTSTANDING BALANCE STATEMENT', { align: 'center' })
-     .moveDown(1);
+  doc.fontSize(20)
+     .text('OUTSTANDING BALANCE STATEMENT', { align: 'center' });
 
-  doc.fontSize(10)
-     .text(`Date: ${new Date().toLocaleDateString()}`, { align: 'right' })
-     .moveDown(1);
+  doc.fontSize(8)
+     .text(`Date: ${new Date().toLocaleDateString()}`, { align: 'right' });
 
   // Company details
-  doc.fontSize(10)
-     .text('Acirassi Books Ltd (Zoom Books Co)', 50, 80)
-     .text('507/508-19055 Airport Way', 50, 95)
-     .text('Pitt Meadows, BC V3Y 0G4', 50, 110)
-     .moveDown(3);
+  doc.fontSize(9)
+     .text('Acirassi Books Ltd (Zoom Books Co)', 40, 70)
+     .text('507/508-19055 Airport Way', 40, 82)
+     .text('Pitt Meadows, BC V3Y 0G4', 40, 94);
 
   // Supplier details
-  doc.fontSize(12)
-     .text('Statement For:', { continued: true })
-     .text(supplier.name, { align: 'left', underline: true })
-     .moveDown(1)
-     .fontSize(10)
-     .text(supplier.address || '', { align: 'left' })
-     .text(`Contact: ${supplier.contactPerson || ''}`, { align: 'left' })
-     .text(`Email: ${supplier.email || ''}`, { align: 'left' })
-     .moveDown(1); // Adjusted for less spacing
+  doc.fontSize(10)
+     .text('Statement For:', 40, 120, { continued: true })
+     .text(supplier.name, { underline: true })
+     .fontSize(9)
+     .text(supplier.address || '', 40, 135)
+     .text(`Contact: ${supplier.contactPerson || ''}`, 40, 147)
+     .text(`Email: ${supplier.email || ''}`, 40, 159); // Adjusted for less spacing
 
   // Outstanding balance
   const totalOutstanding = outstandingInvoices.reduce((sum, inv) => sum + Number(inv.totalAmount), 0);
-  doc.fontSize(12)
-     .text(`Total Outstanding Balance: $${totalOutstanding.toFixed(2)}`, 50, doc.y)
-     .moveDown(1); // Less spacing before table
+  doc.fontSize(10)
+     .text(`Total Outstanding Balance: $${totalOutstanding.toFixed(2)}`, 40, 185);
 
   if (outstandingInvoices.length > 0) {
     // Invoices table
-    const tableTop = doc.y;
-    doc.font('Helvetica-Bold');
+    const tableTop = 210;
+    doc.font('Helvetica-Bold')
+       .fontSize(9);
 
     // Table header
-    doc.text('Invoice #', 50, tableTop)
-       .text('Due Date', 200, tableTop)
-       .text('Amount', 350, tableTop)
-       .text('Days Overdue', 450, tableTop);
+    doc.text('Invoice #', 40, tableTop)
+       .text('Due Date', 160, tableTop)
+       .text('Amount', 280, tableTop)
+       .text('Days Overdue', 400, tableTop);
 
     doc.font('Helvetica');
-    let position = tableTop + 25;
+    let position = tableTop + 20;
 
     outstandingInvoices.forEach(invoice => {
       const dueDate = new Date(invoice.dueDate);
       const today = new Date();
       const daysOverdue = Math.max(0, Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)));
 
-      doc.text(invoice.invoiceNumber || `#${invoice.id}`, 50, position)
-         .text(dueDate.toLocaleDateString(), 200, position)
-         .text(`$${Number(invoice.totalAmount).toFixed(2)}`, 350, position)
-         .text(daysOverdue.toString(), 450, position);
-      position += 20;
+      doc.text(invoice.invoiceNumber || `#${invoice.id}`, 40, position)
+         .text(dueDate.toLocaleDateString(), 160, position)
+         .text(`$${Number(invoice.totalAmount).toFixed(2)}`, 280, position)
+         .text(daysOverdue.toString(), 400, position);
+      position += 15;
     });
 
-    const pageHeight = doc.page.height;
-    const currentY = doc.y;
-    const footerHeight = 30;
-    const remainingSpace = pageHeight - currentY - footerHeight;
-    
-    if (remainingSpace > 0) {
-      // Footer positioned at the bottom with remaining space
-      doc.fontSize(8)
-         .text('This statement reflects all outstanding invoices as of the date shown above.', 50, currentY + remainingSpace);
-    } else {
-      // Footer right after the content if space is tight
-      doc.fontSize(8)
-         .text('This statement reflects all outstanding invoices as of the date shown above.', 50, currentY + 20);
-    }
+    // Footer
+    doc.fontSize(8)
+       .text('This statement reflects all outstanding invoices as of the date shown above.', 40, 700);
   } else {
-    doc.fontSize(12)
-       .text('No outstanding invoices at this time.', 50, doc.y);
+    doc.fontSize(10)
+       .text('No outstanding invoices at this time.', 40, doc.y);
   }
 
   return new Promise((resolve, reject) => {
