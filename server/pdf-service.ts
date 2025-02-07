@@ -107,19 +107,18 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
 
         try {
           // Add BOL directly to the page
-          const pdfBuffer = fs.readFileSync(bolPath);
-          if (['.jpg', '.jpeg', '.png'].includes(ext)) {
-            doc.image(pdfBuffer, {
-              fit: [doc.page.width - 100, doc.page.height - 150],
-              align: 'center',
-              valign: 'center'
-            });
-          } else {
+          if (['.jpg', '.jpeg', '.png', '.pdf'].includes(ext)) {
             doc.image(bolPath, {
               fit: [doc.page.width - 100, doc.page.height - 150],
               align: 'center',
               valign: 'center'
             });
+          } else {
+            // For unsupported file types, add a note
+            doc.fontSize(12)
+               .text(`BOL file format ${ext} not supported. Please upload JPG, JPEG, PNG, or PDF files.`, {
+                 align: 'center'
+               });
           }
         } catch (pdfError) {
           console.error('Error embedding BOL:', pdfError);
