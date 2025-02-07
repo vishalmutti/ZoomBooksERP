@@ -23,6 +23,32 @@ interface SupplierViewProps {
 
 export function SupplierView({ supplier, open, onOpenChange }: SupplierViewProps) {
   const { toast } = useToast();
+  const generateStatementMutation = useMutation({
+    mutationFn: async (supplierId: number) => {
+      const res = await apiRequest("GET", `/api/suppliers/${supplierId}/account-statement`);
+      if (!res.ok) {
+        const error = await res.text();
+        throw new Error(error || 'Failed to generate account statement');
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Success",
+        description: "Account statement generated successfully",
+      });
+      // Open the PDF in a new tab
+      window.open(`/uploads/${data.fileName}`, '_blank');
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const form = useForm<InsertSupplier>({
     resolver: zodResolver(insertSupplierSchema),
     defaultValues: supplier,
@@ -113,15 +139,30 @@ export function SupplierView({ supplier, open, onOpenChange }: SupplierViewProps
                 <Input {...form.register("address")} />
               </div>
 
-              <Button
-                type="submit"
-                disabled={updateSupplierMutation.isPending}
-              >
-                {updateSupplierMutation.isPending && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
-                Save Changes
-              </Button>
+              <div className="space-y-4">
+                <Button
+                  type="submit"
+                  disabled={updateSupplierMutation.isPending}
+                >
+                  {updateSupplierMutation.isPending && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Save Changes
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="w-full"
+                  disabled={generateStatementMutation.isPending}
+                  onClick={() => generateStatementMutation.mutate(supplier.id)}
+                >
+                  {generateStatementMutation.isPending ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : null}
+                  Generate Account Statement
+                </Button>
+              </div>
             </form>
           </div>
 
