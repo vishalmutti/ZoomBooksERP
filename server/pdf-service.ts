@@ -25,7 +25,7 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
      .fontSize(24)
      .text('INVOICE', 450, 45, { align: 'right' })
      .fontSize(10)
-     .text(`Invoice Number: ${data.invoice.invoiceNumber}`, 150, 80)
+     .text(`Invoice Number: ${data.invoice.invoiceNumber}`, 350, 80, { align: 'right' })
      .text(`Date: ${new Date().toLocaleDateString()}`, 450, 95, { align: 'right' })
      .text(`Due Date: ${new Date(data.invoice.dueDate).toLocaleDateString()}`, 450, 110, { align: 'right' });
 
