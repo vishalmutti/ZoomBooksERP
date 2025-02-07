@@ -137,9 +137,20 @@ export async function generateAccountStatementPDF(supplier: Supplier, invoices: 
       position += 20;
     });
 
-    // Footer at the bottom of the page
-    doc.fontSize(8)
-       .text('This statement reflects all outstanding invoices as of the date shown above.', 50, doc.page.height - 50);
+    const pageHeight = doc.page.height;
+    const currentY = doc.y;
+    const footerHeight = 30;
+    const remainingSpace = pageHeight - currentY - footerHeight;
+    
+    if (remainingSpace > 0) {
+      // Footer positioned at the bottom with remaining space
+      doc.fontSize(8)
+         .text('This statement reflects all outstanding invoices as of the date shown above.', 50, currentY + remainingSpace);
+    } else {
+      // Footer right after the content if space is tight
+      doc.fontSize(8)
+         .text('This statement reflects all outstanding invoices as of the date shown above.', 50, currentY + 20);
+    }
   } else {
     doc.fontSize(12)
        .text('No outstanding invoices at this time.', 50, doc.y);
