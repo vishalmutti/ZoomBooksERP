@@ -64,8 +64,8 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
 
   // Adding the logo at the bottom of the page
   const pageHeight = doc.page.height;
-  const logoHeight = 100;
-  const logoWidth = 300;
+  const logoHeight = 300;
+  const logoWidth = 900;
   const marginBottom = 50;
 
   doc.image(
@@ -156,8 +156,8 @@ export async function generateAccountStatementPDF(supplier: Supplier, invoices: 
 
   // Adding the logo at the bottom of the page
   const pageHeight2 = doc.page.height;
-  const logoHeight2 = 100;
-  const logoWidth2 = 300;
+  const logoHeight2 = 300;
+  const logoWidth2 = 900;
   const marginBottom2 = 50;
 
   doc.image(
