@@ -23,7 +23,7 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
     console.warn('Could not load company logo:', error);
     // Continue without the logo
   }
-     .fontSize(10)
+  doc.fontSize(10)
      .text('Acirassi Books Ltd', 50, 200)
      .text('507/508-19055 Airport Way', 50, 215)
      .text('Pitt Meadows, BC V3Y 0G4', 50, 230)
@@ -97,7 +97,7 @@ export async function generateAccountStatementPDF(supplier: Supplier, invoices: 
     console.warn('Could not load company logo:', error);
     // Continue without the logo
   }
-  
+
   doc.fontSize(24)
      .text('ACCOUNT STATEMENT', 450, 45, { align: 'right' })
      .fontSize(10)
