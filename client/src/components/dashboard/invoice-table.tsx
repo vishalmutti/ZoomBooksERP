@@ -21,14 +21,8 @@ export default function InvoiceTable({ invoices: initialInvoices }: { invoices: 
   const { data: invoices = initialInvoices } = useQuery<Invoice[]>({
     queryKey: ["/api/invoices"],
     initialData: initialInvoices,
-    refetchInterval: 1000 // Refetch every second
-  });
-
-  // Add real-time query for invoice data
-  const { data: invoices } = useQuery<Invoice[]>({
-    queryKey: ["/api/invoices"],
-    initialData: initialInvoices,
-    refetchInterval: 1000, // Refetch every second
+    refetchInterval: 5000, // Refetch every 5 seconds
+    staleTime: 2000, // Consider data fresh for 2 seconds
   });
 
   const markPaidMutation = useMutation({
