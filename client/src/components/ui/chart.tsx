@@ -39,8 +39,9 @@ const ChartContainer = React.forwardRef<
     children: React.ComponentProps<
       typeof RechartsPrimitive.ResponsiveContainer
     >["children"]
+    animate?: boolean
   }
->(({ id, className, children, config, ...props }, ref) => {
+>(({ id, className, children, config, animate = true, ...props }, ref) => {
   const uniqueId = React.useId()
   const chartId = `chart-${id || uniqueId.replace(/:/g, "")}`
 
