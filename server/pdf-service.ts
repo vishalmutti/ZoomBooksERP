@@ -105,31 +105,26 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
         // Handle different file types
         const ext = path.extname(bolPath).toLowerCase();
 
-        if (['.jpg', '.jpeg', '.png'].includes(ext)) {
-          doc.image(bolPath, {
-            fit: [doc.page.width - 100, doc.page.height - 150],
-            align: 'center',
-            valign: 'center'
-          });
-        } else if (ext === '.pdf') {
-          try {
-            // Use the first page from the PDF BOL
-            doc.image(`${bolPath}[0]`, {
+        try {
+          // Add BOL directly to the page
+          const pdfBuffer = fs.readFileSync(bolPath);
+          if (['.jpg', '.jpeg', '.png'].includes(ext)) {
+            doc.image(pdfBuffer, {
               fit: [doc.page.width - 100, doc.page.height - 150],
               align: 'center',
               valign: 'center'
             });
-          } catch (pdfError) {
-            console.error('Error rendering PDF BOL:', pdfError);
-            // If PDFKit can't handle the PDF directly, create a temporary image
-            doc.fontSize(12)
-               .text('PDF Bill of Lading is attached to this document.', { align: 'center' })
-               .moveDown()
-               .text('The original BOL PDF is preserved in your invoice records.', { align: 'center' });
+          } else {
+            doc.image(bolPath, {
+              fit: [doc.page.width - 100, doc.page.height - 150],
+              align: 'center',
+              valign: 'center'
+            });
           }
-        } else {
+        } catch (pdfError) {
+          console.error('Error embedding BOL:', pdfError);
           doc.fontSize(12)
-             .text('Unsupported file format for Bill of Lading', { align: 'center' });
+             .text('Error embedding Bill of Lading', { align: 'center' });
         }
       } catch (error) {
         console.error('Error adding BOL to PDF:', error);
