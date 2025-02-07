@@ -122,11 +122,25 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
               valign: 'center'
             });
           } else if (ext === '.pdf') {
-            // For PDF files, add a note since PDFKit doesn't support direct PDF embedding
-            doc.fontSize(12)
-               .text('BOL file is in PDF format. Please access it separately.', {
-                 align: 'center'
-               });
+            try {
+              // For PDF files, create a more informative display
+              doc.fontSize(14)
+                 .text('Bill of Lading (PDF)', { align: 'center' })
+                 .moveDown()
+                 .fontSize(10)
+                 .text(`A PDF Bill of Lading has been included with invoice #${data.invoice.invoiceNumber}.`, {
+                   align: 'center'
+                 })
+                 .moveDown()
+                 .text('The BOL file is available in your document storage system.', {
+                   align: 'center',
+                   color: 'gray'
+                 });
+            } catch (error) {
+              console.error('Error handling PDF BOL:', error);
+              doc.fontSize(12)
+                 .text('Error processing PDF Bill of Lading', { align: 'center' });
+            }
           } else {
             doc.fontSize(12)
                .text(`BOL file format ${ext} not supported. Please upload JPG, JPEG, or PNG files.`, {
