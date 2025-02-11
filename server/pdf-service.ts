@@ -96,72 +96,47 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
 
     if (fs.existsSync(bolPath)) {
       try {
-        // Add a new page for BOL
+        // Add exactly one new page for BOL
         doc.addPage();
         doc.fontSize(14)
            .text('Bill of Lading', { align: 'center' })
            .moveDown();
 
-        // Handle different file types
         const ext = path.extname(bolPath).toLowerCase();
 
-        try {
-          // Add BOL directly to the page
-          if (['.jpg', '.jpeg', '.png', '.pdf'].includes(ext)) {
-            // Add a single page for BOL
-            doc.addPage();
-
-            // Handle image formats
-            if (['.jpg', '.jpeg', '.png'].includes(ext)) {
-              doc.image(bolPath, {
-                fit: [doc.page.width - 100, doc.page.height - 150],
-                align: 'center',
-                valign: 'center'
-              });
-            } else if (ext === '.pdf') {
-              try {
-                const pdfBuffer = fs.readFileSync(bolPath);
-                doc.addPage();
-                doc.fontSize(14)
-                   .text('Bill of Lading', { align: 'center' })
-                   .moveDown();
-                
-                // Embed the PDF as a new page
-                doc.save();
-                doc.scale(0.8);
-                doc.translate(50, 50);
-                doc.embedPDFPages(pdfBuffer, {
-                  start: 0,
-                  end: 1
-                });
-                doc.restore();
-              } catch (error) {
-                console.error('Error embedding PDF BOL:', error);
-                doc.fontSize(12)
-                   .text('Error embedding Bill of Lading PDF', { align: 'center' });
-              }
-            }
-          } else {
+        if (['.jpg', '.jpeg', '.png'].includes(ext)) {
+          // Handle image formats
+          doc.image(bolPath, {
+            fit: [doc.page.width - 100, doc.page.height - 150],
+            align: 'center',
+            valign: 'center'
+          });
+        } else if (ext === '.pdf') {
+          try {
+            const pdfBuffer = fs.readFileSync(bolPath);
+            doc.scale(0.8);
+            doc.translate(50, 50);
+            await doc.embedPDFPages(pdfBuffer, {
+              start: 0,
+              end: 1
+            });
+          } catch (error) {
+            console.error('Error embedding PDF BOL:', error);
             doc.fontSize(12)
-               .text(`BOL file format ${ext} not supported. Please upload JPG, JPEG, or PNG files.`, {
-                 align: 'center'
-               });
+               .text('Error embedding Bill of Lading PDF', { align: 'center' });
           }
-        } catch (pdfError) {
-          console.error('Error embedding BOL:', pdfError);
+        } else {
           doc.fontSize(12)
-             .text('Unable to embed BOL file. Please check file format and permissions.', {
+             .text(`BOL file format ${ext} not supported. Please upload JPG, JPEG, PNG, or PDF files.`, {
                align: 'center'
              });
-          doc.fontSize(12)
-             .text('Error embedding Bill of Lading', { align: 'center' });
         }
       } catch (error) {
         console.error('Error adding BOL to PDF:', error);
         doc.fontSize(12)
            .text('Error loading Bill of Lading file', { align: 'center' })
            .moveDown()
-           .text(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`, { 
+           .text(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`, {
              align: 'center',
              width: 400
            });
