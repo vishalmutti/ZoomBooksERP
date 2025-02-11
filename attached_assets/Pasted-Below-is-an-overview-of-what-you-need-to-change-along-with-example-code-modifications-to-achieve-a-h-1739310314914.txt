@@ -1,0 +1,115 @@
+Below is an overview of what you need to change along with example code modifications to achieve a home page that shows a grid of widgets (one of which is the Accounts Receivable dashboard) instead of directly showing the AR dashboard upon login.
+
+---
+
+## 1. Update Your Routing (client/src/App.tsx)
+
+Currently, your default route ("/") is rendering the dashboard. You’ll need to import your new HomePage component and then change the default route so that it renders the home page. At the same time, move the AR dashboard to a separate route (for example, "/dashboard").
+
+**Before (old routing):**
+
+```tsx
+function Router() {
+  return (
+    <Switch>
+      <Route path="/auth" component={AuthPage} />
+      <Route path="/">
+        <AppLayout>
+          <ProtectedRoute path="/" component={DashboardPage} />
+          <ProtectedRoute path="/suppliers" component={SuppliersPage} />
+        </AppLayout>
+      </Route>
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
+```
+
+**After (updated routing):**
+
+```tsx
+import HomePage from "@/pages/home-page"; // import your home page
+
+function Router() {
+  return (
+    <Switch>
+      <Route path="/auth" component={AuthPage} />
+      <Route path="/">
+        <AppLayout>
+          {/* Home page as the default route */}
+          <ProtectedRoute path="/" component={HomePage} />
+          {/* Move AR Dashboard to its own route */}
+          <ProtectedRoute path="/dashboard" component={DashboardPage} />
+          <ProtectedRoute path="/suppliers" component={SuppliersPage} />
+        </AppLayout>
+      </Route>
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
+```
+
+In this updated configuration, when a user logs in they’ll see the home page ("/") with a grid of application widgets. When they click on the “Accounts Receivable” widget, they’ll be taken to the "/dashboard" route.
+
+---
+
+## 2. Update Your Home Page (client/src/pages/home-page.tsx)
+
+Your home page file already contains a grid layout of widgets. Ensure that the widget for Accounts Receivable uses the new route ("/dashboard"):
+
+```tsx
+const widgets = [
+  {
+    title: "Accounts Receivable",
+    description: "Manage invoices, track payments, and monitor AR aging",
+    path: "/dashboard", // Updated route
+    icon: "💰"
+  },
+  // ...other widgets (Accounts Payable, Payroll, Inventory)
+];
+```
+
+This file is already set up to display the widgets in a grid, so no further changes are needed there aside from ensuring the correct paths are used.
+
+---
+
+## 3. Update Your Navbar (client/src/components/dashboard/navbar.tsx)
+
+Since your home page is now the default route ("/"), you may want to update the navigation items. For example, you might include a “Home” link that goes to "/" and an additional link for the AR Dashboard that goes to "/dashboard."
+
+**Before (old nav items):**
+
+```tsx
+const navItems = [
+  { href: "/", label: "Dashboard" },
+];
+```
+
+**After (updated nav items):**
+
+```tsx
+const navItems = [
+  { href: "/", label: "Home" },
+  { href: "/dashboard", label: "Accounts Receivable" },
+  // you can add more items as you implement additional use cases
+];
+```
+
+Then, in your navbar’s JSX, the links will automatically update their styles based on the current location.
+
+---
+
+## Summary
+
+- **Routing:**  
+  – Change the default route ("/") to render the HomePage instead of DashboardPage.  
+  – Create a dedicated route ("/dashboard") for the Accounts Receivable dashboard.
+
+- **Home Page:**  
+  – Update the widget paths so that the Accounts Receivable widget links to "/dashboard."  
+  – Use your existing grid layout for the widgets.
+
+- **Navigation:**  
+  – Update the nav items in your navbar to include a “Home” link ("/") and an “Accounts Receivable” link ("/dashboard"), along with placeholders for future applications.
+
+With these modifications, when users log in they will see a home page with multiple widget squares. Clicking the Accounts Receivable widget takes them to the AR dashboard, while the navigation also reflects the new route structure for a multi-use application.
