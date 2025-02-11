@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import { AuthProvider } from "@/hooks/use-auth";
 import AuthPage from "@/pages/auth-page";
-import HomePage from "@/pages/home-page";
 import DashboardPage from "@/pages/dashboard-page";
 import SuppliersPage from "@/pages/suppliers-page";
 import { ProtectedRoute } from "./lib/protected-route";
