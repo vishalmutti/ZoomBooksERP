@@ -94,9 +94,6 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
     return dateB.getTime() - dateA.getTime();
   });
 
-    return matchesSearch && matchesDateRange && matchesStatus && matchesAmount;
-  });
-
   const columns: ColumnDef<Invoice>[] = [
     {
       accessorKey: "invoiceNumber",
