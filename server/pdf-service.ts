@@ -113,17 +113,40 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
           });
         } else if (ext === '.pdf') {
           try {
-            const pdfBuffer = fs.readFileSync(bolPath);
-            doc.scale(0.8);
-            doc.translate(50, 50);
-            await doc.embedPDFPages(pdfBuffer, {
-              start: 0,
-              end: 1
+            // First finish and save the invoice PDF
+            doc.end();
+            await new Promise((resolve, reject) => {
+              writeStream.on('finish', resolve);
+              writeStream.on('error', reject);
             });
+
+            // Now use pdf-lib to merge PDFs
+            const { PDFDocument } = await import('pdf-lib');
+            
+            // Load both PDFs
+            const invoicePdf = await PDFDocument.load(fs.readFileSync(filePath));
+            const bolPdf = await PDFDocument.load(fs.readFileSync(bolPath));
+            
+            // Create a new PDF
+            const mergedPdf = await PDFDocument.create();
+            
+            // Copy pages from both PDFs
+            const invoicePages = await mergedPdf.copyPages(invoicePdf, [0]);
+            const bolPages = await mergedPdf.copyPages(bolPdf, [0]);
+            
+            // Add all pages to the new PDF
+            invoicePages.forEach(page => mergedPdf.addPage(page));
+            bolPages.forEach(page => mergedPdf.addPage(page));
+            
+            // Save the merged PDF
+            const mergedPdfBytes = await mergedPdf.save();
+            fs.writeFileSync(filePath, mergedPdfBytes);
+            
+            return fileName;
           } catch (error) {
-            console.error('Error embedding PDF BOL:', error);
+            console.error('Error merging PDF BOL:', error);
             doc.fontSize(12)
-               .text('Error embedding Bill of Lading PDF', { align: 'center' });
+               .text('Error merging Bill of Lading PDF', { align: 'center' });
           }
         } else {
           doc.fontSize(12)
