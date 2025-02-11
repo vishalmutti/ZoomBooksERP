@@ -215,7 +215,7 @@ export async function generateAccountStatementPDF(supplier: Supplier, invoices: 
 
       doc.text(invoice.invoiceNumber || `#${invoice.id}`, 40, position)
          .text(dueDate.toLocaleDateString(), 160, position)
-         .text(`$${Number(invoice.totalAmount).toFixed(2)}`, 280, position)
+         .text(`$${Number(invoice.totalAmount).toFixed(2)} ${invoice.currency}`, 280, position)
          .text(daysOverdue.toString(), 400, position);
       position += 30; 
     });
