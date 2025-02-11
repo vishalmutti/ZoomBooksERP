@@ -141,8 +141,6 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
             // Save the merged PDF
             const mergedPdfBytes = await mergedPdf.save();
             fs.writeFileSync(filePath, mergedPdfBytes);
-            
-            return fileName;
           } catch (error) {
             console.error('Error merging PDF BOL:', error);
             doc.fontSize(12)
