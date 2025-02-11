@@ -107,7 +107,11 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
     {
       accessorKey: "totalAmount",
       header: "Amount",
-      cell: ({ row }) => `$${Number(row.getValue("totalAmount")).toFixed(2)}`,
+      cell: ({ row }) => {
+        const invoice = row.original;
+        const symbol = invoice.currency === 'CAD' ? 'C$' : '$';
+        return `${symbol}${Number(row.getValue("totalAmount")).toFixed(2)}`;
+      },
     },
     {
       accessorKey: "dueDate",
