@@ -27,13 +27,25 @@ function Router() {
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
-      <Route path="/">
+      
+      <Route path="/dashboard">
         <AppLayout>
-          <ProtectedRoute path="/" component={HomePage} />
           <ProtectedRoute path="/dashboard" component={DashboardPage} />
+        </AppLayout>
+      </Route>
+      
+      <Route path="/suppliers">
+        <AppLayout>
           <ProtectedRoute path="/suppliers" component={SuppliersPage} />
         </AppLayout>
       </Route>
+      
+      <Route path="/">
+        <AppLayout>
+          <ProtectedRoute path="/" component={HomePage} />
+        </AppLayout>
+      </Route>
+      
       <Route component={NotFound} />
     </Switch>
   );
