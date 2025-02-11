@@ -3,6 +3,8 @@ import { Invoice } from "@shared/schema";
 import { AROverview } from "@/components/dashboard/ar-overview";
 import { InvoiceList } from "@/components/dashboard/invoice-list";
 import { InvoiceForm } from "@/components/dashboard/invoice-form";
+import { SupplierList } from "@/components/dashboard/supplier-list";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { LogOut } from "lucide-react";
@@ -43,6 +45,11 @@ export default function DashboardPage() {
           <div>
             <h3 className="text-xl font-semibold mb-4">Invoices</h3>
             <InvoiceList invoices={invoices} />
+          </div>
+
+          <div>
+            <h3 className="text-xl font-semibold mb-4">Suppliers</h3>
+            <SupplierList suppliers={suppliers} />
           </div>
         </div>
       </main>
