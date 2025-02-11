@@ -1,0 +1,63 @@
+The issue is that when you render the cell, you’re showing a string that includes a currency code (e.g. "CAD 123.45"), and the default sorting isn’t comparing the numeric part correctly. To fix this, you need to make sure that the underlying value used for sorting is the number itself rather than the rendered string.
+
+There are two common approaches:
+
+---
+
+### 1. Use an Accessor Function for the Numeric Value
+
+You can define an accessor function for the "totalAmount" column so that the table uses the pure numeric value for sorting. For example:
+
+```js
+{
+  header: "Amount",
+  // This accessor returns the numeric amount (for sorting and filtering)
+  accessorFn: (row: Invoice) => Number(row.totalAmount),
+  // Use the raw totalAmount as the id for sorting etc.
+  id: "totalAmount",
+  cell: ({ row }) => {
+    const invoice = row.original;
+    // Use the full currency code for display
+    const currencyDisplay = invoice.currency;
+    // Format the numeric value for display
+    return `${currencyDisplay} ${Number(invoice.totalAmount).toFixed(2)}`;
+  },
+  // Optionally, you can specify a built-in numeric sorting function
+  sortingFn: (rowA, rowB, columnId) =>
+    Number(rowA.getValue(columnId)) - Number(rowB.getValue(columnId)),
+}
+```
+
+In this setup, the accessor function extracts and returns a number, so the table’s built-in sort will compare numbers correctly while your cell renderer still displays the full currency code.
+
+---
+
+### 2. Define a Custom Sorting Function on the Column
+
+If you want to keep the accessor as is, you can override the sorting behavior for that column. For example:
+
+```js
+{
+  accessorKey: "totalAmount",
+  header: "Amount",
+  cell: ({ row }) => {
+    const invoice = row.original;
+    const currencyDisplay = invoice.currency;
+    return `${currencyDisplay} ${Number(row.getValue("totalAmount")).toFixed(2)}`;
+  },
+  sortingFn: (rowA, rowB, columnId) => {
+    // Convert the raw values to numbers before comparing
+    return Number(rowA.getValue(columnId)) - Number(rowB.getValue(columnId));
+  }
+}
+```
+
+This tells the table to use the numeric conversion of `totalAmount` for sorting rather than the full rendered string.
+
+---
+
+### Summary
+
+Either approach will make sure that when you click the amount column to sort, the table compares the underlying numbers (e.g. 123.45) rather than the display string (e.g. "CAD 123.45"). The first approach (using an accessor function) is often cleaner because it separates the sorting value from the display logic.
+
+Choose the one that best fits your table configuration, and your sorting should then correctly order the amounts from greatest to least or vice versa.
