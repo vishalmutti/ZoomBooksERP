@@ -117,7 +117,9 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
         const symbol = invoice.currency === 'CAD' ? 'C$' : '$';
         return `${symbol}${Number(row.getValue("totalAmount")).toFixed(2)} ${invoice.currency}`;
       },
-      sortingFn: "number",
+      sortingFn: (rowA, rowB, columnId) => {
+        return Number(rowA.getValue(columnId)) - Number(rowB.getValue(columnId));
+      },
     },
     {
       accessorKey: "dueDate",
