@@ -1,0 +1,172 @@
+Approach 2: Merge the Generated Invoice with the PDF BOL Using pdf-merger-js
+A better solution is to generate the invoice PDF first (which works perfectly for your invoice page and image‐based BOLs) and then, if the BOL is a PDF, merge that generated invoice with the BOL file using an external merger. This way, if the BOL is a PDF, you produce a merged PDF with the invoice on page 1 and the BOL on page 2 without any blank pages.
+
+Here’s how you can modify your function:
+
+Generate the invoice PDF with PDFKit as usual.
+If a BOL file exists and its extension is PDF, finish writing the invoice PDF, then use pdf-merger-js to merge the invoice with the BOL.
+For example:
+
+js
+Copy
+import PDFDocument from 'pdfkit';
+import fs from 'fs';
+import path from 'path';
+import { Invoice, InvoiceItem, Supplier } from '@shared/schema';
+// We'll import pdf-merger-js dynamically when needed.
+
+interface PDFInvoiceData {
+  invoice: Invoice & { items?: InvoiceItem[] };
+  supplier: Supplier;
+}
+
+export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> {
+  const doc = new PDFDocument({ margin: 50 });
+  const fileName = `invoice-${data.invoice.invoiceNumber}-${Date.now()}.pdf`;
+  const filePath = path.join(process.cwd(), 'uploads', fileName);
+  const writeStream = fs.createWriteStream(filePath);
+
+  // ----- Create invoice first page content -----
+  doc.fontSize(12)
+     .font('Helvetica-Bold')
+     .text('Acirassi Books Ltd (Zoom Books Co)', 50, 70)
+     .font('Helvetica')
+     .fontSize(10)
+     .text('507/508-19055 Airport Way', 50, 90)
+     .text('Pitt Meadows, BC V3Y 0G4', 50, 110)
+     .fontSize(24)
+     .text('INVOICE', 450, 45, { align: 'right' })
+     .fontSize(10)
+     .text(`Invoice Number: ${data.invoice.invoiceNumber}`, 350, 130, { align: 'right' })
+     .text(`Date: ${new Date().toLocaleDateString()}`, 450, 145, { align: 'right' })
+     .text(`Due Date: ${new Date(data.invoice.dueDate).toLocaleDateString()}`, 450, 160, { align: 'right' });
+
+  // Supplier details
+  doc.fontSize(12)
+     .text('Bill To:', 50, 180)
+     .font('Helvetica-Bold')
+     .text(data.supplier.name, 50, 200)
+     .font('Helvetica')
+     .fontSize(10)
+     .text(data.supplier.address || '', 50, 215)
+     .text(`Contact: ${data.supplier.contactPerson || ''}`, 50, 230)
+     .text(`Email: ${data.supplier.email || ''}`, 50, 245)
+     .moveDown(2);
+
+  // Items table
+  const tableTop = 270;
+  doc.font('Helvetica-Bold');
+  doc.text('Description', 50, tableTop)
+     .text('Quantity', 280, tableTop)
+     .text('Unit Price', 350, tableTop)
+     .text('Total', 450, tableTop);
+
+  doc.font('Helvetica');
+  let position = tableTop + 25;
+  data.invoice.items?.forEach(item => {
+    doc.text(item.description, 50, position)
+       .text(item.quantity?.toString() || "0", 280, position)
+       .text(`$${Number(item.unitPrice).toFixed(2)}`, 350, position)
+       .text(`$${Number(item.totalPrice).toFixed(2)}`, 450, position);
+    position += 25; 
+  });
+
+  doc.font('Helvetica-Bold')
+     .text('Total Amount:', 350, position + 20)
+     .text(`$${Number(data.invoice.totalAmount).toFixed(2)}`, 450, position + 20)
+     .moveDown()
+     .font('Helvetica-Bold')
+     .fontSize(10)
+     .text('Notes:', 50, position + 50)
+     .font('Helvetica')
+     .text(data.invoice.notes || 'No notes provided', 50, position + 70)
+     .moveDown()
+     .fontSize(8)
+     .text('Thank you for your business!', 50, position + 100)
+     .moveDown();
+
+  // Adding the logo
+  const pageHeight = doc.page.height;
+  const logoHeight = 300;
+  const logoWidth = 600;
+  const marginBottom = 50;
+  doc.image(
+    path.join(process.cwd(), 'attached_assets', 'Zoom Books Logo Final-01.png'),
+    (doc.page.width - logoWidth) / 2,
+    pageHeight - logoHeight - marginBottom,
+    {
+      fit: [logoWidth, logoHeight],
+      align: 'center',
+    }
+  );
+
+  // Handle BOL file
+  let isBolPdf = false;
+  if (data.invoice.bolFile) {
+    const bolPath = path.join(process.cwd(), 'uploads', data.invoice.bolFile);
+    if (fs.existsSync(bolPath)) {
+      const ext = path.extname(bolPath).toLowerCase();
+      if (['.jpg', '.jpeg', '.png'].includes(ext)) {
+        // For image BOLs, add one new page and embed the image
+        doc.addPage();
+        doc.fontSize(14)
+           .text('Bill of Lading', { align: 'center' })
+           .moveDown();
+        doc.image(bolPath, {
+          fit: [doc.page.width - 100, doc.page.height - 150],
+          align: 'center',
+          valign: 'center'
+        });
+      } else if (ext === '.pdf') {
+        // For PDF BOLs, mark that we need to merge later.
+        isBolPdf = true;
+      } else {
+        doc.addPage();
+        doc.fontSize(12)
+           .text(`BOL file format ${ext} not supported. Please upload JPG, JPEG, PNG, or PDF files.`, {
+             align: 'center'
+           });
+      }
+    }
+  }
+
+  // Finalize the current document
+  doc.pipe(writeStream);
+  doc.end();
+
+  // Wait for the PDF file to be fully written
+  await new Promise((resolve, reject) => {
+    writeStream.on('finish', resolve);
+    writeStream.on('error', reject);
+  });
+
+  // If the BOL is a PDF, merge the generated invoice with the BOL using pdf-merger-js
+  if (isBolPdf) {
+    const PDFMerger = (await import('pdf-merger-js')).default;
+    const merger = new PDFMerger();
+    // Add the generated invoice PDF (first page)
+    await merger.add(filePath);
+    // Add the PDF BOL (all pages)
+    const bolPath = path.join(process.cwd(), 'uploads', data.invoice.bolFile!);
+    await merger.add(bolPath);
+    // Create a new merged file
+    const mergedFileName = `invoice-${data.invoice.invoiceNumber}-${Date.now()}-merged.pdf`;
+    const mergedFilePath = path.join(process.cwd(), 'uploads', mergedFileName);
+    await merger.save(mergedFilePath);
+    return mergedFileName;
+  }
+
+  return fileName;
+}
+What’s happening here:
+
+Image BOLs:
+If the BOL is an image (JPG/JPEG/PNG), we add one new page and embed it using PDFKit (unchanged).
+
+PDF BOLs:
+If the BOL is a PDF, we set a flag (isBolPdf) and do not add any extra page with PDFKit. Instead, after finishing the invoice PDF, we use pdf-merger-js to merge the generated invoice (first page) with the uploaded PDF BOL (which can contain multiple pages). This produces a merged PDF with no extra blank pages.
+
+Finalizing:
+The function returns the name of the merged PDF file when a PDF BOL is used or the normal invoice PDF filename otherwise.
+
+This solution keeps your image embedding working as before while handling PDF BOLs separately so that no blank pages appear.
