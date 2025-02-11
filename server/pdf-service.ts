@@ -120,13 +120,21 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
               });
             } else if (ext === '.pdf') {
               try {
+                const pdfBuffer = fs.readFileSync(bolPath);
+                doc.addPage();
+                doc.fontSize(14)
+                   .text('Bill of Lading', { align: 'center' })
+                   .moveDown();
+                
+                // Embed the PDF as a new page
                 doc.save();
-                doc.scale(0.8); // Scale down slightly to fit better
-                doc.translate(50, 50); // Adjust position
-                doc.path('M 0,0 L 500,0 L 500,700 L 0,700 Z')
-                   .clip();
+                doc.scale(0.8);
+                doc.translate(50, 50);
+                doc.embedPDFPages(pdfBuffer, {
+                  start: 0,
+                  end: 1
+                });
                 doc.restore();
-                doc.file(bolPath);
               } catch (error) {
                 console.error('Error embedding PDF BOL:', error);
                 doc.fontSize(12)
