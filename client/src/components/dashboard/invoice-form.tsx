@@ -366,7 +366,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
           <Button className="w-full text-lg">Create Invoice</Button>
         </DialogTrigger>
       )}
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{editInvoice ? "Edit" : "Create New"} Invoice</DialogTitle>
         </DialogHeader>
@@ -450,8 +450,8 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                       <div className="col-span-2 font-medium">Total</div>
                     </div>
                     {form.watch("items")?.map((item, index) => (
-                      <div key={index} className="grid grid-cols-13 gap-2">
-                        <div className="col-span-6">
+                      <div key={index} className="grid grid-cols-12 gap-2">
+                        <div className="col-span-5">
                           <Input
                             placeholder="Description"
                             defaultValue={item.description}
