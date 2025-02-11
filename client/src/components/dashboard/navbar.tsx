@@ -5,7 +5,6 @@ import { Link, useLocation } from "wouter";
 
 const navItems = [
   { href: "/", label: "Home" },
-  { href: "/dashboard", label: "Accounts Receivable" },
 ];
 
 export function Navbar() {
