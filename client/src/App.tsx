@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import { AuthProvider } from "@/hooks/use-auth";
 import AuthPage from "@/pages/auth-page";
+import HomePage from "@/pages/home-page";
 import DashboardPage from "@/pages/dashboard-page";
 import SuppliersPage from "@/pages/suppliers-page";
 import { ProtectedRoute } from "./lib/protected-route";
@@ -27,7 +28,8 @@ function Router() {
       <Route path="/auth" component={AuthPage} />
       <Route path="/">
         <AppLayout>
-          <ProtectedRoute path="/" component={DashboardPage} />
+          <ProtectedRoute path="/" component={HomePage} />
+          <ProtectedRoute path="/dashboard" component={DashboardPage} />
           <ProtectedRoute path="/suppliers" component={SuppliersPage} />
         </AppLayout>
       </Route>

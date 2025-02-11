@@ -4,7 +4,8 @@ import { LogOut } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
 const navItems = [
-  { href: "/", label: "Dashboard" },
+  { href: "/", label: "Home" },
+  { href: "/dashboard", label: "Accounts Receivable" },
 ];
 
 export function Navbar() {
