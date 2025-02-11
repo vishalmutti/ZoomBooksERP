@@ -60,7 +60,7 @@ export default function InvoiceTable({ invoices: initialInvoices }: { invoices: 
         {(invoices || []).map((invoice) => (
           <TableRow key={invoice.id}>
             <TableCell>{invoice.clientName}</TableCell>
-            <TableCell>${invoice.amount.toString()} {invoice.currency}</TableCell>
+            <TableCell>${invoice.amount.toString()} {invoice.currency || 'USD'}</TableCell>
             <TableCell>{format(new Date(invoice.dueDate), "MMM d, yyyy")}</TableCell>
             <TableCell>
               {invoice.isPaid ? (
