@@ -103,6 +103,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         invoiceNumber: invoiceData.invoiceNumber,
         dueDate: new Date(invoiceData.dueDate).toISOString().split('T')[0],
         totalAmount: invoiceData.totalAmount.toString(),
+        currency: invoiceData.currency || "USD",
         notes: invoiceData.notes || "",
         isPaid: invoiceData.isPaid,
         items: invoiceData.items?.map(item => ({
