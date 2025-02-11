@@ -118,7 +118,7 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
         return `${symbol}${Number(row.getValue("totalAmount")).toFixed(2)} ${invoice.currency}`;
       },
       sortingFn: (rowA, rowB, columnId) => {
-        return Number(rowA.getValue(columnId)) - Number(rowB.getValue(columnId));
+        return Number(rowB.getValue(columnId)) - Number(rowA.getValue(columnId));
       },
     },
     {
