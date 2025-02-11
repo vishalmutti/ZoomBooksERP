@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,8 +30,9 @@ export default function AuthPage() {
     <div className="min-h-screen grid grid-cols-1 md:grid-cols-2">
       <div className="flex items-center justify-center p-8">
         <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Welcome to Zoom Books AR</CardTitle>
+          <CardHeader className="text-center">
+            <img src="/logo.png" alt="Zoom Books Logo" className="h-24 mx-auto mb-4" />
+            <CardTitle>Welcome to Zoom Books</CardTitle>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="login">
@@ -83,15 +85,15 @@ export default function AuthPage() {
 
       <div className="hidden md:flex bg-primary/10 items-center justify-center p-8">
         <div className="max-w-md space-y-4">
-          <h1 className="text-4xl font-bold text-primary">Zoom Books AR Management</h1>
+          <h1 className="text-4xl font-bold text-primary">Zoom Books Management Suite</h1>
           <p className="text-lg text-gray-600">
-            Efficiently manage your accounts receivable, track invoices, and monitor financial performance all in one place. Features include:
+            A comprehensive solution for all your business management needs. Access multiple tools from a single dashboard:
           </p>
           <ul className="list-disc list-inside space-y-2 text-gray-600">
-            <li>Invoice creation and management</li>
-            <li>Supplier directory with auto-complete</li>
-            <li>Payment tracking and status updates</li>
-            <li>Financial overview and reporting</li>
+            <li>Accounts Receivable</li>
+            <li>Accounts Payable</li>
+            <li>Payroll Management</li>
+            <li>Inventory Control</li>
           </ul>
         </div>
       </div>
