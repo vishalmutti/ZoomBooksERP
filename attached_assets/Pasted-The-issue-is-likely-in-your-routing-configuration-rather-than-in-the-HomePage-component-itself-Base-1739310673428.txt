@@ -1,0 +1,82 @@
+The issue is likely in your routing configuration rather than in the HomePage component itself. Based on your description, it sounds like both the HomePage (which should only display the grid of widgets) and the Accounts Receivable Dashboard (DashboardPage) are being rendered for the root route ("/").
+
+To fix this, you need to update your routing in client/src/App.tsx so that:
+
+1. The default route ("/") renders the HomePage (the grid of widgets).
+2. The AR dashboard is rendered only when you navigate to "/dashboard" (when you click the Accounts Receivable widget).
+
+### How to Update Your Routing
+
+Here’s an example of how you can modify your routing in App.tsx:
+
+```tsx
+import { Switch, Route } from "wouter";
+import { queryClient } from "./lib/queryClient";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/toaster";
+import NotFound from "@/pages/not-found";
+import { AuthProvider } from "@/hooks/use-auth";
+import AuthPage from "@/pages/auth-page";
+import DashboardPage from "@/pages/dashboard-page";
+import SuppliersPage from "@/pages/suppliers-page";
+import HomePage from "@/pages/home-page";
+import { ProtectedRoute } from "./lib/protected-route";
+import { Navbar } from "@/components/dashboard/navbar";
+
+function AppLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <main className="container mx-auto px-4 py-8">
+        {children}
+      </main>
+    </div>
+  );
+}
+
+function Router() {
+  return (
+    <Switch>
+      <Route path="/auth" component={AuthPage} />
+      <Route path="/">
+        <AppLayout>
+          {/* 
+            Render HomePage only for the default route "/".
+            Render DashboardPage only when the URL is "/dashboard".
+          */}
+          <ProtectedRoute path="/" component={HomePage} />
+          <ProtectedRoute path="/dashboard" component={DashboardPage} />
+          <ProtectedRoute path="/suppliers" component={SuppliersPage} />
+        </AppLayout>
+      </Route>
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <Router />
+        <Toaster />
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+}
+
+export default App;
+```
+
+### Explanation
+
+- **HomePage as the default route:**  
+  With the configuration above, when a user navigates to "/", only the HomePage is rendered. HomePage shows your grid of widget cards (including the Accounts Receivable widget).
+
+- **DashboardPage on "/dashboard":**  
+  The Accounts Receivable dashboard is now rendered only when the user clicks on the Accounts Receivable widget (which links to "/dashboard") and the route matches.
+
+- **Navigation Updates:**  
+  Your HomePage widget configuration is already correct (the Accounts Receivable widget’s path is set to "/dashboard"). With the routing fixed, clicking that widget will take the user to the AR dashboard.
+
+Once you update your App.tsx with this routing logic, the AR dashboard should no longer appear on the home page—it will only load when you click the Accounts Receivable widget.
