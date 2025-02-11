@@ -14,7 +14,7 @@ import { insertInvoiceSchema, type InsertInvoice, type InsertInvoiceItem, type I
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useState, useEffect } from "react";
-import { Loader2, Plus, Upload, Download } from "lucide-react";
+import { Loader2, Plus, Upload, Download, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Command,
@@ -450,7 +450,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                       <div className="col-span-2 font-medium">Total</div>
                     </div>
                     {form.watch("items")?.map((item, index) => (
-                      <div key={index} className="grid grid-cols-12 gap-2">
+                      <div key={index} className="grid grid-cols-13 gap-2">
                         <div className="col-span-6">
                           <Input
                             placeholder="Description"
@@ -486,6 +486,20 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                             value={item.totalPrice}
                             readOnly
                           />
+                        </div>
+                        <div className="col-span-1 flex items-center">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => {
+                              const items = form.getValues("items") || [];
+                              form.setValue("items", items.filter((_, i) => i !== index));
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
                     ))}
