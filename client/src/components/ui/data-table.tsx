@@ -86,8 +86,8 @@ export function DataTable<TData, TValue>({
                             header.getContext()
                           )}
                       {{
-                        asc: ' 🔼',
-                        desc: ' 🔽',
+                        desc: ' 🔼',
+                        asc: ' 🔽',
                       }[header.column.getIsSorted() as string] ?? null}
                     </TableHead>
                   )
