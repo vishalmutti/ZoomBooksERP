@@ -1,0 +1,146 @@
+Below is an in‐depth explanation of the potential issues and some recommendations to resolve the merging problem for your Accounts Receivable dashboard.
+
+---
+
+## 1. Multiple Page Additions
+
+Your current implementation calls `doc.addPage()` several times when processing the BOL section. For example:
+
+- You first add a page before entering the file‑type handling block.
+- Then you add another page inside the conditional that checks if the file extension is one of the allowed types.
+- For PDF files, you even add an additional page before embedding.
+
+This sequence can result in extra (or even blank) pages. To have exactly two pages—one for the invoice and one for the BOL—you should add **only one new page** for the BOL section.  
+
+---
+
+## 2. Merging Existing PDF Files with PDFKit
+
+It’s important to note that the standard PDFKit library is built primarily for generating PDFs from scratch and does not natively support merging or embedding entire pages from an external PDF. In your code you call a method named `doc.embedPDFPages`, but [several discussions](citeturn0search0)(citeturn0search1) on GitHub and Stack Overflow confirm that PDFKit does not support merging PDFs out of the box.  
+
+**If the BOL file is a PDF, you have two options:**
+
+- **Option A: Simplify the Flow with PDFKit (for images only)**  
+  If you only need to handle images (JPG, JPEG, PNG) for the BOL, you can embed the image directly on the new page.
+
+- **Option B: Use an External Library for Merging**  
+  To merge an externally generated invoice PDF with a BOL PDF, consider using a dedicated merging tool or library (for example, [pdf-merger-js](citeturn0search5) or [pdf-lib](https://pdf-lib.js.org)). These tools can combine PDFs after they have been generated.
+
+---
+
+## 3. Recommended Revised Code for the BOL Section
+
+Assuming you want to stick with PDFKit and you are using a custom method like `embedPDFPages` (or a patched version that supports it), here’s a refactored version of your BOL-handling code that:
+
+- Adds a single page for the BOL.
+- Embeds the BOL as an image (if applicable) or as a PDF (if your environment supports it).
+
+```js
+// If there's a BOL file, append it on a new page
+if (data.invoice.bolFile) {
+  const bolPath = path.join(process.cwd(), 'uploads', data.invoice.bolFile);
+  
+  if (fs.existsSync(bolPath)) {
+    try {
+      // Add exactly one new page for the BOL
+      doc.addPage();
+      doc.fontSize(14)
+         .text('Bill of Lading', { align: 'center' })
+         .moveDown();
+      
+      // Determine the file extension of the BOL
+      const ext = path.extname(bolPath).toLowerCase();
+      
+      if (['.jpg', '.jpeg', '.png'].includes(ext)) {
+        // Embed the image on the current page
+        doc.image(bolPath, {
+          fit: [doc.page.width - 100, doc.page.height - 150],
+          align: 'center',
+          valign: 'center'
+        });
+      } else if (ext === '.pdf') {
+        try {
+          const pdfBuffer = fs.readFileSync(bolPath);
+          // Attempt to embed PDF pages on this page.
+          // Note: Standard PDFKit does not support this natively.
+          doc.embedPDFPages(pdfBuffer, { start: 0, end: 1 });
+        } catch (error) {
+          console.error('Error embedding PDF BOL:', error);
+          doc.fontSize(12)
+             .text('Error embedding Bill of Lading PDF', { align: 'center' });
+        }
+      } else {
+        // If the file type is unsupported, show an error message
+        doc.fontSize(12)
+           .text(`BOL file format ${ext} not supported. Please upload JPG, JPEG, PNG, or PDF files.`, { align: 'center' });
+      }
+    } catch (error) {
+      console.error('Error adding BOL to PDF:', error);
+      doc.fontSize(12)
+         .text('Error loading Bill of Lading file', { align: 'center' });
+    }
+  }
+}
+```
+
+**Key Points in This Revision:**
+
+- **Single Page Addition:**  
+  The revised code calls `doc.addPage()` only once—right before adding the BOL content.
+
+- **Conditional Handling:**  
+  The file type is checked, and if it’s an image, the file is embedded with `doc.image()`. For PDFs, an attempt is made to embed the PDF pages (if your custom version of PDFKit supports it).
+
+- **Error Handling:**  
+  Any errors during file reading or embedding are caught and logged, with a user-friendly error message printed on the PDF.
+
+---
+
+## 4. Alternative Merging Approach
+
+Because merging PDF files isn’t a native feature of PDFKit, if you find that embedding a PDF BOL does not work as expected, consider generating the invoice PDF and the BOL PDF separately and then merging them using an external library. For example:
+
+- **Using pdf-merger-js:**  
+  You can generate both PDFs and then merge them as follows:
+
+  ```js
+  import PDFMerger from 'pdf-merger-js';
+
+  async function mergeInvoiceAndBol(invoicePdfPath, bolPdfPath, outputPdfPath) {
+    const merger = new PDFMerger();
+    await merger.add(invoicePdfPath);
+    await merger.add(bolPdfPath);
+    await merger.save(outputPdfPath);
+  }
+  ```
+
+- **Using an External Command:**  
+  Tools like pdftk can be called from Node.js using a child process:
+
+  ```js
+  const { exec } = require('child_process');
+  exec(`pdftk ${invoicePdfPath} ${bolPdfPath} cat output ${outputPdfPath}`, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error merging PDFs: ${error.message}`);
+      return;
+    }
+    console.log('Merged PDF created successfully');
+  });
+  ```
+
+This approach offloads the merging task to a tool designed specifically for it and might be more robust if PDFKit’s embedding is insufficient.
+
+---
+
+## Final Thoughts
+
+- **Streamline Your Page Logic:**  
+  Ensure that you add a new page only once for the BOL content.
+
+- **Be Aware of PDFKit Limitations:**  
+  Since PDFKit isn’t intended for merging existing PDF files, embedding a PDF BOL may require additional libraries or custom patches.
+
+- **Consider Alternative Tools:**  
+  If merging the invoice and BOL PDFs becomes problematic, libraries like [pdf-merger-js](citeturn0search5) or [pdf-lib](https://pdf-lib.js.org) offer a robust solution for combining multiple PDFs into one.
+
+By implementing these changes and approaches, you should be able to display the generated invoice on the first page and the uploaded BOL (if it’s in PDF format) on the second page, ensuring a cleaner, two-page PDF document for your dashboard.
