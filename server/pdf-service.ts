@@ -1,3 +1,4 @@
+
 import PDFDocument from 'pdfkit';
 import fs from 'fs';
 import path from 'path';
@@ -51,7 +52,6 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
 
   doc.font('Helvetica');
   let position = tableTop + 25;
-
   data.invoice.items?.forEach(item => {
     doc.text(item.description, 50, position)
        .text(item.quantity?.toString() || "0", 280, position)
@@ -79,7 +79,6 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
   const logoHeight = 300;
   const logoWidth = 600;
   const marginBottom = 50;
-
   doc.image(
     path.join(process.cwd(), 'attached_assets', 'Zoom Books Logo Final-01.png'),
     (doc.page.width - logoWidth) / 2,
@@ -90,69 +89,66 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
     }
   );
 
-  // If there's a BOL file, append it
+  // Handle BOL file
+  let isBolPdf = false;
   if (data.invoice.bolFile) {
     const bolPath = path.join(process.cwd(), 'uploads', data.invoice.bolFile);
-
     if (fs.existsSync(bolPath)) {
-      try {
-        // Add exactly one new page for BOL
+      const ext = path.extname(bolPath).toLowerCase();
+      if (['.jpg', '.jpeg', '.png'].includes(ext)) {
+        // For image BOLs, add one new page and embed the image
         doc.addPage();
         doc.fontSize(14)
            .text('Bill of Lading', { align: 'center' })
            .moveDown();
-
-        const ext = path.extname(bolPath).toLowerCase();
-
-        if (['.jpg', '.jpeg', '.png'].includes(ext)) {
-          // Handle image formats
-          doc.image(bolPath, {
-            fit: [doc.page.width - 100, doc.page.height - 150],
-            align: 'center',
-            valign: 'center'
-          });
-        } else if (ext === '.pdf') {
-          try {
-            const pdfBuffer = fs.readFileSync(bolPath);
-            const { PDFDocument } = await import('pdf-lib');
-            const bolPdf = await PDFDocument.load(pdfBuffer);
-            const bolPage = await bolPdf.copyPages(bolPdf, [0]);
-            doc.addPage();
-            doc.text('Bill of Lading', { align: 'center' });
-            doc.moveDown();
-            doc.text('PDF attachment on next page', { align: 'center' });
-          } catch (error) {
-            console.error('Error merging PDF BOL:', error);
-            doc.fontSize(12)
-               .text('Error merging Bill of Lading PDF', { align: 'center' });
-          }
-        } else {
-          doc.fontSize(12)
-             .text(`BOL file format ${ext} not supported. Please upload JPG, JPEG, PNG, or PDF files.`, {
-               align: 'center'
-             });
-        }
-      } catch (error) {
-        console.error('Error adding BOL to PDF:', error);
+        doc.image(bolPath, {
+          fit: [doc.page.width - 100, doc.page.height - 150],
+          align: 'center',
+          valign: 'center'
+        });
+      } else if (ext === '.pdf') {
+        // For PDF BOLs, mark that we need to merge later
+        isBolPdf = true;
+      } else {
+        doc.addPage();
         doc.fontSize(12)
-           .text('Error loading Bill of Lading file', { align: 'center' })
-           .moveDown()
-           .text(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`, {
-             align: 'center',
-             width: 400
+           .text(`BOL file format ${ext} not supported. Please upload JPG, JPEG, PNG, or PDF files.`, {
+             align: 'center'
            });
       }
     }
   }
 
-  // Finalize the document
+  // Finalize the current document
   doc.pipe(writeStream);
   doc.end();
 
-  return new Promise((resolve, reject) => {
-    writeStream.on('finish', () => resolve(fileName));
+  // Wait for the PDF file to be fully written
+  await new Promise((resolve, reject) => {
+    writeStream.on('finish', resolve);
     writeStream.on('error', reject);
   });
+
+  // If the BOL is a PDF, merge the generated invoice with the BOL using pdf-merger-js
+  if (isBolPdf) {
+    const PDFMerger = (await import('pdf-merger-js')).default;
+    const merger = new PDFMerger();
+    // Add the generated invoice PDF (first page)
+    await merger.add(filePath);
+    // Add the PDF BOL (all pages)
+    const bolPath = path.join(process.cwd(), 'uploads', data.invoice.bolFile!);
+    await merger.add(bolPath);
+    // Create a new merged file
+    const mergedFileName = fileName.replace('.pdf', '-merged.pdf');
+    const mergedFilePath = path.join(process.cwd(), 'uploads', mergedFileName);
+    await merger.save(mergedFilePath);
+    
+    // Remove the original unmerged file
+    fs.unlinkSync(filePath);
+    return mergedFileName;
+  }
+
+  return fileName;
 }
 
 export async function generateAccountStatementPDF(supplier: Supplier, invoices: Invoice[]): Promise<string> {
