@@ -38,20 +38,31 @@ export default function HomePage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {widgets.map((widget) => (
-          <Link key={widget.title} href={widget.path}>
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="text-4xl mb-2">{widget.icon}</div>
-                <CardTitle>{widget.title}</CardTitle>
-                <CardDescription>{widget.description}</CardDescription>
-              </CardHeader>
-            </Card>
-          </Link>
-        ))}
-      </div>
+    <div className="min-h-screen bg-background">
+      <header className="border-b">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <img src="/logo.png" alt="Zoom Books Logo" className="h-16" />
+            <h1 className="text-2xl font-bold">Zoom Books Management Suite</h1>
+          </div>
+        </div>
+      </header>
+
+      <main className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {widgets.map((widget) => (
+            <Link key={widget.title} href={widget.path}>
+              <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="text-4xl mb-2">{widget.icon}</div>
+                  <CardTitle>{widget.title}</CardTitle>
+                  <CardDescription>{widget.description}</CardDescription>
+                </CardHeader>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      </main>
     </div>
   );
 }
