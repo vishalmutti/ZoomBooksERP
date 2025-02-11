@@ -114,7 +114,7 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
       id: "totalAmount",
       cell: ({ row }) => {
         const invoice = row.original;
-        const symbol = invoice.currency === 'CAD' ? 'C$' : '$';
+        const symbol = '$';
         return `${symbol}${Number(row.getValue("totalAmount")).toFixed(2)} ${invoice.currency}`;
       },
       sortingFn: (rowA, rowB, columnId) => {
