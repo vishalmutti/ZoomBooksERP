@@ -1,0 +1,153 @@
+I'll extract and analyze the contents of your uploaded project files to diagnose why the **Bill of Lading (BOL)** is not correctly being displayed on the second page after the invoice. I'll check:
+
+1. **How the invoice and BOL are being generated and merged.**
+2. **Whether the BOL is correctly retrieved and included.**
+3. **Any potential formatting or pagination issues.**
+
+Let me begin the analysis.
+
+The extracted project contains a large number of files, including a `.git` directory. To efficiently diagnose the issue with the **Bill of Lading (BOL)** not appearing correctly, I'll look for the relevant PDF generation or merging code. I'll check for:
+
+1. **Invoice and BOL PDF generation logic** – How they are created.
+2. **Merging process** – Whether the BOL is appended correctly.
+3. **Pagination handling** – If a page break is correctly inserted.
+
+I'll now identify the key files related to invoice and BOL generation and review their contents.
+
+I've identified key files related to the **invoice and BOL (Bill of Lading) processing**:
+
+1. **Invoice PDF Generation & Merging Logic:**
+   - `server/pdf-service.ts` (Likely handles the merging of invoice and BOL)
+   - `client/src/components/dashboard/invoice-form.tsx`
+   - `client/src/components/dashboard/invoice-list.tsx`
+   - `client/src/components/dashboard/invoice-table.tsx`
+
+2. **Generated PDF Files:**
+   - **Invoice PDFs:** Multiple `invoice-*.pdf` files in `/uploads/`
+   - **BOL PDFs:** Multiple `bol-*.pdf` files in `/uploads/`
+   - **Merged PDFs:** Found `merged-invoice-DC-001-*.pdf`, likely the final output.
+
+Next, I'll examine **`pdf-service.ts`** to diagnose how the BOL is being added to the invoice and why it's not appearing correctly on the second page.
+
+### Initial Findings in `pdf-service.ts`
+
+1. **Invoice Generation:**
+   - Uses `pdfkit` to create a **single-page invoice**.
+   - Writes invoice details like company info, invoice number, supplier info, and item table.
+
+2. **Possible Issues with the BOL:**
+   - No direct mention of merging the **Bill of Lading (BOL)**.
+   - It looks like the invoice is created as a **standalone PDF**.
+   - If BOL should be on the second page, there **should be an explicit command** to append it.
+
+### Next Steps:
+I'll now scan for any **BOL-related code** inside `pdf-service.ts` to check if it's even being added. If not, I'll check how the system **expects** the BOL to be attached.
+
+### Diagnosis of the BOL Issue
+
+From the **`pdf-service.ts`** file, I found multiple references to the **Bill of Lading (BOL)**:
+- There is an attempt to **add a new page for the BOL**.
+- The system tries to **embed the BOL**, but **error messages** indicate potential failures.
+
+### Possible Issues:
+1. **File Format Issue**  
+   - The code suggests the BOL must be in JPG, JPEG, or PNG format.  
+   - If the BOL is a PDF, it **may not be processed correctly**.
+
+2. **Embedding Failure**  
+   - Multiple error messages like:
+     ```
+     console.error('Error embedding PDF BOL:', error);
+     console.error('Error adding BOL to PDF:', error);
+     ```
+   - This suggests the BOL **isn't getting appended** successfully.
+
+3. **Page Break Issue**  
+   - The code does attempt:
+     ```ts
+     .text('Bill of Lading', { align: 'center' })
+     ```
+     But it **may not be explicitly adding a page break** before inserting the BOL.
+
+### Next Steps:
+1. **Check if the BOL files are PDFs or images** in the `/uploads/` directory.
+2. **Review the actual BOL appending code** in `pdf-service.ts` to see how it's merging.  
+3. **Ensure a new page is added before inserting BOL.**
+
+I'll first inspect the `/uploads/` directory for BOL file types.
+
+### Key Finding: **BOL Files Are PDFs**
+- The BOL files in `/uploads/` have a **`.pdf` extension**.
+- However, the `pdf-service.ts` code **expects images (JPG, JPEG, PNG)** for embedding.
+- This mismatch is likely causing the **BOL to fail to append to the invoice**.
+
+### Solution:
+1. **Fix the PDF Embedding Process**  
+   - Modify the script to properly handle **PDF BOLs** instead of expecting images.
+   - Use a library like `pdf-lib` or `pdfkit` to merge PDFs instead of embedding an image.
+
+2. **Ensure a Page Break Before BOL**  
+   - Explicitly add a `.addPage()` before inserting the BOL.
+
+---
+
+### Next Step:
+I'll now examine how the `pdf-service.ts` currently attempts to add the BOL PDF to the invoice.
+
+### Issue Identified: **PDF BOL Handling is Broken**
+The extracted code snippet shows that:
+1. **The script recognizes that the BOL is a PDF** (`if (ext === '.pdf')`).
+2. **It attempts to process it but throws an error**, preventing the BOL from being appended.
+3. **The error messages confirm embedding is failing**, likely due to improper PDF merging.
+
+---
+
+### **Fix: Properly Merge BOL PDFs Instead of Treating Them as Images**
+Instead of attempting to **embed** the BOL PDF as an image, modify the code to **append it as a new page** using `pdf-lib` or `pdfkit`.
+
+#### ✅ **Correct Approach using `pdf-lib`**
+Modify the merging process like this:
+
+```ts
+import fs from 'fs';
+import { PDFDocument } from 'pdf-lib';
+
+async function mergeInvoiceAndBOL(invoicePath: string, bolPath: string, outputPath: string) {
+    try {
+        const invoiceBytes = fs.readFileSync(invoicePath);
+        const bolBytes = fs.readFileSync(bolPath);
+
+        const invoicePdf = await PDFDocument.load(invoiceBytes);
+        const bolPdf = await PDFDocument.load(bolBytes);
+
+        const [bolPage] = await invoicePdf.copyPages(bolPdf, [0]); // Copy first page of BOL
+        invoicePdf.addPage(bolPage); // Add BOL as a new page
+
+        const finalPdfBytes = await invoicePdf.save();
+        fs.writeFileSync(outputPath, finalPdfBytes);
+
+        console.log("Merged invoice and BOL successfully.");
+    } catch (error) {
+        console.error("Error merging BOL with invoice:", error);
+    }
+}
+
+// Example Usage:
+await mergeInvoiceAndBOL('uploads/invoice-DC-001.pdf', 'uploads/bol-DC-001.pdf', 'uploads/merged-invoice-DC-001.pdf');
+```
+
+---
+
+### **Why This Fix Works:**
+- **Correctly loads the BOL as a PDF instead of an image.**
+- **Ensures the BOL is appended as a new page in the invoice.**
+- **Eliminates unnecessary error handling for unsupported image formats.**
+
+---
+
+### **Next Steps**
+- **Implement this fix in `pdf-service.ts`.**
+- **Test generating an invoice with an attached BOL.**
+- **Confirm that the BOL appears on the second page.**
+
+Would you like me to check anything else in your project before you apply this fix? 🚀
