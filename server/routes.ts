@@ -160,6 +160,18 @@ export function registerRoutes(app: Express): Server {
             bolFile: invoice.bolFile
           });
           invoice.uploadedFile = pdfFileName;
+          
+          // Send email if supplier has an email address
+          if (supplier.email) {
+            const { sendInvoiceEmail } = await import('./email-service');
+            const pdfPath = path.join(process.cwd(), 'uploads', pdfFileName);
+            await sendInvoiceEmail(
+              supplier.email,
+              supplier.name,
+              invoice.invoiceNumber || `#${invoice.id}`,
+              pdfPath
+            );
+          }
         }
       }
 
