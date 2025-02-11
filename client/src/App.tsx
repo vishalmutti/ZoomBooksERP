@@ -27,8 +27,7 @@ function Router() {
       <Route path="/auth" component={AuthPage} />
       <Route path="/">
         <AppLayout>
-          <ProtectedRoute path="/" component={HomePage} />
-          <ProtectedRoute path="/dashboard" component={DashboardPage} />
+          <ProtectedRoute path="/" component={DashboardPage} />
           <ProtectedRoute path="/suppliers" component={SuppliersPage} />
         </AppLayout>
       </Route>
