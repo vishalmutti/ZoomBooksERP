@@ -113,34 +113,14 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
           });
         } else if (ext === '.pdf') {
           try {
-            // First finish and save the invoice PDF
-            doc.end();
-            await new Promise((resolve, reject) => {
-              writeStream.on('finish', resolve);
-              writeStream.on('error', reject);
-            });
-
-            // Now use pdf-lib to merge PDFs
+            const pdfBuffer = fs.readFileSync(bolPath);
             const { PDFDocument } = await import('pdf-lib');
-            
-            // Load both PDFs
-            const invoicePdf = await PDFDocument.load(fs.readFileSync(filePath));
-            const bolPdf = await PDFDocument.load(fs.readFileSync(bolPath));
-            
-            // Create a new PDF
-            const mergedPdf = await PDFDocument.create();
-            
-            // Copy pages from both PDFs
-            const invoicePages = await mergedPdf.copyPages(invoicePdf, [0]);
-            const bolPages = await mergedPdf.copyPages(bolPdf, [0]);
-            
-            // Add all pages to the new PDF
-            invoicePages.forEach(page => mergedPdf.addPage(page));
-            bolPages.forEach(page => mergedPdf.addPage(page));
-            
-            // Save the merged PDF
-            const mergedPdfBytes = await mergedPdf.save();
-            fs.writeFileSync(filePath, mergedPdfBytes);
+            const bolPdf = await PDFDocument.load(pdfBuffer);
+            const bolPage = await bolPdf.copyPages(bolPdf, [0]);
+            doc.addPage();
+            doc.text('Bill of Lading', { align: 'center' });
+            doc.moveDown();
+            doc.text('PDF attachment on next page', { align: 'center' });
           } catch (error) {
             console.error('Error merging PDF BOL:', error);
             doc.fontSize(12)
