@@ -523,14 +523,26 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
 
               <TabsContent value="upload">
                 <div className="space-y-4">
-                  <div>
-                    <Label>Total Amount ($)</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="Enter total amount"
-                      {...form.register("totalAmount")}
-                    />
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <Label>Total Amount</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="Enter total amount"
+                        {...form.register("totalAmount")}
+                      />
+                    </div>
+                    <div className="w-24">
+                      <Label>Currency</Label>
+                      <select
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                        {...form.register("currency")}
+                      >
+                        <option value="USD">USD</option>
+                        <option value="CAD">CAD</option>
+                      </select>
+                    </div>
                   </div>
                   <div>
                     <Label>Upload Invoice</Label>

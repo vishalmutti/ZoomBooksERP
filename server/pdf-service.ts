@@ -1,4 +1,3 @@
-
 import PDFDocument from 'pdfkit';
 import fs from 'fs';
 import path from 'path';
@@ -62,7 +61,7 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
 
   doc.font('Helvetica-Bold')
      .text('Total Amount:', 350, position + 20)
-     .text(`$${Number(data.invoice.totalAmount).toFixed(2)}`, 450, position + 20)
+     .text(`$${Number(data.invoice.totalAmount).toFixed(2)} ${data.invoice.currency}`, 450, position + 20)
      .moveDown()
      .font('Helvetica-Bold')
      .fontSize(10)
@@ -142,7 +141,7 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
     const mergedFileName = fileName.replace('.pdf', '-merged.pdf');
     const mergedFilePath = path.join(process.cwd(), 'uploads', mergedFileName);
     await merger.save(mergedFilePath);
-    
+
     // Remove the original unmerged file
     fs.unlinkSync(filePath);
     return mergedFileName;

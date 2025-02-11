@@ -24,6 +24,7 @@ export const invoices = pgTable("invoices", {
   supplierId: integer("supplier_id").references(() => suppliers.id),
   invoiceNumber: varchar("invoice_number", { length: 50 }),
   totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 3 }).default('USD').notNull(),
   dueDate: date("due_date").notNull(),
   isPaid: boolean("is_paid").default(false).notNull(),
   paymentDate: date("payment_date"),
