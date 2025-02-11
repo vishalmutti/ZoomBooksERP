@@ -88,6 +88,13 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
       (!maxAmount || Number(invoice.totalAmount) <= Number(maxAmount));
 
     return matchesSearch && matchesDateRange && matchesStatus && matchesAmount;
+  }).sort((a, b) => {
+    const dateA = new Date(a.dueDate);
+    const dateB = new Date(b.dueDate);
+    return dateB.getTime() - dateA.getTime();
+  });
+
+    return matchesSearch && matchesDateRange && matchesStatus && matchesAmount;
   });
 
   const columns: ColumnDef<Invoice>[] = [
