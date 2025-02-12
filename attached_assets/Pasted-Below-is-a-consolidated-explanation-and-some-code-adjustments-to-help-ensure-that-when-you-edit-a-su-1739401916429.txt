@@ -1,0 +1,156 @@
+Below is a consolidated explanation and some code adjustments to help ensure that when you edit a supplier and add additional contacts via the LoadSupplierForm, the updated contacts actually show up.
+
+### Key Points to Verify
+
+1. **Backend Update and Retrieval**  
+   - Your updateSupplier function must delete old contacts, insert the new ones, and then return a supplier object that includes the updated contacts.  
+   - Your getSupplier method should join or fetch contacts separately (as you've done) and return them as a property (e.g. `contacts`).
+
+2. **Frontend Query Invalidation & Form Reset**  
+   - After an update, you’re invalidating the queries for both the supplier list and the contacts.
+   - The form’s reset in the useEffect uses data from the contacts query. If that query isn’t refetched (or if the supplier prop isn’t updated), the new contacts won’t appear.
+   - You may want to explicitly reset the form with the updated supplier data (including contacts) after a successful update.
+
+3. **useFieldArray Handling**  
+   - The useFieldArray hook (for the "contacts" field) depends on the form state. If the form is reset without the updated contacts, then the UI won’t reflect the changes.
+
+### Suggested Adjustments
+
+#### A. Modify the Backend’s updateSupplier
+
+Make sure your updateSupplier method returns the supplier along with its contacts. For example, change your updateSupplier method (in storage.ts) to something like:
+
+```ts
+async updateSupplier(id: number, updates: Partial<InsertSupplier>): Promise<Supplier | undefined> {
+  return await db.transaction(async (tx) => {
+    // Update the basic supplier fields.
+    await tx
+      .update(suppliers)
+      .set({
+        name: updates.name,
+        address: updates.address,
+        contactPerson: updates.contactPerson,
+        email: updates.email,
+        phone: updates.phone,
+      })
+      .where(eq(suppliers.id, id));
+
+    // Handle contacts update.
+    if (updates.contacts) {
+      await tx.delete(supplierContacts).where(eq(supplierContacts.supplierId, id));
+
+      if (updates.contacts.length > 0) {
+        await tx.insert(supplierContacts).values(
+          updates.contacts.map(contact => ({
+            name: contact.name,
+            email: contact.email,
+            phone: contact.phone,
+            isPrimary: contact.isPrimary,
+            supplierId: id,
+          }))
+        );
+      }
+    }
+
+    // Return the fully updated supplier including contacts.
+    return await this.getSupplier(id);
+  });
+}
+```
+
+This ensures that when you update a supplier, you get back a supplier object that includes a fresh contacts array.
+
+#### B. Adjust the Frontend onSubmit Handler in LoadSupplierForm
+
+Right after a successful update, instead of just invalidating queries, read the updated supplier from the response and reset the form with that data. For example, modify your onSubmit like this:
+
+```tsx
+async function onSubmit(data: InsertSupplier) {
+  try {
+    const url = supplier ? `/api/suppliers/${supplier.id}` : "/api/suppliers";
+    const method = supplier ? "PATCH" : "POST";
+
+    const response = await fetch(url, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to save supplier");
+    }
+
+    // Read the updated supplier (including contacts) from the backend.
+    const updatedSupplier = await response.json();
+
+    // Invalidate supplier queries.
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["/api/suppliers"] }),
+      queryClient.invalidateQueries({ queryKey: ["/api/suppliers", supplier?.id, "contacts"] }),
+    ]);
+
+    // Close the dialog.
+    onOpenChange(false);
+
+    // Reset the form with the updated supplier data.
+    form.reset({
+      name: updatedSupplier.name,
+      address: updatedSupplier.address ?? "",
+      contactPerson: updatedSupplier.contactPerson ?? "",
+      email: updatedSupplier.email ?? "",
+      phone: updatedSupplier.phone ?? "",
+      contacts: updatedSupplier.contacts?.map((contact: SupplierContact) => ({
+        name: contact.name ?? "",
+        email: contact.email ?? "",
+        phone: contact.phone ?? "",
+        isPrimary: contact.isPrimary,
+      })) || [],
+    });
+
+    toast({
+      title: "Success",
+      description: supplier 
+        ? "Supplier updated successfully"
+        : "Supplier created successfully",
+    });
+  } catch (error) {
+    console.error("Error updating supplier:", error);
+    toast({
+      title: "Error",
+      description: supplier 
+        ? "Failed to update supplier"
+        : "Failed to create supplier",
+      variant: "destructive",
+    });
+  }
+}
+```
+
+#### C. Verify the Contacts Query
+
+Make sure that the GET route for `/api/suppliers/:id/contacts` is working as expected and returning the newly added contacts. You can test it with a tool like Postman or by logging the result in your frontend useQuery.
+
+For example, you already have in your LoadSupplierForm:
+```tsx
+const { data: contacts = [], isLoading: isLoadingContacts } = useQuery<SupplierContact[]>({
+  queryKey: ["/api/suppliers", supplier?.id, "contacts"],
+  enabled: !!supplier?.id && open,
+  gcTime: 0,
+  staleTime: 0
+});
+```
+Temporarily log `contacts` (or display it in the UI) to ensure the query returns the updated data.
+
+### Final Summary
+
+1. **Backend:**  
+   - Ensure that updateSupplier deletes old contacts, inserts new ones, and then returns the updated supplier (with contacts) via getSupplier.
+2. **Frontend:**  
+   - In the onSubmit handler, read the updated supplier from the response and immediately call form.reset with the new supplier data (including contacts).
+   - Confirm that your useQuery for contacts (key: ["/api/suppliers", supplier?.id, "contacts"]) is refetching correctly after an update.
+3. **Debugging:**  
+   - Add console logs in your onSubmit handler and in your useEffect to check that the contacts array is as expected.
+
+With these changes, when you edit a supplier and add an additional contact person, the form should reset with the updated contacts, and you should see them both in the supplier list and when you click the edit supplier button again.
