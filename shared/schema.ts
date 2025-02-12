@@ -57,7 +57,7 @@ export const incomingLoads = pgTable("incoming_loads", {
   id: serial("id").primaryKey(),
   loadId: varchar("load_id", { length: 50 }).notNull().unique(),
   loadType: varchar("load_type", { length: 50 }).notNull(),
-  supplierId: integer("supplier_id").references(() => suppliers.id).notNull(),
+  supplierId: varchar("supplier_id", { length: 255 }).notNull(),
   referenceNumber: varchar("reference_number", { length: 50 }).notNull(),
   location: varchar("location", { length: 50 }).notNull().$type<'British Columbia' | 'Ontario'>(),
   pickupDate: date("pickup_date"),

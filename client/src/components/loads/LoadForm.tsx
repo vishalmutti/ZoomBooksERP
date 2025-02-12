@@ -164,7 +164,7 @@ export function LoadForm({ defaultType }: LoadFormProps) {
                         <PopoverTrigger asChild>
                           <Button variant="outline" className="w-full justify-between">
                             {field.value 
-                              ? suppliers.find(s => s.id.toString() === field.value)?.name 
+                              ? suppliers.find(s => s.name === field.value)?.name 
                               : "Select supplier..."}
                           </Button>
                         </PopoverTrigger>
@@ -179,7 +179,7 @@ export function LoadForm({ defaultType }: LoadFormProps) {
                                     key={supplier.id}
                                     value={supplier.name}
                                     onSelect={() => {
-                                      field.onChange(supplier.id.toString());
+                                      field.onChange(supplier.name);
                                       // Close the popover after selection
                                       const popoverElement = document.querySelector('[data-radix-popper-content-id]');
                                       if (popoverElement) {
