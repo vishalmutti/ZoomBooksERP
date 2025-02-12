@@ -1,0 +1,40 @@
+Below is a pared‐down list of core features and requirements you can share with the replit agent for your new "Load Management" widget. This version focuses solely on the basics you need without extra bells and whistles:
+
+---
+
+### Core Features
+
+1. **Unique Load ID Generation and Classification**  
+   - **Auto-Generated Load ID:** Automatically generate a unique internal load ID each time a new load record is created.  
+   - **Load Type:** Allow the user to select one of three load categories—Inventory, Wholesale, or Miscellaneous—to clearly classify the load.
+
+2. **Basic Load Record Management**  
+   - **Create and Edit Loads:** Provide simple forms to add new loads and update existing load details (e.g., load type, date, and any relevant notes).  
+   - **Status Tracking:** Include a simple mechanism to mark loads as complete once all required actions (such as attaching a freight invoice) are finished.
+
+3. **Freight Invoice Attachment**  
+   - **File Upload:** Enable users to attach one or more freight invoice files (PDFs or images) to each load record.  
+   - **Invoice Metadata (Optional):** Optionally capture minimal information about the attached freight invoice (like invoice number or cost) for reference.
+
+4. **Basic Search and Filtering**  
+   - **Filtering Options:** Allow users to search and filter load records by criteria such as load ID, load type, and date.  
+   - **Simple List View:** Display a basic list or table of load records so users can quickly locate and manage individual loads.
+
+---
+
+### What to Tell the Replit Agent
+
+You might prompt the agent with something like:
+
+> "I need to build a new 'Load Management' widget that replaces our current Google Sheets for tracking loads. The core features should include:
+>
+> - Automatically generating a unique load ID for each new load.
+> - Letting users classify each load as Inventory, Wholesale, or Miscellaneous.
+> - Providing a simple form to create and edit load records.
+> - Allowing users to mark loads as complete.
+> - Enabling file uploads so freight invoices can be attached to each load.
+> - Offering basic search and filtering capabilities (by load ID, load type, and date).
+>
+> Please do not include advanced dashboard metrics, notifications, user permissions, audit logs, or any integration with accounts receivable. This tool is meant to be a lightweight internal system for managing and tracking loads."
+
+This clear, concise prompt outlines only the essential features and avoids the extra functionality you want to exclude.
