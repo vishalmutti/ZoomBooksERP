@@ -288,9 +288,9 @@ export function LoadForm({ defaultType }: LoadFormProps) {
                     <FormLabel>Pickup Date</FormLabel>
                     <FormControl>
                       <Input 
-                        type="datetime-local" 
+                        type="date" 
                         {...field}
-                        value={field.value ? new Date(field.value).toISOString().slice(0, 16) : ''}
+                        value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
                         onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value).toISOString() : null)}
                       />
                     </FormControl>
@@ -306,9 +306,9 @@ export function LoadForm({ defaultType }: LoadFormProps) {
                     <FormLabel>Delivery Date</FormLabel>
                     <FormControl>
                       <Input 
-                        type="datetime-local" 
+                        type="date" 
                         {...field}
-                        value={field.value ? new Date(field.value).toISOString().slice(0, 16) : ''}
+                        value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
                         onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value).toISOString() : null)}
                       />
                     </FormControl>
