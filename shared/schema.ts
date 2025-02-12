@@ -92,7 +92,7 @@ export const loadDocuments = pgTable("load_documents", {
 
 export const freightInvoices = pgTable("freight_invoices", {
   id: serial("id").primaryKey(),
-  loadId: integer("load_id").references(() => loads.id).notNull(),
+  loadId: integer("load_id").references(() => incomingLoads.id).notNull(),
   invoiceNumber: varchar("invoice_number", { length: 50 }),
   cost: decimal("cost", { precision: 10, scale: 2 }),
   truckingCompany: varchar("trucking_company", { length: 255 }),
