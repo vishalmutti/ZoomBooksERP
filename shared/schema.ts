@@ -55,7 +55,7 @@ export const payments = pgTable("payments", {
 
 export const incomingLoads = pgTable("incoming_loads", {
   id: serial("id").primaryKey(),
-  loadId: varchar("load_id", { length: 50 }).notNull().unique(),
+  loadId: varchar("load_id", { length: 50 }).unique(),
   loadType: varchar("load_type", { length: 50 }).notNull(),
   supplierId: varchar("supplier_id", { length: 255 }).notNull(),
   referenceNumber: varchar("reference_number", { length: 50 }).notNull(),

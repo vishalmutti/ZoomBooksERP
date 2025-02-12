@@ -22,15 +22,7 @@ interface Supplier {
   name: string;
 }
 
-function generateLoadId(type: string) {
-  const date = new Date();
-  const typePrefix = type.substring(0, 3).toUpperCase();
-  const dateStr = date.getFullYear() +
-    String(date.getMonth() + 1).padStart(2, '0') +
-    String(date.getDate()).padStart(2, '0');
-  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-  return `${typePrefix}-${dateStr}-${random}`;
-}
+
 
 interface LoadFormProps {
   defaultType: 'Incoming' | 'Wholesale' | 'Miscellaneous';
@@ -52,7 +44,6 @@ export function LoadForm({ defaultType }: LoadFormProps) {
     defaultValues: {
       loadType: "Incoming",
       notes: "",
-      loadId: generateLoadId("Incoming"),
       location: "",
       referenceNumber: "",
       pickupDate: null,
