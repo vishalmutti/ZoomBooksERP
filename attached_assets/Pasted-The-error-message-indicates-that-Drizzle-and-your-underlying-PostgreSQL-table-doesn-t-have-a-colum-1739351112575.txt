@@ -1,0 +1,80 @@
+The error message indicates that Drizzle (and your underlying PostgreSQL table) doesn’t have a column named "pickup_location" because your schema uses camelCase property names (like "pickupLocation") even though the underlying SQL column is "pickup_location". In other words, when you create or update a record you must use the property names defined in your schema.
+
+### What’s Happening
+
+Your schema (in shared/schema.ts) defines the loads table like this:
+
+```ts
+export const loads = pgTable("loads", {
+  // …
+  pickupLocation: text("pickup_location").notNull(),
+  deliveryLocation: text("delivery_location").notNull(),
+  driverName: varchar("driver_name", { length: 255 }),
+  driverPhone: varchar("driver_phone", { length: 50 }),
+  freightCost: decimal("freight_cost", { precision: 10, scale: 2 }),
+  // … other fields
+});
+```
+
+Here the property names are in camelCase (e.g. **pickupLocation**) even though the actual database column is named "pickup_location". Drizzle uses these property names when mapping objects to columns.
+
+However, in your **LoadForm.tsx** default values (and likely elsewhere) you’re still using snake_case keys. For example:
+
+```ts
+defaultValues: {
+  loadType: "Incoming",
+  notes: "",
+  status: "Pending",
+  loadId: generateLoadId("Incoming"),
+  pickup_location: "",         // Incorrect
+  delivery_location: "",       // Incorrect
+  scheduled_pickup: new Date().toISOString(),
+  scheduled_delivery: new Date().toISOString(),
+  carrier: "",
+  driver_name: "",             // Incorrect
+  driver_phone: "",            // Incorrect
+  equipment: "",
+  freightCost: "0",            // This one is mixed; if your schema uses camelCase, it should be 'freightCost'
+  // … other fields
+  actual_pickup: null,         // Incorrect
+  actual_delivery: null,       // Incorrect
+  // … 
+}
+```
+
+### How to Fix It
+
+You need to update the keys in your form (and anywhere else you construct a load object) to use camelCase names that match your schema. For example, update the default values in **LoadForm.tsx** as follows:
+
+```diff
+defaultValues: {
+  loadType: "Incoming",
+  notes: "",
+  status: "Pending",
+  loadId: generateLoadId("Incoming"),
+- pickup_location: "",
+- delivery_location: "",
+- driver_name: "",
+- driver_phone: "",
+- freightCost: "0",
+- actual_pickup: null,
+- actual_delivery: null,
++ pickupLocation: "",
++ deliveryLocation: "",
++ driverName: "",
++ driverPhone: "",
++ freightCost: "0",
++ actualPickup: null,
++ actualDelivery: null,
+  // Keep other fields as is (ensure they match your schema)
+}
+```
+
+Make sure that in your submission payload (in your onSubmit function) you’re also using these correct keys. This change lets Drizzle map your object correctly to the underlying table columns.
+
+### Summary
+
+- **Update All Keys:** Change every reference from snake_case (e.g., "pickup_location", "driver_name") to the camelCase versions (e.g., "pickupLocation", "driverName") as defined in your schema.
+- **Test Again:** Once these keys match the schema, the error about "pickup_location" not existing should be resolved.
+
+By making these changes, your Load Management dashboard should work without throwing the column-not-found error.
