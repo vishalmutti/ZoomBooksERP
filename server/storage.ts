@@ -284,15 +284,32 @@ export class DatabaseStorage implements IStorage {
 
 
   async getLoads(): Promise<Load[]> {
-    const results = await db.select()
-      .from(loads)
-      .orderBy(loads.createdAt);
-    
+    const results = await db.select({
+      id: loads.id,
+      loadId: loads.loadId,
+      loadType: loads.loadType,
+      status: loads.status,
+      notes: loads.notes,
+      createdAt: loads.createdAt
+    })
+    .from(loads)
+    .orderBy(loads.createdAt);
+
     return results;
   }
 
   async getLoad(id: number): Promise<(Load & { freightInvoices?: FreightInvoice[] }) | undefined> {
-    const [load] = await db.select().from(loads).where(eq(loads.id, id));
+    const [load] = await db.select({
+      id: loads.id,
+      loadId: loads.loadId,
+      loadType: loads.loadType,
+      status: loads.status,
+      notes: loads.notes,
+      createdAt: loads.createdAt
+    })
+    .from(loads)
+    .where(eq(loads.id, id));
+
     if (!load) return undefined;
 
     const loadFreightInvoices = await db
