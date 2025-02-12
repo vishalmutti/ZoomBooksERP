@@ -53,43 +53,20 @@ export const payments = pgTable("payments", {
   notes: text("notes"),
 });
 
-export const loads = pgTable("loads", {
+export const incomingLoads = pgTable("incoming_loads", {
   id: serial("id").primaryKey(),
-  loadId: varchar("load_id", { length: 50 }).notNull().unique(), // Format: TYPE-YYYYMMDD-XXX
-  loadType: varchar("load_type", { length: 20}).notNull().$type<'Incoming' | 'Wholesale' | 'Miscellaneous'>(),
-  supplierId: integer("supplierid").references(() => suppliers.id),
-  notes: text("notes"),
-
-  // Common fields for all load types
+  loadId: varchar("load_id", { length: 50 }).notNull().unique(), // Format: INC-YYYYMMDD-XXX
+  supplierId: integer("supplier_id").references(() => suppliers.id),
   location: varchar("location", { length: 50 }).notNull().$type<'British Columbia' | 'Ontario'>(),
-  scheduledPickup: timestamp("scheduled_pickup").notNull(),
-  scheduledDelivery: timestamp("scheduled_delivery").notNull(),
-  carrier: varchar("carrier", { length: 255 }),
-  loadCost: decimal("load_cost", { precision: 10, scale: 2 }),
-  freightCost: decimal("freight_cost", { precision: 10, scale: 2 }),
-  totalCost: decimal("total_cost", { precision: 10, scale: 2 }),
-  profitRoi: decimal("profit_roi", { precision: 10, scale: 2 }),
-
-  // Wholesale specific fields
-  poNumber: varchar("po_number", { length: 50 }),
-  orderNumber: varchar("order_number", { length: 50 }),
-  brokerName: varchar("broker_name", { length: 255 }),
-  brokerContact: varchar("broker_contact", { length: 255 }),
-
-  // Incoming specific fields
-  containerNumber: varchar("container_number", { length: 50 }),
-  bookingNumber: varchar("booking_number", { length: 50 }),
-  vesselName: varchar("vessel_name", { length: 255 }),
-  voyageNumber: varchar("voyage_number", { length: 50 }),
-  estimatedPortArrival: timestamp("estimated_port_arrival"),
-  actualPortArrival: timestamp("actual_port_arrival"),
-  customsClearanceDate: timestamp("customs_clearance_date"),
-
-  // Miscellaneous specific fields
-  referenceNumber: varchar("reference_number", { length: 50 }),
-  warehouseLocation: varchar("warehouse_location", { length: 100 }),
-  handlingInstructions: text("handling_instructions"),
-
+  notes: text("notes"),
+  loadCost: decimal("load_cost", { precision: 10, scale: 2 }).notNull(),
+  freightCost: decimal("freight_cost", { precision: 10, scale: 2 }).notNull(),
+  totalCost: decimal("total_cost", { precision: 10, scale: 2 }).notNull(),
+  profitRoi: decimal("profit_roi", { precision: 10, scale: 2 }).notNull(),
+  bolFile: text("bol_file"),
+  materialInvoiceFile: text("material_invoice_file"),
+  freightInvoiceFile: text("freight_invoice_file"),
+  loadPerformanceFile: text("load_performance_file"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

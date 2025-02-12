@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,14 +14,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import type { InsertLoad } from "@shared/schema";
 
-function generateLoadId(type: string) {
+function generateLoadId() {
   const date = new Date();
-  const typePrefix = type.substring(0, 3).toUpperCase();
   const dateStr = date.getFullYear() +
     String(date.getMonth() + 1).padStart(2, '0') +
     String(date.getDate()).padStart(2, '0');
   const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-  return `${typePrefix}-${dateStr}-${random}`;
+  return `INC-${dateStr}-${random}`;
 }
 
 export function IncomingLoadForm() {
@@ -37,13 +37,9 @@ export function IncomingLoadForm() {
   const form = useForm<InsertLoad>({
     resolver: zodResolver(insertLoadSchema),
     defaultValues: {
-      loadType: "Incoming",
-      loadId: generateLoadId("Incoming"),
+      loadId: generateLoadId(),
       supplierId: "",
       location: "",
-      scheduledPickup: new Date().toISOString(),
-      scheduledDelivery: new Date().toISOString(),
-      carrier: "",
       notes: "",
       loadCost: "0",
       freightCost: "0",
@@ -71,13 +67,13 @@ export function IncomingLoadForm() {
       if (files.freightInvoice) formData.append('freightInvoice', files.freightInvoice);
       if (files.loadPerformance) formData.append('loadPerformance', files.loadPerformance);
 
-      const response = await fetch('/api/loads', {
+      const response = await fetch('/api/incoming-loads', {
         method: 'POST',
         body: formData
       });
 
       if (response.ok) {
-        queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/incoming-loads"] });
         setOpen(false);
         form.reset();
         toast({
@@ -153,6 +149,20 @@ export function IncomingLoadForm() {
               )}
             />
 
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notes</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -190,20 +200,6 @@ export function IncomingLoadForm() {
                   <FormLabel>Profit ROI</FormLabel>
                   <FormControl>
                     <Input type="number" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes</FormLabel>
-                  <FormControl>
-                    <Textarea {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
