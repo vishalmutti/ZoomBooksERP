@@ -13,6 +13,8 @@ export function LoadDashboard() {
   const [activeTab, setActiveTab] = useState("incoming");
   const [showAddSupplier, setShowAddSupplier] = useState(false);
   const [editingLoad, setEditingLoad] = useState<IncomingLoad | null>(null);
+  const [showAddLoad, setShowAddLoad] = useState(false);
+
   const { data: loads, isLoading, refetch } = useQuery<IncomingLoad[]>({
     queryKey: ["/api/loads"],
   });
@@ -72,7 +74,10 @@ export function LoadDashboard() {
 
         <TabsContent value="incoming" className="space-y-4">
           <div className="flex justify-end">
-            <LoadForm defaultType="Incoming" onClose={() => setEditingLoad(null)} />
+            <Button onClick={() => setShowAddLoad(true)}>
+              <LuPlus className="h-4 w-4 mr-2" />
+              Add Load
+            </Button>
           </div>
           <LoadTable 
             loads={filteredLoads} 
@@ -84,7 +89,10 @@ export function LoadDashboard() {
 
         <TabsContent value="wholesale" className="space-y-4">
           <div className="flex justify-end">
-            <LoadForm defaultType="Wholesale" onClose={() => setEditingLoad(null)} />
+            <Button onClick={() => setShowAddLoad(true)}>
+              <LuPlus className="h-4 w-4 mr-2" />
+              Add Load
+            </Button>
           </div>
           <LoadTable 
             loads={filteredLoads} 
@@ -96,7 +104,10 @@ export function LoadDashboard() {
 
         <TabsContent value="miscellaneous" className="space-y-4">
           <div className="flex justify-end">
-            <LoadForm defaultType="Miscellaneous" onClose={() => setEditingLoad(null)} />
+            <Button onClick={() => setShowAddLoad(true)}>
+              <LuPlus className="h-4 w-4 mr-2" />
+              Add Load
+            </Button>
           </div>
           <LoadTable 
             loads={filteredLoads} 
@@ -106,6 +117,14 @@ export function LoadDashboard() {
           />
         </TabsContent>
       </Tabs>
+
+      {showAddLoad && (
+        <LoadForm
+          defaultType={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+          onClose={() => setShowAddLoad(false)}
+          show={true}
+        />
+      )}
 
       <div className="mt-8">
         <div className="flex justify-between items-center mb-4">
