@@ -207,7 +207,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteSupplier(id: number): Promise<void> {
-    await db.delete(suppliers).where(eq(suppliers.id, id));
+    await db.transaction(async (tx) => {
+      // Delete related records first
+      await tx.delete(invoices).where(eq(invoices.supplierId, id));
+      await tx.delete(supplierContacts).where(eq(supplierContacts.supplierId, id));
+      // Finally delete the supplier
+      await tx.delete(suppliers).where(eq(suppliers.id, id));
+    });
   }
 
   async getInvoices(filters?: InvoiceFilters): Promise<Invoice[]> {
