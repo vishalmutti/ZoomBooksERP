@@ -162,34 +162,8 @@ export class DatabaseStorage implements IStorage {
         }
       }
 
-      const [result] = await tx
-        .select({
-          id: suppliers.id,
-          name: suppliers.name,
-          email: suppliers.email,
-          address: suppliers.address,
-          contactPerson: suppliers.contactPerson,
-          phone: suppliers.phone,
-          createdAt: suppliers.createdAt,
-          outstandingAmount: sql<string>`COALESCE(
-            SUM(CASE WHEN ${invoices.isPaid} = false THEN ${invoices.totalAmount}::numeric ELSE 0 END),
-            0
-          )::text`
-        })
-        .from(suppliers)
-        .leftJoin(invoices, eq(invoices.supplierId, suppliers.id))
-        .where(eq(suppliers.id, id))
-        .groupBy(suppliers.id);
-
-      if (!result) return undefined;
-
-      const contacts = await tx
-        .select()
-        .from(supplierContacts)
-        .where(eq(supplierContacts.supplierId, id))
-        .orderBy(supplierContacts.createdAt);
-
-      return { ...result, contacts };
+      // Return the updated supplier using getSupplier
+      return await this.getSupplier(id);
     });
   }
 

@@ -96,14 +96,32 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
         throw new Error("Failed to save supplier");
       }
 
+      // Read the updated supplier from response
+      const updatedSupplier = await response.json();
+
       // Invalidate queries
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["/api/suppliers"] }),
         queryClient.invalidateQueries({ queryKey: ["/api/suppliers", supplier?.id, "contacts"] }),
       ]);
 
-      // Close dialog first
+      // Close dialog
       onOpenChange(false);
+
+      // Reset form with updated data
+      form.reset({
+        name: updatedSupplier.name,
+        address: updatedSupplier.address ?? "",
+        contactPerson: updatedSupplier.contactPerson ?? "",
+        email: updatedSupplier.email ?? "",
+        phone: updatedSupplier.phone ?? "",
+        contacts: updatedSupplier.contacts?.map((contact: SupplierContact) => ({
+          name: contact.name ?? "",
+          email: contact.email ?? "",
+          phone: contact.phone ?? "",
+          isPrimary: contact.isPrimary,
+        })) || [],
+      });
 
       toast({
         title: "Success",
@@ -111,10 +129,8 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
           ? "Supplier updated successfully"
           : "Supplier created successfully",
       });
-
-      // Reset form after dialog is closed
-      setTimeout(() => form.reset(), 100);
     } catch (error) {
+      console.error("Error saving supplier:", error);
       toast({
         title: "Error",
         description: supplier 
