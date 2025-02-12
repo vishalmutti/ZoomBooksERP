@@ -56,7 +56,7 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
           email: supplier.email ?? "",
           phone: supplier.phone ?? "",
           contacts: supplierContacts.map(contact => ({
-            name: contact.name,
+            name: contact.name ?? "",
             email: contact.email ?? "",
             phone: contact.phone ?? "",
             isPrimary: contact.isPrimary,
