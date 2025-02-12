@@ -1,3 +1,4 @@
+
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertSupplierSchema } from "@shared/schema";
@@ -9,7 +10,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import type { InsertSupplier, Supplier, SupplierContact } from "@shared/schema";
 import { LuPlus, LuTrash } from "react-icons/lu";
-import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import React from 'react';
 
@@ -26,7 +26,9 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
   // Only fetch contacts when editing a specific supplier and dialog is open
   const { data: contacts = [], isLoading: isLoadingContacts } = useQuery<SupplierContact[]>({
     queryKey: ["/api/suppliers", supplier?.id, "contacts"],
-    enabled: !!supplier?.id && open, // Only fetch when dialog is open and we have a supplier
+    enabled: !!supplier?.id && open,
+    staleTime: 0, // Always fetch fresh data
+    cacheTime: 0
   });
 
   const form = useForm<InsertSupplier>({
@@ -61,10 +63,9 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
             email: contact.email ?? "",
             phone: contact.phone ?? "",
             isPrimary: contact.isPrimary,
-            notes: contact.notes ?? "",
           })),
         });
-      } else if (!supplier) {
+      } else {
         form.reset({
           name: "",
           address: "",
@@ -209,8 +210,7 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
                     name: "", 
                     email: "", 
                     phone: "", 
-                    isPrimary: false,
-                    notes: "" 
+                    isPrimary: false
                   })}
                 >
                   <LuPlus className="h-4 w-4 mr-2" />
@@ -291,8 +291,6 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
                         </FormItem>
                       )}
                     />
-
-                    
                   </div>
                 ))
               )}
