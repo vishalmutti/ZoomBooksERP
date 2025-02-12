@@ -1,0 +1,57 @@
+It seems that when adding a contact through the edit supplier form, the new contact information may not be properly saving to the database or might not be reflected when fetching the supplier data. Let's check a few things to diagnose this issue:
+
+Check the onSubmit Function: Ensure that when the form is submitted, all contact information is being sent properly, including any new contacts added.
+
+API Endpoint: Verify that the API endpoint for updating the supplier (/api/suppliers/${supplier.id}) correctly handles adding/updating contacts and saves them to the database.
+
+Database Logic: Check the server-side logic to confirm that the new contacts are being persisted correctly in the database.
+
+Contact Management Logic: Ensure that when loading the supplier information for editing, you're fetching all related contacts.
+
+Here’s how you can modify the onSubmit function in your LoadSupplierForm.tsx to ensure it's handling the contacts correctly:
+
+async function onSubmit(data: InsertSupplier) {
+  try {
+    const url = supplier ? `/api/suppliers/${supplier.id}` : "/api/suppliers";
+    const method = supplier ? "PATCH" : "POST";
+    const response = await fetch(url, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ...data,
+        contacts: data.contacts.map(contact => ({
+          name: contact.name,
+          email: contact.email,
+          phone: contact.phone,
+          isPrimary: contact.isPrimary,
+          notes: contact.notes
+        })),
+      }),
+    });
+    if (!response.ok) {
+      throw new Error("Failed to save supplier");
+    }
+    // Optionally refresh the contacts after submit
+    queryClient.invalidateQueries(["/api/suppliers", supplier?.id, "contacts"]);
+  } catch (error) {
+    console.error(error);
+    toast({
+      title: "Error",
+      description: (error as Error).message,
+      variant: "destructive",
+    });
+  }
+}
+Make sure that your backend route (/api/suppliers/:id) is correctly set up to handle both updating an existing supplier and adding new contacts. If necessary, check the relevant server logic that processes the incoming data and persists it to your database.
+
+If the contact information is supposed to be retrieved later, ensure that the function that fetches the supplier details also includes the contacts. This part of the code is critical in your existing LoadSupplierForm.tsx:
+
+const { data: contacts = [], isLoading: isLoadingContacts } = useQuery<SupplierContact[]>({
+  queryKey: ["/api/suppliers", supplier?.id, "contacts"],
+  enabled: !!supplier?.id && open, // Only fetch when dialog is open and we have a supplier
+});
+Confirm that the API is returning the correct contacts for the supplier when editing. You might want to log the response here to check if all contacts are returned.
+
+These adjustments and checks should help ensure that added contacts are correctly submitted and retrieved. If you encounter any issues, consider adding console logs to inspect the data being sent and received throughout this process.
