@@ -30,16 +30,27 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
 
   const form = useForm<InsertSupplier>({
     resolver: zodResolver(insertSupplierSchema),
-    defaultValues: {
+    defaultValues: React.useMemo(() => ({
       name: supplier?.name ?? "",
       address: supplier?.address ?? "",
       email: supplier?.email ?? "",
       phone: supplier?.phone ?? "",
-      contacts: [],
-    },
+      contacts: supplier ? contacts.map(contact => ({
+        name: contact.name,
+        email: contact.email ?? "",
+        phone: contact.phone ?? "",
+        isPrimary: contact.isPrimary,
+        notes: contact.notes ?? "",
+      })) : [],
+    }), [supplier, contacts])
   });
 
-  // Update form values when contacts are loaded
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "contacts",
+  });
+
+  // Update form values when contacts are loaded or supplier changes
   React.useEffect(() => {
     if (supplier && contacts.length > 0) {
       form.setValue("contacts", contacts.map(contact => ({
@@ -49,16 +60,8 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
         isPrimary: contact.isPrimary,
         notes: contact.notes ?? "",
       })));
-    } else if (!supplier) {
-      // Reset contacts when creating a new supplier
-      form.setValue("contacts", []);
     }
   }, [contacts, supplier, form.setValue]);
-
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: "contacts",
-  });
 
   async function onSubmit(data: InsertSupplier) {
     try {
