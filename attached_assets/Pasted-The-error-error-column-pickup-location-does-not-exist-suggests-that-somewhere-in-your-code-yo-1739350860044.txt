@@ -1,0 +1,94 @@
+The error
+
+> error: column "pickup_location" does not exist
+
+suggests that somewhere in your code you’re sending keys using snake_case (like `"pickup_location"`) instead of using the camelCase names defined in your schema (e.g. `pickupLocation`).
+
+Your schema (in shared/schema.ts) defines the "loads" table with properties such as:
+
+```ts
+pickupLocation: text("pickup_location").notNull(),
+deliveryLocation: text("delivery_location").notNull(),
+driverName: varchar("driver_name", { length: 255 }),
+driverPhone: varchar("driver_phone", { length: 50 }),
+```
+
+Notice that the **property names** in your code are in camelCase (pickupLocation, deliveryLocation, etc.), even though the underlying SQL column names are snake_case. Drizzle ORM expects that when you create or update a record, you use the property names (camelCase) so that it can map them correctly to the actual column names in the database.
+
+For example, in your **LoadForm.tsx** file, your default values currently use snake_case keys:
+
+```ts
+defaultValues: {
+  loadType: "Incoming",
+  notes: "",
+  status: "Pending",
+  loadId: generateLoadId("Incoming"),
+  pickup_location: "",
+  delivery_location: "",
+  scheduled_pickup: new Date().toISOString(),
+  scheduled_delivery: new Date().toISOString(),
+  carrier: "",
+  driver_name: "",
+  driver_phone: "",
+  equipment: "",
+  freight_cost: "0",
+  // Optional fields...
+}
+```
+
+You need to change these keys to match your schema’s camelCase property names. For example:
+
+```ts
+defaultValues: {
+  loadType: "Incoming",
+  notes: "",
+  status: "Pending",
+  loadId: generateLoadId("Incoming"),
+  pickupLocation: "",
+  deliveryLocation: "",
+  scheduled_pickup: new Date().toISOString(), // You can keep the same key if the column name is the same as in your schema definition (i.e. scheduledPickup is defined as scheduled_pickup under the hood)
+  scheduled_delivery: new Date().toISOString(), // Similarly for scheduledDelivery if your schema maps it correctly
+  carrier: "",
+  driverName: "",
+  driverPhone: "",
+  equipment: "",
+  freightCost: "0",
+  // Optional fields using camelCase:
+  containerNumber: "",
+  bookingNumber: "",
+  vesselName: "",
+  voyageNumber: "",
+  poNumber: "",
+  orderNumber: "",
+  brokerName: "",
+  brokerContact: "",
+  referenceNumber: "",
+  warehouseLocation: "",
+  handlingInstructions: "",
+  // Dates
+  actualPickup: null,
+  actualDelivery: null,
+  estimatedPortArrival: null,
+  actualPortArrival: null,
+  customsClearanceDate: null,
+}
+```
+
+Make sure that every time you refer to these fields in your code (whether in default values, onSubmit payloads, or updates) you use the camelCase keys defined in your schema (e.g. `pickupLocation`, `deliveryLocation`, `driverName`, and `driverPhone`).
+
+Once you update your LoadForm (and any similar files, such as IncomingLoadForm if necessary) to use the correct property names, Drizzle ORM will correctly map them to the underlying database columns, and the error about `"pickup_location" does not exist` should be resolved.
+
+---
+
+### Next Steps
+
+1. **Update the Client Code:**  
+   Go through your load management forms (both LoadForm.tsx and any others) and change all snake_case keys to their camelCase equivalents as shown above.
+
+2. **Test the Change:**  
+   After making these changes, refresh the application and click the "Manage Loads" widget. The load management dashboard should now work without the column error.
+
+3. **Review Other Mismatches:**  
+   Double-check any other parts of your code that construct load objects or update loads to ensure they follow the same naming convention.
+
+This should fix your crash when clicking the manage loads widget.
