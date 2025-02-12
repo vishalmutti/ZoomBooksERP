@@ -42,7 +42,7 @@ export function LoadForm({ defaultType }: LoadFormProps) {
   const form = useForm<InsertLoad>({
     resolver: zodResolver(insertLoadSchema),
     defaultValues: {
-      loadType: "Incoming",
+      loadType: defaultType,
       notes: "",
       location: "",
       referenceNumber: "",
@@ -151,7 +151,7 @@ export function LoadForm({ defaultType }: LoadFormProps) {
                         <PopoverTrigger asChild>
                           <Button variant="outline" className="w-full justify-between">
                             {field.value 
-                              ? suppliers.find(s => s.name === field.value)?.name 
+                              ? suppliers.find(s => s.id.toString() === field.value)?.name 
                               : "Select supplier..."}
                           </Button>
                         </PopoverTrigger>
@@ -166,7 +166,7 @@ export function LoadForm({ defaultType }: LoadFormProps) {
                                     key={supplier.id}
                                     value={supplier.name}
                                     onSelect={() => {
-                                      field.onChange(supplier.name);
+                                      field.onChange(supplier.id.toString());
                                       // Close the popover after selection
                                       const popoverElement = document.querySelector('[data-radix-popper-content-id]');
                                       if (popoverElement) {
