@@ -60,8 +60,12 @@ export const incomingLoads = pgTable("incoming_loads", {
   supplierId: varchar("supplier_id", { length: 255 }).notNull(),
   referenceNumber: varchar("reference_number", { length: 50 }).notNull(),
   location: varchar("location", { length: 50 }).notNull().$type<'British Columbia' | 'Ontario'>(),
-  pickupDate: date("pickup_date"),
-  deliveryDate: date("delivery_date"),
+  pickupLocation: varchar("pickup_location", { length: 255 }),
+  deliveryLocation: varchar("delivery_location", { length: 255 }),
+  scheduledPickup: date("scheduled_pickup"),
+  scheduledDelivery: date("scheduled_delivery"),
+  status: varchar("status", { length: 50 }).default('Pending').notNull(),
+  carrier: varchar("carrier", { length: 100 }),
   notes: text("notes"),
   loadCost: decimal("load_cost", { precision: 10, scale: 2 }).notNull(),
   freightCost: decimal("freight_cost", { precision: 10, scale: 2 }).notNull(),
@@ -71,7 +75,6 @@ export const incomingLoads = pgTable("incoming_loads", {
   freightInvoiceFile: text("freight_invoice_file"),
   loadPerformanceFile: text("load_performance_file"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  carrier: varchar("carrier", { length: 100 }),
 });
 
 export const loadStatusHistory = pgTable("load_status_history", {
