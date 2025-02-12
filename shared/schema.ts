@@ -30,6 +30,11 @@ export const supplierContacts = pgTable("supplier_contacts", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const alterSupplierContacts = sql`
+  ALTER TABLE supplier_contacts 
+  ADD COLUMN IF NOT EXISTS notes text;
+`;
+
 // Update the insert schema to include notes
 export const insertSupplierContactSchema = createInsertSchema(supplierContacts).omit({
   id: true,
