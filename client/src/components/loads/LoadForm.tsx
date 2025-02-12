@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { InsertLoad } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 
 interface Supplier {
@@ -159,28 +160,41 @@ export function LoadForm({ defaultType }: LoadFormProps) {
                   return (
                     <FormItem>
                       <FormLabel>Supplier</FormLabel>
-                      <Command className="rounded-lg border shadow-md">
-                        <CommandInput placeholder="Search suppliers..." />
-                        <CommandList>
-                          {suppliers.length === 0 ? (
-                            <CommandEmpty>No suppliers found.</CommandEmpty>
-                          ) : (
-                            <CommandGroup>
-                              {suppliers.map((supplier) => (
-                                <CommandItem
-                                  key={supplier.id}
-                                  value={supplier.name}
-                                  onSelect={() => {
-                                    field.onChange(supplier.id.toString());
-                                  }}
-                                >
-                                  {supplier.name}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          )}
-                        </CommandList>
-                      </Command>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className="w-full justify-between">
+                            {field.value 
+                              ? suppliers.find(s => s.id.toString() === field.value)?.name 
+                              : "Select supplier..."}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[300px] p-0">
+                          <Command>
+                            <CommandInput placeholder="Search suppliers..." />
+                            <CommandList>
+                              <CommandEmpty>No suppliers found.</CommandEmpty>
+                              <CommandGroup>
+                                {suppliers.map((supplier) => (
+                                  <CommandItem
+                                    key={supplier.id}
+                                    value={supplier.name}
+                                    onSelect={() => {
+                                      field.onChange(supplier.id.toString());
+                                      // Close the popover after selection
+                                      const popoverElement = document.querySelector('[data-radix-popper-content-id]');
+                                      if (popoverElement) {
+                                        (popoverElement as HTMLElement).style.display = 'none';
+                                      }
+                                    }}
+                                  >
+                                    {supplier.name}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   );
