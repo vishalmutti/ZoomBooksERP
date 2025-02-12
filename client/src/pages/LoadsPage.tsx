@@ -125,10 +125,10 @@ export function LoadsPage() {
                     </div>
                     <div className="space-y-1">
                       <p className="text-sm">
-                        Pickup: {format(new Date(load.scheduledPickup), "PPp")}
+                        Pickup: {load.scheduledPickup ? format(new Date(load.scheduledPickup), "PPp") : "Not scheduled"}
                       </p>
                       <p className="text-sm">
-                        Delivery: {format(new Date(load.scheduledDelivery), "PPp")}
+                        Delivery: {load.scheduledDelivery ? format(new Date(load.scheduledDelivery), "PPp") : "Not scheduled"}
                       </p>
                       {load.actualPickup && (
                         <p className="text-sm">
