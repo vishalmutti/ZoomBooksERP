@@ -54,6 +54,27 @@ export const payments = pgTable("payments", {
   notes: text("notes"),
 });
 
+// Define load types and status as varchar with check constraints
+export const loads = pgTable("loads", {
+  id: serial("id").primaryKey(),
+  loadId: varchar("load_id", { length: 50 }).notNull().unique(), // Format: TYPE-YYYYMMDD-XXX
+  loadType: varchar("load_type", { length: 20}).notNull().$type<'Inventory' | 'Wholesale' | 'Miscellaneous'>(),
+  status: varchar("status", { length: 30}).notNull().default('Pending').$type<'Pending' | 'In Transit' | 'Delivered' | 'Freight Invoice Attached' | 'Paid' | 'Completed'>(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Add new freight invoices table
+export const freightInvoices = pgTable("freight_invoices", {
+  id: serial("id").primaryKey(),
+  loadId: integer("load_id").references(() => loads.id).notNull(),
+  invoiceNumber: varchar("invoice_number", { length: 50 }),
+  cost: decimal("cost", { precision: 10, scale: 2 }),
+  truckingCompany: varchar("trucking_company", { length: 255 }),
+  attachmentFile: text("attachment_file").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Relations
 export const invoicesRelations = relations(invoices, ({ one, many }) => ({
   supplier: one(suppliers, {
@@ -75,6 +96,18 @@ export const paymentsRelations = relations(payments, ({ one }) => ({
   invoice: one(invoices, {
     fields: [payments.invoiceId],
     references: [invoices.id],
+  }),
+}));
+
+// Add relations
+export const loadsRelations = relations(loads, ({ many }) => ({
+  freightInvoices: many(freightInvoices),
+}));
+
+export const freightInvoicesRelations = relations(freightInvoices, ({ one }) => ({
+  load: one(loads, {
+    fields: [freightInvoices.loadId],
+    references: [loads.id],
   }),
 }));
 
@@ -109,6 +142,19 @@ export const insertPaymentSchema = createInsertSchema(payments)
     id: true,
   });
 
+// Add new schemas
+export const insertLoadSchema = createInsertSchema(loads)
+  .omit({
+    id: true,
+    createdAt: true,
+  });
+
+export const insertFreightInvoiceSchema = createInsertSchema(freightInvoices)
+  .omit({
+    id: true,
+    createdAt: true,
+  });
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -124,3 +170,10 @@ export type Invoice = typeof invoices.$inferSelect;
 
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 export type Payment = typeof payments.$inferSelect;
+
+// Add new types
+export type InsertLoad = z.infer<typeof insertLoadSchema>;
+export type Load = typeof loads.$inferSelect;
+
+export type InsertFreightInvoice = z.infer<typeof insertFreightInvoiceSchema>;
+export type FreightInvoice = typeof freightInvoices.$inferSelect;

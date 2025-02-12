@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
+import { LoadManagementWidget } from "@/components/LoadManagementWidget";
 
 const widgets = [
   {
@@ -37,18 +38,24 @@ export default function HomePage() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {widgets.map((widget) => (
-        <Link key={widget.title} href={widget.path}>
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="text-4xl mb-2">{widget.icon}</div>
-              <CardTitle>{widget.title}</CardTitle>
-              <CardDescription>{widget.description}</CardDescription>
-            </CardHeader>
-          </Card>
-        </Link>
-      ))}
+    <div className="space-y-6">
+      {/* Load Management Widget */}
+      <LoadManagementWidget />
+
+      {/* Other Widgets */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {widgets.map((widget) => (
+          <Link key={widget.title} href={widget.path}>
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="text-4xl mb-2">{widget.icon}</div>
+                <CardTitle>{widget.title}</CardTitle>
+                <CardDescription>{widget.description}</CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }

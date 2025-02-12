@@ -10,6 +10,7 @@ import fs from "fs";
 import express from "express";
 import { eq } from "drizzle-orm";
 import { db } from "./db";
+import { insertLoadSchema, insertFreightInvoiceSchema } from "@shared/schema";
 
 const uploadDir = path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(uploadDir)) {
@@ -160,7 +161,7 @@ export function registerRoutes(app: Express): Server {
             bolFile: invoice.bolFile
           });
           invoice.uploadedFile = pdfFileName;
-          
+
           // Send email if supplier has an email address
           if (supplier.email) {
             const { sendInvoiceEmail } = await import('./email-service');
@@ -339,7 +340,124 @@ export function registerRoutes(app: Express): Server {
     res.json(payments);
   });
 
-  const httpServer = createServer(app);
+  // Add new load management routes
+  app.get("/api/loads", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const loads = await storage.getLoads();
+    res.json(loads);
+  });
+
+  app.get("/api/loads/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const id = parseInt(req.params.id);
+    const load = await storage.getLoad(id);
+    if (!load) return res.status(404).send("Load not found");
+    res.json(load);
+  });
+
+  app.post("/api/loads", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    const parsed = insertLoadSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json(parsed.error);
+    }
+
+    const load = await storage.createLoad(parsed.data);
+    res.status(201).json(load);
+  });
+
+  app.patch("/api/loads/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    const id = parseInt(req.params.id);
+    const parsed = insertLoadSchema.partial().safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json(parsed.error);
+    }
+
+    const load = await storage.updateLoad(id, parsed.data);
+    res.json(load);
+  });
+
+  app.delete("/api/loads/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    const id = parseInt(req.params.id);
+    const load = await storage.getLoad(id);
+    if (!load) return res.status(404).send("Load not found");
+
+    await storage.deleteLoad(id);
+    res.sendStatus(200);
+  });
+
+  // Freight invoice routes
+  app.get("/api/loads/:loadId/freight-invoices", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    const loadId = parseInt(req.params.loadId);
+    const freightInvoices = await storage.getLoadFreightInvoices(loadId);
+    res.json(freightInvoices);
+  });
+
+  app.post("/api/loads/:loadId/freight-invoices", upload, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const loadId = parseInt(req.params.loadId);
+      const freightInvoiceData = JSON.parse(req.body.freightInvoiceData);
+
+      const parsed = insertFreightInvoiceSchema.safeParse({
+        ...freightInvoiceData,
+        loadId,
+        attachmentFile: req.files?.file?.[0]?.filename, // Assuming single file upload
+      });
+
+      if (!parsed.success) {
+        return res.status(400).json(parsed.error);
+      }
+
+      const freightInvoice = await storage.createFreightInvoice(parsed.data);
+      res.status(201).json(freightInvoice);
+    } catch (error) {
+      console.error('Error creating freight invoice:', error);
+      res.status(500).json({ message: 'Failed to create freight invoice' });
+    }
+  });
+
+  app.patch("/api/loads/:loadId/freight-invoices/:id", upload, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const id = parseInt(req.params.id);
+      const freightInvoiceData = JSON.parse(req.body.freightInvoiceData);
+
+      const parsed = insertFreightInvoiceSchema.partial().safeParse({
+        ...freightInvoiceData,
+        attachmentFile: req.files?.file?.[0]?.filename, // Assuming single file upload
+
+      });
+
+      if (!parsed.success) {
+        return res.status(400).json(parsed.error);
+      }
+
+      const freightInvoice = await storage.updateFreightInvoice(id, parsed.data);
+      res.json(freightInvoice);
+    } catch (error) {
+      console.error('Error updating freight invoice:', error);
+      res.status(500).json({ message: 'Failed to update freight invoice' });
+    }
+  });
+
+  app.delete("/api/loads/:loadId/freight-invoices/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    const id = parseInt(req.params.id);
+    await storage.deleteFreightInvoice(id);
+    res.sendStatus(200);
+  });
+
   app.get("/api/suppliers/:id/account-statement", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
@@ -363,5 +481,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  const httpServer = createServer(app);
   return httpServer;
 }
