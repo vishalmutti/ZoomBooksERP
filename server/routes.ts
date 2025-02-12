@@ -371,7 +371,7 @@ export function registerRoutes(app: Express): Server {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     const id = parseInt(req.params.id);
-    const parsed = insertLoadSchema.partial().safeParse(req.body);
+    const parsed = insertIncomingLoadSchema.partial().safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json(parsed.error);
     }
