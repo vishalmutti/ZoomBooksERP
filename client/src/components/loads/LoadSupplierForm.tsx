@@ -5,10 +5,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import type { InsertSupplier, Supplier } from "@shared/schema";
+import type { InsertSupplier, Supplier, SupplierContact } from "@shared/schema";
 import { LuPlus, LuTrash } from "react-icons/lu";
+import React from 'react';
 
 interface LoadSupplierFormProps {
   open: boolean;
@@ -20,6 +21,12 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // Fetch supplier contacts if editing
+  const { data: contacts = [] } = useQuery<SupplierContact[]>({
+    queryKey: ["/api/suppliers", supplier?.id, "contacts"],
+    enabled: !!supplier,
+  });
+
   const form = useForm<InsertSupplier>({
     resolver: zodResolver(insertSupplierSchema),
     defaultValues: supplier ? {
@@ -27,7 +34,12 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
       address: supplier.address ?? "",
       email: supplier.email ?? "",
       phone: supplier.phone ?? "",
-      contacts: [],
+      contacts: contacts.map(contact => ({
+        name: contact.name,
+        email: contact.email ?? "",
+        phone: contact.phone ?? "",
+        isPrimary: contact.isPrimary,
+      })),
     } : {
       name: "",
       address: "",
@@ -36,6 +48,18 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
       contacts: [],
     },
   });
+
+  // Update form values when contacts are loaded
+  React.useEffect(() => {
+    if (supplier && contacts.length > 0) {
+      form.setValue("contacts", contacts.map(contact => ({
+        name: contact.name,
+        email: contact.email ?? "",
+        phone: contact.phone ?? "",
+        isPrimary: contact.isPrimary,
+      })));
+    }
+  }, [contacts, supplier, form.setValue]);
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,

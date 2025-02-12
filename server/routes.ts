@@ -112,6 +112,18 @@ export function registerRoutes(app: Express): Server {
     res.sendStatus(200);
   });
 
+  // Add this route after the other supplier routes
+  app.get("/api/suppliers/:id/contacts", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    const id = parseInt(req.params.id);
+    const supplier = await storage.getSupplier(id);
+    if (!supplier) return res.status(404).send("Supplier not found");
+
+    const contacts = await storage.getSupplierContacts(id);
+    res.json(contacts);
+  });
+
   // Invoice routes
   app.get("/api/invoices", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
