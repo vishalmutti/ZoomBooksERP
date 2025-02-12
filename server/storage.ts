@@ -1,5 +1,4 @@
-import { invoices, suppliers, invoiceItems, users, payments, type User, type InsertUser, type Invoice, type InsertInvoice, type Supplier, type InsertSupplier, type Payment, type InsertPayment, type InvoiceItem } from "@shared/schema";
-import { loads, freightInvoices, type Load, type InsertLoad, type FreightInvoice, type InsertFreightInvoice } from "@shared/schema";
+import { invoices, suppliers, invoiceItems, users, payments, incomingLoads, type User, type InsertUser, type Invoice, type InsertInvoice, type Supplier, type InsertSupplier, type Payment, type InsertPayment, type InvoiceItem } from "@shared/schema";
 import { db } from "./db";
 import { eq, ilike, and, gte, lte, sql, desc } from "drizzle-orm";
 import session from "express-session";
@@ -283,39 +282,26 @@ export class DatabaseStorage implements IStorage {
   }
 
 
-  async getLoads(): Promise<Load[]> {
+  async getLoads() {
     return await db
       .select({
-        id: loads.id,
-        loadId: loads.loadId,
-        loadType: loads.loadType,
-        notes: loads.notes,
-        location: loads.location,
-        scheduledPickup: loads.scheduledPickup,
-        scheduledDelivery: loads.scheduledDelivery,
-        carrier: loads.carrier,
-        loadCost: loads.loadCost,
-        freightCost: loads.freightCost,
-        totalCost: loads.totalCost,
-        profitRoi: loads.profitRoi,
-        poNumber: loads.poNumber,
-        orderNumber: loads.orderNumber,
-        brokerName: loads.brokerName,
-        brokerContact: loads.brokerContact,
-        containerNumber: loads.containerNumber,
-        bookingNumber: loads.bookingNumber,
-        vesselName: loads.vesselName,
-        voyageNumber: loads.voyageNumber,
-        estimatedPortArrival: loads.estimatedPortArrival,
-        actualPortArrival: loads.actualPortArrival,
-        customsClearanceDate: loads.customsClearanceDate,
-        referenceNumber: loads.referenceNumber,
-        warehouseLocation: loads.warehouseLocation,
-        handlingInstructions: loads.handlingInstructions,
-        createdAt: loads.createdAt
+        id: incomingLoads.id,
+        loadId: incomingLoads.loadId,
+        supplierId: incomingLoads.supplierId,
+        location: incomingLoads.location,
+        notes: incomingLoads.notes,
+        loadCost: incomingLoads.loadCost,
+        freightCost: incomingLoads.freightCost,
+        totalCost: incomingLoads.totalCost,
+        profitRoi: incomingLoads.profitRoi,
+        bolFile: incomingLoads.bolFile,
+        materialInvoiceFile: incomingLoads.materialInvoiceFile,
+        freightInvoiceFile: incomingLoads.freightInvoiceFile,
+        loadPerformanceFile: incomingLoads.loadPerformanceFile,
+        createdAt: incomingLoads.createdAt
       })
-      .from(loads)
-      .orderBy(loads.createdAt);
+      .from(incomingLoads)
+      .orderBy(incomingLoads.createdAt);
   }
 
   async getLoad(id: number): Promise<(Load & { freightInvoices?: FreightInvoice[] }) | undefined> {
