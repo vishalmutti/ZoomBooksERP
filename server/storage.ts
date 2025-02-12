@@ -331,8 +331,8 @@ export class DatabaseStorage implements IStorage {
 
   async createLoad(load: InsertLoad): Promise<Load> {
     const [newLoad] = await db
-      .insert(loads)
-      .values([load])
+      .insert(incomingLoads)
+      .values(load)
       .returning();
     return newLoad;
   }
