@@ -39,9 +39,11 @@ export function LoadForm() {
     defaultValues: {
       loadType: "Incoming",
       notes: "",
-      status: "Pending",
       loadId: generateLoadId("Incoming"),
       location: "",
+      referenceNumber: "",
+      pickupDate: null,
+      deliveryDate: null,
       loadCost: "0",
       freightCost: "0",
       profitRoi: "0",
@@ -209,6 +211,59 @@ export function LoadForm() {
                     <FormLabel>Profit ROI</FormLabel>
                     <FormControl>
                       <Input type="number" step="0.01" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="referenceNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Reference #</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="pickupDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Pickup Date</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="datetime-local" 
+                        {...field}
+                        value={field.value ? new Date(field.value).toISOString().slice(0, 16) : ''}
+                        onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value).toISOString() : null)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="deliveryDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Delivery Date</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="datetime-local" 
+                        {...field}
+                        value={field.value ? new Date(field.value).toISOString().slice(0, 16) : ''}
+                        onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value).toISOString() : null)}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
