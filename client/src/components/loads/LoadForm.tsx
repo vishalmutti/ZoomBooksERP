@@ -72,7 +72,11 @@ export function LoadForm({ defaultType }: LoadFormProps) {
       // Append all the form data
       Object.entries(data).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
-          formData.append(key, value.toString());
+          if (key === 'scheduledPickup' || key === 'scheduledDelivery') {
+            formData.append(key, value ? new Date(value).toISOString() : '');
+          } else {
+            formData.append(key, value.toString());
+          }
         }
       });
 
@@ -82,29 +86,32 @@ export function LoadForm({ defaultType }: LoadFormProps) {
       if (files.freightInvoice) formData.append('freightInvoiceFile', files.freightInvoice);
       if (files.loadPerformance) formData.append('loadPerformanceFile', files.loadPerformance);
 
+      console.log('Submitting form data:', Object.fromEntries(formData.entries()));
+
       const response = await fetch('/api/loads', {
         method: 'POST',
-        body: formData,
+        body: formData, // FormData will automatically set the correct Content-Type header
       });
 
-      if (response.ok) {
-        queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
-        setOpen(false);
-        form.reset();
-        setFiles({
-          bol: null,
-          materialInvoice: null,
-          freightInvoice: null,
-          loadPerformance: null
-        });
-        toast({
-          title: "Success",
-          description: "Load created successfully",
-        });
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to create load");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.error('Server response:', errorData);
+        throw new Error(errorData?.message || 'Failed to create load');
       }
+
+      queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
+      setOpen(false);
+      form.reset();
+      setFiles({
+        bol: null,
+        materialInvoice: null,
+        freightInvoice: null,
+        loadPerformance: null
+      });
+      toast({
+        title: "Success",
+        description: "Load created successfully",
+      });
     } catch (error) {
       console.error('Error creating load:', error);
       toast({
@@ -403,33 +410,33 @@ export function LoadForm({ defaultType }: LoadFormProps) {
             <div className="space-y-4">
               <div>
                 <FormLabel>BOL</FormLabel>
-                <Input 
-                  type="file" 
-                  onChange={(e) => handleFileChange('bol', e)} 
+                <Input
+                  type="file"
+                  onChange={(e) => handleFileChange('bol', e)}
                   accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
                 />
               </div>
               <div>
                 <FormLabel>Material Invoice</FormLabel>
-                <Input 
-                  type="file" 
-                  onChange={(e) => handleFileChange('materialInvoice', e)} 
+                <Input
+                  type="file"
+                  onChange={(e) => handleFileChange('materialInvoice', e)}
                   accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
                 />
               </div>
               <div>
                 <FormLabel>Freight Invoice</FormLabel>
-                <Input 
-                  type="file" 
-                  onChange={(e) => handleFileChange('freightInvoice', e)} 
+                <Input
+                  type="file"
+                  onChange={(e) => handleFileChange('freightInvoice', e)}
                   accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
                 />
               </div>
               <div>
                 <FormLabel>Load Performance</FormLabel>
-                <Input 
-                  type="file" 
-                  onChange={(e) => handleFileChange('loadPerformance', e)} 
+                <Input
+                  type="file"
+                  onChange={(e) => handleFileChange('loadPerformance', e)}
                   accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
                 />
               </div>

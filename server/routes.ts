@@ -29,7 +29,10 @@ const upload = multer({
   })
 }).fields([
   { name: 'file', maxCount: 1 },
-  { name: 'bolFile', maxCount: 1 }
+  { name: 'bolFile', maxCount: 1 },
+  { name: 'materialInvoiceFile', maxCount: 1 },
+  { name: 'freightInvoiceFile', maxCount: 1 },
+  { name: 'loadPerformanceFile', maxCount: 1 }
 ]);
 
 export function registerRoutes(app: Express): Server {
@@ -355,16 +358,32 @@ export function registerRoutes(app: Express): Server {
     res.json(load);
   });
 
-  app.post("/api/loads", async (req, res) => {
+  app.post("/api/loads", upload, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
-    const parsed = insertIncomingLoadSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json(parsed.error);
-    }
+    try {
+      const loadData = req.body;
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
-    const load = await storage.createLoad(parsed.data);
-    res.status(201).json(load);
+      const parsed = insertIncomingLoadSchema.safeParse({
+        ...loadData,
+        bolFile: files?.bolFile?.[0]?.filename,
+        materialInvoiceFile: files?.materialInvoiceFile?.[0]?.filename,
+        freightInvoiceFile: files?.freightInvoiceFile?.[0]?.filename,
+        loadPerformanceFile: files?.loadPerformanceFile?.[0]?.filename,
+      });
+
+      if (!parsed.success) {
+        console.error('Validation error:', parsed.error);
+        return res.status(400).json({ message: 'Invalid load data', error: parsed.error });
+      }
+
+      const load = await storage.createLoad(parsed.data);
+      res.status(201).json(load);
+    } catch (error) {
+      console.error('Error creating load:', error);
+      res.status(500).json({ message: 'Failed to create load' });
+    }
   });
 
   app.patch("/api/loads/:id", async (req, res) => {
