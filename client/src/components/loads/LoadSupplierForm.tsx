@@ -49,13 +49,18 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
   React.useEffect(() => {
     if (open) {
       if (supplier) {
+        const { data: contacts } = useQuery<SupplierContact[]>({
+          queryKey: ["/api/suppliers", supplier.id, "contacts"],
+          enabled: !!supplier?.id,
+        });
+
         form.reset({
           name: supplier.name,
           address: supplier.address ?? "",
           contactPerson: supplier.contactPerson ?? "",
           email: supplier.email ?? "",
           phone: supplier.phone ?? "",
-          contacts: supplier.contacts?.map(contact => ({
+          contacts: contacts?.map(contact => ({
             name: contact.name ?? "",
             email: contact.email ?? "",
             phone: contact.phone ?? "",
