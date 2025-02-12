@@ -5,13 +5,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoadForm } from "./LoadForm";
 import { LoadTable } from "./LoadTable";
 import { Button } from "@/components/ui/button";
-import type { Load } from "@shared/schema";
-import { LuPackage2, LuShip, LuStore } from "react-icons/lu";
+import type { Load, Supplier } from "@shared/schema";
+import { LuPackage2, LuShip, LuStore, Plus } from "react-icons/lu";
+import { LoadSupplierList } from "./LoadSupplierList";
+import { LoadSupplierForm } from "./LoadSupplierForm";
 
 export function LoadDashboard() {
   const [activeTab, setActiveTab] = useState("incoming");
+  const [showAddSupplier, setShowAddSupplier] = useState(false);
   const { data: loads, isLoading } = useQuery<Load[]>({
     queryKey: ["loads"],
+  });
+  const { data: suppliers = [] } = useQuery<Supplier[]>({
+    queryKey: ["/api/suppliers"],
   });
 
   const filteredLoads = loads?.filter(load => load.loadType.toLowerCase() === activeTab);
@@ -62,6 +68,23 @@ export function LoadDashboard() {
           <LoadTable loads={filteredLoads} isLoading={isLoading} />
         </TabsContent>
       </Tabs>
+
+      <div className="mt-8">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold">Load Suppliers</h2>
+          <Button onClick={() => setShowAddSupplier(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Supplier
+          </Button>
+        </div>
+        
+        <LoadSupplierList suppliers={suppliers} />
+        
+        <LoadSupplierForm
+          open={showAddSupplier}
+          onOpenChange={setShowAddSupplier}
+        />
+      </div>
     </div>
   );
 }
