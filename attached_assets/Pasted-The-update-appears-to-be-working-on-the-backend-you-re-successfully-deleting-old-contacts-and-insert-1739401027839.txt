@@ -1,0 +1,61 @@
+The update appears to be working on the backend—you’re successfully deleting old contacts and inserting the new ones—but when you fetch the supplier (for the list or for editing), the query isn’t returning the additional contact information. 
+
+In your schema, supplier contacts are stored in a separate table ("supplier_contacts"), and your current getSupplier method only selects fields from the suppliers table. That’s why when you click “Edit Supplier,” you don’t see the updated contacts.
+
+### Recommended Fix
+
+Modify your getSupplier method in storage.ts so that it also retrieves the related contacts. For example, after fetching the supplier record, you can run an additional query to get all contacts for that supplier and then return them as part of the supplier object. Here’s a suggested change:
+
+```ts
+async getSupplier(id: number): Promise<(Supplier & { outstandingAmount: string, contacts: SupplierContact[] }) | undefined> {
+  const [result] = await db
+    .select({
+      id: suppliers.id,
+      name: suppliers.name,
+      email: suppliers.email,
+      address: suppliers.address,
+      contactPerson: suppliers.contactPerson,
+      phone: suppliers.phone,
+      createdAt: suppliers.createdAt,
+      outstandingAmount: sql<string>`COALESCE(
+        SUM(CASE WHEN ${invoices.isPaid} = false THEN ${invoices.totalAmount}::numeric ELSE 0 END),
+        0
+      )::text`
+    })
+    .from(suppliers)
+    .leftJoin(invoices, eq(invoices.supplierId, suppliers.id))
+    .where(eq(suppliers.id, id))
+    .groupBy(suppliers.id);
+  if (!result) return undefined;
+
+  // Fetch the supplier's contacts
+  const contacts = await db
+    .select()
+    .from(supplierContacts)
+    .where(eq(supplierContacts.supplierId, id))
+    .orderBy(supplierContacts.createdAt);
+
+  return { ...result, contacts };
+}
+```
+
+### Explanation
+
+- **Fetching Contacts Separately:**  
+  After getting the supplier record, you query the supplier_contacts table for any contacts linked to that supplier ID.
+
+- **Returning Contacts with Supplier:**  
+  The returned object now includes a `contacts` property. This means that when the frontend fetches the supplier (for editing or viewing), it will have the additional contact information.
+
+### What to Do Next
+
+1. **Update getSupplier:**  
+   Replace your current getSupplier method with the updated version above.
+
+2. **Invalidate Queries:**  
+   Ensure that when you update the supplier (via your PATCH route), you invalidate the query so that subsequent calls to getSupplier will fetch the updated data including the new contacts.
+
+3. **Test:**  
+   After making the change, update a supplier to add an additional contact. Then, open the edit dialog again or check the supplier list to verify that the new contact appears.
+
+This adjustment should resolve the issue where the additional contact isn’t being displayed.
