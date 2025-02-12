@@ -1,0 +1,97 @@
+The likely issue is that when you update a supplier, the update function returns only the supplier’s basic fields (name, address, etc.) and does not fetch the updated contacts. As a result, after updating, the UI doesn’t see any additional contacts—even though they were (presumably) inserted in the database.
+
+To fix this, modify your updateSupplier method so that after updating the supplier and its contacts, it fetches and returns the supplier with its contacts (like your getSupplier method does).
+
+For example, change your updateSupplier method in server/storage.ts from:
+
+```ts
+async updateSupplier(id: number, updates: Partial<InsertSupplier>): Promise<Supplier | undefined> {
+  return await db.transaction(async (tx) => {
+    const [supplier] = await tx
+      .update(suppliers)
+      .set({
+        name: updates.name,
+        address: updates.address,
+        contactPerson: updates.contactPerson,
+        email: updates.email,
+        phone: updates.phone,
+      })
+      .where(eq(suppliers.id, id))
+      .returning();
+
+    if (updates.contacts) {
+      await tx.delete(supplierContacts).where(eq(supplierContacts.supplierId, id));
+
+      if (updates.contacts.length > 0) {
+        await tx.insert(supplierContacts).values(
+          updates.contacts.map(contact => ({
+            name: contact.name,
+            email: contact.email,
+            phone: contact.phone,
+            isPrimary: contact.isPrimary,
+            supplierId: id,
+          }))
+        );
+      }
+    }
+
+    return supplier;
+  });
+}
+```
+
+to something like:
+
+```ts
+async updateSupplier(id: number, updates: Partial<InsertSupplier>): Promise<Supplier | undefined> {
+  return await db.transaction(async (tx) => {
+    // Update the basic supplier fields.
+    await tx
+      .update(suppliers)
+      .set({
+        name: updates.name,
+        address: updates.address,
+        contactPerson: updates.contactPerson,
+        email: updates.email,
+        phone: updates.phone,
+      })
+      .where(eq(suppliers.id, id));
+
+    // If contacts are provided, delete the old ones and insert the new ones.
+    if (updates.contacts) {
+      await tx.delete(supplierContacts).where(eq(supplierContacts.supplierId, id));
+
+      if (updates.contacts.length > 0) {
+        await tx.insert(supplierContacts).values(
+          updates.contacts.map(contact => ({
+            name: contact.name,
+            email: contact.email,
+            phone: contact.phone,
+            isPrimary: contact.isPrimary,
+            supplierId: id,
+          }))
+        );
+      }
+    }
+
+    // Now fetch the updated supplier with contacts.
+    return await this.getSupplier(id);
+  });
+}
+```
+
+### Explanation
+
+- **Transaction Flow:**  
+  First, the supplier’s basic fields are updated. Then, if contacts are provided in the update, the existing contacts are deleted and the new ones are inserted.
+  
+- **Fetching Updated Data:**  
+  After performing the updates inside the transaction, the function calls `this.getSupplier(id)` which (based on your existing implementation) retrieves the supplier along with its contacts. This updated object is then returned to the API and ultimately to your UI.
+
+### Next Steps
+
+1. Update your updateSupplier method as shown above.
+2. Test by editing a supplier and adding an additional contact.
+3. When you re-open the edit form (or refresh the supplier list), the new contact information should now be visible.
+
+This change should resolve the issue where your additional contact persons aren’t appearing after an update.
