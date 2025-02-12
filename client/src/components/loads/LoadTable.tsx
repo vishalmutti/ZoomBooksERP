@@ -41,7 +41,7 @@ const statusColors = {
   "Final Delivery": "bg-green-500/10 text-green-500"
 };
 
-const FileLink = ({ file }: { file: string | null }) => {
+const FileLink = ({ file, label }: { file: string | null; label: string }) => {
   if (!file) return null;
 
   return (
@@ -50,6 +50,7 @@ const FileLink = ({ file }: { file: string | null }) => {
       size="sm"
       className="h-8 w-8 p-0"
       onClick={() => window.open(`/uploads/${file}`, "_blank")}
+      title={label}
     >
       <LuFileText className="h-4 w-4" />
     </Button>
@@ -140,16 +141,16 @@ export function LoadTable({ loads, isLoading, onEdit, onDelete }: LoadTableProps
               <TableCell>${Number(load.freightCost).toFixed(2)}</TableCell>
               <TableCell>{Number(load.profitRoi).toFixed(2)}%</TableCell>
               <TableCell>
-                <FileLink file={load.bolFile} />
+                <FileLink file={load.bolFile} label="BOL Document" />
               </TableCell>
               <TableCell>
-                <FileLink file={load.materialInvoiceFile} />
+                <FileLink file={load.materialInvoiceFile} label="Material Invoice" />
               </TableCell>
               <TableCell>
-                <FileLink file={load.freightInvoiceFile} />
+                <FileLink file={load.freightInvoiceFile} label="Freight Invoice" />
               </TableCell>
               <TableCell>
-                <FileLink file={load.loadPerformanceFile} />
+                <FileLink file={load.loadPerformanceFile} label="Load Performance" />
               </TableCell>
               <TableCell>{load.notes}</TableCell>
               <TableCell>
@@ -157,16 +158,18 @@ export function LoadTable({ loads, isLoading, onEdit, onDelete }: LoadTableProps
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onEdit && onEdit(load)}
+                    className="h-8 w-8 p-0"
+                    onClick={() => onEdit?.(load)}
                   >
                     <LuPencil className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
+                    className="h-8 w-8 p-0"
                     onClick={() => {
                       if (window.confirm('Are you sure you want to delete this load?')) {
-                        onDelete && onDelete(load.id);
+                        onDelete?.(load.id);
                       }
                     }}
                   >
