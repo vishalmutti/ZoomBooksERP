@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { InsertSupplier, Supplier, SupplierContact } from "@shared/schema";
 import { LuPlus, LuTrash } from "react-icons/lu";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import React from 'react';
 
 interface LoadSupplierFormProps {
@@ -22,27 +23,21 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Fetch supplier contacts if editing
-  const { data: contacts = [] } = useQuery<SupplierContact[]>({
+  // Only fetch contacts when editing a specific supplier and dialog is open
+  const { data: contacts = [], isLoading: isLoadingContacts } = useQuery<SupplierContact[]>({
     queryKey: ["/api/suppliers", supplier?.id, "contacts"],
-    enabled: !!supplier?.id, // Only fetch if we have a supplier id
+    enabled: !!supplier?.id && open, // Only fetch when dialog is open and we have a supplier
   });
 
   const form = useForm<InsertSupplier>({
     resolver: zodResolver(insertSupplierSchema),
-    defaultValues: React.useMemo(() => ({
-      name: supplier?.name ?? "",
-      address: supplier?.address ?? "",
-      email: supplier?.email ?? "",
-      phone: supplier?.phone ?? "",
-      contacts: supplier ? contacts.map(contact => ({
-        name: contact.name,
-        email: contact.email ?? "",
-        phone: contact.phone ?? "",
-        isPrimary: contact.isPrimary,
-        notes: contact.notes ?? "",
-      })) : [],
-    }), [supplier, contacts])
+    defaultValues: {
+      name: "",
+      address: "",
+      email: "",
+      phone: "",
+      contacts: [],
+    },
   });
 
   const { fields, append, remove } = useFieldArray({
@@ -50,18 +45,36 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
     name: "contacts",
   });
 
-  // Update form values when contacts are loaded or supplier changes
+  // Reset form when dialog opens/closes or supplier changes
   React.useEffect(() => {
-    if (supplier && contacts.length > 0) {
-      form.setValue("contacts", contacts.map(contact => ({
-        name: contact.name,
-        email: contact.email ?? "",
-        phone: contact.phone ?? "",
-        isPrimary: contact.isPrimary,
-        notes: contact.notes ?? "",
-      })));
+    if (open) {
+      // When editing, wait for contacts to load before setting form values
+      if (supplier && (!isLoadingContacts || contacts.length > 0)) {
+        form.reset({
+          name: supplier.name,
+          address: supplier.address ?? "",
+          email: supplier.email ?? "",
+          phone: supplier.phone ?? "",
+          contacts: contacts.map(contact => ({
+            name: contact.name,
+            email: contact.email ?? "",
+            phone: contact.phone ?? "",
+            isPrimary: contact.isPrimary,
+            notes: contact.notes ?? "",
+          })),
+        });
+      } else if (!supplier) {
+        // When creating new, reset to empty form
+        form.reset({
+          name: "",
+          address: "",
+          email: "",
+          phone: "",
+          contacts: [],
+        });
+      }
     }
-  }, [contacts, supplier, form.setValue]);
+  }, [supplier, contacts, open, form, isLoadingContacts]);
 
   async function onSubmit(data: InsertSupplier) {
     try {
@@ -143,6 +156,34 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
               )}
             />
 
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" {...field} value={field.value ?? ""} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone</FormLabel>
+                  <FormControl>
+                    <Input {...field} value={field.value ?? ""} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-medium">Contacts</h3>
@@ -163,75 +204,96 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
                 </Button>
               </div>
 
-              {fields.map((field, index) => (
-                <div key={field.id} className="space-y-4 p-4 border rounded-lg relative">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute top-2 right-2"
-                    onClick={() => remove(index)}
-                  >
-                    <LuTrash className="h-4 w-4" />
-                  </Button>
+              {isLoadingContacts ? (
+                <div className="text-sm text-muted-foreground">Loading contacts...</div>
+              ) : (
+                fields.map((field, index) => (
+                  <div key={field.id} className="space-y-4 p-4 border rounded-lg relative">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute top-2 right-2"
+                      onClick={() => remove(index)}
+                    >
+                      <LuTrash className="h-4 w-4" />
+                    </Button>
 
-                  <FormField
-                    control={form.control}
-                    name={`contacts.${index}.name`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Contact Name</FormLabel>
-                        <FormControl>
-                          <Input {...field} value={field.value ?? ""} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name={`contacts.${index}.name`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Contact Name</FormLabel>
+                          <FormControl>
+                            <Input {...field} value={field.value ?? ""} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name={`contacts.${index}.email`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input type="email" {...field} value={field.value ?? ""} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name={`contacts.${index}.email`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input type="email" {...field} value={field.value ?? ""} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name={`contacts.${index}.phone`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Phone</FormLabel>
-                        <FormControl>
-                          <Input {...field} value={field.value ?? ""} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name={`contacts.${index}.phone`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone</FormLabel>
+                          <FormControl>
+                            <Input {...field} value={field.value ?? ""} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name={`contacts.${index}.notes`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Notes</FormLabel>
-                        <FormControl>
-                          <Textarea {...field} value={field.value ?? ""} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              ))}
+                    <FormField
+                      control={form.control}
+                      name={`contacts.${index}.isPrimary`}
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-2">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormLabel className="text-sm font-normal">Primary Contact</FormLabel>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name={`contacts.${index}.notes`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Notes</FormLabel>
+                          <FormControl>
+                            <Textarea {...field} value={field.value ?? ""} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                ))
+              )}
             </div>
 
             <Button type="submit" className="w-full">
