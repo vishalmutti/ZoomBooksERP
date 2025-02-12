@@ -289,7 +289,6 @@ export class DatabaseStorage implements IStorage {
         id: loads.id,
         loadId: loads.loadId,
         loadType: loads.loadType,
-        supplierId: loads.supplierId,
         notes: loads.notes,
         location: loads.location,
         scheduledPickup: loads.scheduledPickup,
