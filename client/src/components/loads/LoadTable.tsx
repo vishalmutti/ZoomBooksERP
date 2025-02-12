@@ -68,17 +68,23 @@ export function LoadTable({ loads, isLoading }: LoadTableProps) {
   }
 
   return (
-    <div className="rounded-md border">
+    <div className="rounded-md border overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Load ID</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Pickup</TableHead>
-            <TableHead>Delivery</TableHead>
+            <TableHead>Reference Number</TableHead>
+            <TableHead>Location</TableHead>
+            <TableHead>Pickup Location</TableHead>
+            <TableHead>Delivery Location</TableHead>
             <TableHead>Carrier</TableHead>
-            <TableHead>Scheduled Date</TableHead>
+            <TableHead>Scheduled Pickup</TableHead>
+            <TableHead>Scheduled Delivery</TableHead>
+            <TableHead>Load Cost</TableHead>
+            <TableHead>Freight Cost</TableHead>
+            <TableHead>Profit/ROI</TableHead>
+            <TableHead>Notes</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -87,10 +93,9 @@ export function LoadTable({ loads, isLoading }: LoadTableProps) {
               <TableCell>
                 <div className="flex items-center gap-2">
                   {loadTypeIcons[load.loadType as keyof typeof loadTypeIcons]}
-                  <span>{load.loadId}</span>
+                  <span>{load.loadType}</span>
                 </div>
               </TableCell>
-              <TableCell>{load.loadType}</TableCell>
               <TableCell>
                 <Badge
                   variant="outline"
@@ -99,12 +104,21 @@ export function LoadTable({ loads, isLoading }: LoadTableProps) {
                   {load.status}
                 </Badge>
               </TableCell>
+              <TableCell>{load.referenceNumber}</TableCell>
+              <TableCell>{load.location}</TableCell>
               <TableCell>{load.pickupLocation}</TableCell>
               <TableCell>{load.deliveryLocation}</TableCell>
               <TableCell>{load.carrier}</TableCell>
               <TableCell>
                 {load.scheduledPickup && format(new Date(load.scheduledPickup), "MMM d, yyyy")}
               </TableCell>
+              <TableCell>
+                {load.scheduledDelivery && format(new Date(load.scheduledDelivery), "MMM d, yyyy")}
+              </TableCell>
+              <TableCell>${Number(load.loadCost).toFixed(2)}</TableCell>
+              <TableCell>${Number(load.freightCost).toFixed(2)}</TableCell>
+              <TableCell>{Number(load.profitRoi).toFixed(2)}%</TableCell>
+              <TableCell>{load.notes}</TableCell>
             </TableRow>
           ))}
         </TableBody>
