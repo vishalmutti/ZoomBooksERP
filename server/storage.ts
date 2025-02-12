@@ -1,4 +1,4 @@
-import { invoices, suppliers, invoiceItems, users, payments, incomingLoads, type User, type InsertUser, type Invoice, type InsertInvoice, type Supplier, type InsertSupplier, type Payment, type InsertPayment, type InvoiceItem } from "@shared/schema";
+import { invoices, suppliers, invoiceItems, users, payments, incomingLoads, freightInvoices, type User, type InsertUser, type Invoice, type InsertInvoice, type Supplier, type InsertSupplier, type Payment, type InsertPayment, type InvoiceItem, type IncomingLoad, type InsertIncomingLoad, type FreightInvoice, type InsertFreightInvoice } from "@shared/schema";
 import { db } from "./db";
 import { eq, ilike, and, gte, lte, sql, desc } from "drizzle-orm";
 import session from "express-session";
@@ -40,10 +40,10 @@ export interface IStorage {
 
   sessionStore: session.Store;
 
-  getLoads(): Promise<Load[]>;
-  getLoad(id: number): Promise<(Load & { freightInvoices?: FreightInvoice[] }) | undefined>;
-  createLoad(load: InsertLoad): Promise<Load>;
-  updateLoad(id: number, updates: Partial<Load>): Promise<Load>;
+  getLoads(): Promise<IncomingLoad[]>;
+  getLoad(id: number): Promise<(IncomingLoad & { freightInvoices?: FreightInvoice[] }) | undefined>;
+  createLoad(load: InsertIncomingLoad): Promise<IncomingLoad>;
+  updateLoad(id: number, updates: Partial<IncomingLoad>): Promise<IncomingLoad>;
   deleteLoad(id: number): Promise<void>;
   getLoadFreightInvoices(loadId: number): Promise<FreightInvoice[]>;
   createFreightInvoice(freightInvoice: InsertFreightInvoice): Promise<FreightInvoice>;
@@ -284,22 +284,38 @@ export class DatabaseStorage implements IStorage {
 
   async getLoads() {
     return await db
-      .select()
+      .select({
+        id: incomingLoads.id,
+        loadId: incomingLoads.loadId,
+        loadType: incomingLoads.loadType,
+        supplierId: incomingLoads.supplierId,
+        referenceNumber: incomingLoads.referenceNumber,
+        location: incomingLoads.location,
+        status: incomingLoads.status,
+        pickupLocation: incomingLoads.pickupLocation,
+        deliveryLocation: incomingLoads.deliveryLocation,
+        carrier: incomingLoads.carrier,
+        scheduledPickup: incomingLoads.scheduledPickup,
+        scheduledDelivery: incomingLoads.scheduledDelivery,
+        notes: incomingLoads.notes,
+        loadCost: incomingLoads.loadCost,
+        freightCost: incomingLoads.freightCost,
+        profitRoi: incomingLoads.profitRoi,
+        bolFile: incomingLoads.bolFile,
+        materialInvoiceFile: incomingLoads.materialInvoiceFile,
+        freightInvoiceFile: incomingLoads.freightInvoiceFile,
+        loadPerformanceFile: incomingLoads.loadPerformanceFile,
+        createdAt: incomingLoads.createdAt,
+      })
       .from(incomingLoads)
-      .orderBy(incomingLoads.createdAt);
+      .orderBy(desc(incomingLoads.createdAt));
   }
 
-  async getLoad(id: number): Promise<(Load & { freightInvoices?: FreightInvoice[] }) | undefined> {
-    const [load] = await db.select({
-      id: loads.id,
-      loadId: loads.loadId,
-      loadType: loads.loadType,
-      status: loads.status,
-      notes: loads.notes,
-      createdAt: loads.createdAt
-    })
-    .from(loads)
-    .where(eq(loads.id, id));
+  async getLoad(id: number): Promise<(IncomingLoad & { freightInvoices?: FreightInvoice[] }) | undefined> {
+    const [load] = await db
+      .select()
+      .from(incomingLoads)
+      .where(eq(incomingLoads.id, id));
 
     if (!load) return undefined;
 
@@ -314,7 +330,7 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  async createLoad(load: InsertLoad): Promise<Load> {
+  async createLoad(load: InsertIncomingLoad): Promise<IncomingLoad> {
     const [newLoad] = await db
       .insert(incomingLoads)
       .values(load)
@@ -322,11 +338,11 @@ export class DatabaseStorage implements IStorage {
     return newLoad;
   }
 
-  async updateLoad(id: number, updates: Partial<Load>): Promise<Load> {
+  async updateLoad(id: number, updates: Partial<IncomingLoad>): Promise<IncomingLoad> {
     const [updatedLoad] = await db
-      .update(loads)
+      .update(incomingLoads)
       .set(updates)
-      .where(eq(loads.id, id))
+      .where(eq(incomingLoads.id, id))
       .returning();
     return updatedLoad;
   }
@@ -334,7 +350,7 @@ export class DatabaseStorage implements IStorage {
   async deleteLoad(id: number): Promise<void> {
     await db.transaction(async (tx) => {
       await tx.delete(freightInvoices).where(eq(freightInvoices.loadId, id));
-      await tx.delete(loads).where(eq(loads.id, id));
+      await tx.delete(incomingLoads).where(eq(incomingLoads.id, id));
     });
   }
 

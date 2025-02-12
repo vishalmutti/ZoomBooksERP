@@ -1,11 +1,10 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoadForm } from "./LoadForm";
 import { LoadTable } from "./LoadTable";
 import { Button } from "@/components/ui/button";
-import type { Load, Supplier } from "@shared/schema";
+import type { IncomingLoad, Supplier } from "@shared/schema";
 import { LuPackage2, LuPlus, LuShip, LuStore } from "react-icons/lu";
 import { LoadSupplierList } from "./LoadSupplierList";
 import { LoadSupplierForm } from "./LoadSupplierForm";
@@ -13,14 +12,16 @@ import { LoadSupplierForm } from "./LoadSupplierForm";
 export function LoadDashboard() {
   const [activeTab, setActiveTab] = useState("incoming");
   const [showAddSupplier, setShowAddSupplier] = useState(false);
-  const { data: loads, isLoading } = useQuery<Load[]>({
-    queryKey: ["loads"],
+  const { data: loads, isLoading } = useQuery<IncomingLoad[]>({
+    queryKey: ["/api/loads"],
   });
   const { data: suppliers = [] } = useQuery<Supplier[]>({
     queryKey: ["/api/suppliers"],
   });
 
-  const filteredLoads = loads?.filter(load => load.loadType.toLowerCase() === activeTab);
+  const filteredLoads = loads?.filter(load => 
+    load.loadType?.toLowerCase() === activeTab.toLowerCase()
+  );
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -53,14 +54,14 @@ export function LoadDashboard() {
           </div>
           <LoadTable loads={filteredLoads} isLoading={isLoading} />
         </TabsContent>
-        
+
         <TabsContent value="wholesale" className="space-y-4">
           <div className="flex justify-end">
             <LoadForm defaultType="Wholesale" />
           </div>
           <LoadTable loads={filteredLoads} isLoading={isLoading} />
         </TabsContent>
-        
+
         <TabsContent value="miscellaneous" className="space-y-4">
           <div className="flex justify-end">
             <LoadForm defaultType="Miscellaneous" />
@@ -77,9 +78,9 @@ export function LoadDashboard() {
             Add Supplier
           </Button>
         </div>
-        
+
         <LoadSupplierList suppliers={suppliers} />
-        
+
         <LoadSupplierForm
           open={showAddSupplier}
           onOpenChange={setShowAddSupplier}

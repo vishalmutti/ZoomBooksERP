@@ -8,12 +8,12 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Load } from "@shared/schema";
+import type { IncomingLoad } from "@shared/schema";
 import { format } from "date-fns";
 import { LuTruck, LuPackage2, LuStore, LuBox } from "react-icons/lu";
 
 interface LoadTableProps {
-  loads?: Load[];
+  loads?: IncomingLoad[];
   isLoading: boolean;
 }
 
@@ -103,7 +103,7 @@ export function LoadTable({ loads, isLoading }: LoadTableProps) {
               <TableCell>{load.deliveryLocation}</TableCell>
               <TableCell>{load.carrier}</TableCell>
               <TableCell>
-                {format(new Date(load.scheduledPickup), "MMM d, yyyy")}
+                {load.scheduledPickup && format(new Date(load.scheduledPickup), "MMM d, yyyy")}
               </TableCell>
             </TableRow>
           ))}
