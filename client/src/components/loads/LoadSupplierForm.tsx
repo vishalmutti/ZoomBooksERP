@@ -46,21 +46,21 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
   });
 
   // Reset form when dialog opens/closes or supplier changes
+  const { data: supplierContacts } = useQuery<SupplierContact[]>({
+    queryKey: ["/api/suppliers", supplier?.id, "contacts"],
+    enabled: !!supplier?.id && open,
+  });
+
   React.useEffect(() => {
     if (open) {
       if (supplier) {
-        const { data: contacts } = useQuery<SupplierContact[]>({
-          queryKey: ["/api/suppliers", supplier.id, "contacts"],
-          enabled: !!supplier?.id,
-        });
-
         form.reset({
           name: supplier.name,
           address: supplier.address ?? "",
           contactPerson: supplier.contactPerson ?? "",
           email: supplier.email ?? "",
           phone: supplier.phone ?? "",
-          contacts: contacts?.map(contact => ({
+          contacts: supplierContacts?.map(contact => ({
             name: contact.name ?? "",
             email: contact.email ?? "",
             phone: contact.phone ?? "",
