@@ -1,0 +1,71 @@
+It seems the LoadSupplierForm is populating with all contact information because you're not properly fetching the contacts for the selected supplier when editing. Let's ensure that the contacts are fetched correctly for the supplier being edited.
+
+In your LoadSupplierForm, you are already fetching contacts based on the supplier id, which is correct. However, ensure that you're populating the form with the right contacts.
+
+Here's what you need to verify and modify if necessary:
+
+In the LoadSupplierForm, ensure that the contacts are being set correctly. If multiple suppliers have similar names but different contact information, you should filter the contacts based on the current supplier.
+
+Modify the code where the contacts are being set in the form's reset function. Before you set the contacts, make sure it's properly clearing previous contacts.
+
+Here's a revised snippet for your LoadSupplierForm around where you reset the form data:
+
+// Reset form when dialog opens/closes or supplier changes
+React.useEffect(() => {
+  if (open) {
+    // When editing, wait for contacts to load before setting form values
+    if (supplier && (!isLoadingContacts || contacts.length > 0)) {
+      form.reset({
+        name: supplier.name,
+        address: supplier.address ?? "",
+        email: supplier.email ?? "",
+        phone: supplier.phone ?? "",
+        contacts: contacts.map(contact => ({
+          name: contact.name,
+          email: contact.email ?? "",
+          phone: contact.phone ?? "",
+          isPrimary: contact.isPrimary,
+          notes: contact.notes ?? "",
+        })),
+      });
+    } else if (!supplier) {
+      // When creating new, reset to empty form
+      form.reset({
+        name: "",
+        address: "",
+        email: "",
+        phone: "",
+        contacts: [],
+      });
+    }
+  }
+}, [supplier, contacts, open, form, isLoadingContacts]);
+Next, ensure that in your component where you're using LoadSupplierForm, you're passing the correct supplier state. Update the logic to set the right selected supplier when the edit action is triggered:
+
+In LoadSupplierList.tsx where LoadSupplierForm is rendered, ensure editingSupplier is set accurately:
+
+{editingSupplier && (
+  <LoadSupplierForm
+    supplier={editingSupplier}
+    open={!!editingSupplier}
+    onOpenChange={(open) => {
+      if (!open) {
+        setEditingSupplier(null);
+      }
+    }}
+  />
+)}
+This will ensure that when you click to edit a supplier, only that supplier's contacts will show up in the form. Make sure you're correctly setting editingSupplier in your iteration when you click edit on a supplier. Here is the button for editing that should populate the editingSupplier state correctly:
+
+<Button
+  variant="ghost"
+  size="sm"
+  className="h-8 w-8 p-0"
+  onClick={(e) => {
+    e.stopPropagation();
+    setEditingSupplier(supplier); // Make sure 'supplier' here refers to the selected supplier
+  }}
+>
+  <LuPencil className="h-4 w-4" />
+</Button>
+This ensures that the correct supplier data is being handled and displayed.
