@@ -25,7 +25,7 @@ export interface IStorage {
   searchSuppliers(query: string): Promise<Supplier[]>;
   createSupplier(supplier: InsertSupplier): Promise<Supplier>;
   updateSupplier(id: number, updates: Partial<InsertSupplier>): Promise<Supplier | undefined>;
-  getSupplier(id: number): Promise<(Supplier & { outstandingAmount: string }) | undefined>;
+  getSupplier(id: number): Promise<(Supplier & { outstandingAmount: string, contacts: SupplierContact[] }) | undefined>;
   getSupplierInvoices(supplierId: number): Promise<Invoice[]>;
   deleteSupplier(id: number): Promise<void>;
 
@@ -167,7 +167,7 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  async getSupplier(id: number): Promise<(Supplier & { outstandingAmount: string }) | undefined> {
+  async getSupplier(id: number): Promise<(Supplier & { outstandingAmount: string, contacts: SupplierContact[] }) | undefined> {
     const [result] = await db
       .select({
         id: suppliers.id,
@@ -186,7 +186,16 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(invoices, eq(invoices.supplierId, suppliers.id))
       .where(eq(suppliers.id, id))
       .groupBy(suppliers.id);
-    return result;
+    if (!result) return undefined;
+
+    // Fetch the supplier's contacts
+    const contacts = await db
+      .select()
+      .from(supplierContacts)
+      .where(eq(supplierContacts.supplierId, id))
+      .orderBy(supplierContacts.createdAt);
+
+    return { ...result, contacts };
   }
 
   async getSupplierInvoices(supplierId: number): Promise<Invoice[]> {
