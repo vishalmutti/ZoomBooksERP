@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertLoadSchema } from "@shared/schema";
@@ -23,11 +23,13 @@ interface Supplier {
 
 interface LoadFormProps {
   onClose: () => void;
-  initialData?: any; // Placeholder until IncomingLoad is defined
+  initialData?: any;
+  defaultType?: 'Incoming' | 'Wholesale' | 'Miscellaneous';
+  show?: boolean;
 }
 
-export function LoadForm({ onClose, initialData }: LoadFormProps) {
-  const [open, setOpen] = useState(false);
+export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormProps) {
+  const [open, setOpen] = useState(show || false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [files, setFiles] = useState<{
@@ -42,10 +44,17 @@ export function LoadForm({ onClose, initialData }: LoadFormProps) {
     loadPerformance: null
   });
 
+  // Update open state when show prop changes
+  useEffect(() => {
+    if (show !== undefined) {
+      setOpen(show);
+    }
+  }, [show]);
+
   const form = useForm<InsertLoad>({
     resolver: zodResolver(insertLoadSchema),
     defaultValues: initialData || {
-      loadType: "Incoming", // Default value added
+      loadType: defaultType || "Incoming",
       notes: "",
       location: "",
       referenceNumber: "",
@@ -54,7 +63,7 @@ export function LoadForm({ onClose, initialData }: LoadFormProps) {
       loadCost: "0",
       freightCost: "0",
       profitRoi: "0",
-      supplierId: "" // Added for completeness
+      supplierId: ""
     }
   });
 
@@ -67,11 +76,22 @@ export function LoadForm({ onClose, initialData }: LoadFormProps) {
     }
   };
 
+  const handleClose = () => {
+    setOpen(false);
+    onClose();
+    form.reset();
+    setFiles({
+      bol: null,
+      materialInvoice: null,
+      freightInvoice: null,
+      loadPerformance: null
+    });
+  };
+
   async function onSubmit(data: InsertLoad) {
     try {
       const formData = new FormData();
 
-      // Append all the form data
       Object.entries(data).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
           if (key === 'scheduledPickup' || key === 'scheduledDelivery') {
@@ -82,12 +102,10 @@ export function LoadForm({ onClose, initialData }: LoadFormProps) {
         }
       });
 
-      // Append files if they exist
       if (files.bol) formData.append('bolFile', files.bol);
       if (files.materialInvoice) formData.append('materialInvoiceFile', files.materialInvoice);
       if (files.freightInvoice) formData.append('freightInvoiceFile', files.freightInvoice);
       if (files.loadPerformance) formData.append('loadPerformanceFile', files.loadPerformance);
-
 
       const url = initialData ? `/api/loads/${initialData.id}` : '/api/loads';
       const method = initialData ? 'PATCH' : 'POST';
@@ -104,17 +122,10 @@ export function LoadForm({ onClose, initialData }: LoadFormProps) {
       }
 
       queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
-      onClose(); // Use onClose prop
-      form.reset();
-      setFiles({
-        bol: null,
-        materialInvoice: null,
-        freightInvoice: null,
-        loadPerformance: null
-      });
+      handleClose();
       toast({
-        title: initialData ? "Success: Load updated successfully" : "Success: Load created successfully",
-        description: initialData ? "Load updated successfully" : "Load created successfully",
+        title: initialData ? "Load updated successfully" : "Load created successfully",
+        description: initialData ? "The load has been updated" : "New load has been created",
       });
     } catch (error) {
       console.error('Error creating/updating load:', error);
@@ -126,6 +137,286 @@ export function LoadForm({ onClose, initialData }: LoadFormProps) {
     }
   }
 
+  const content = (
+    <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogHeader>
+        <DialogTitle>{initialData ? "Edit Load" : "Create New Load"}</DialogTitle>
+      </DialogHeader>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="loadType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Load Type</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select load type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Incoming">Incoming</SelectItem>
+                      <SelectItem value="Wholesale">Wholesale</SelectItem>
+                      <SelectItem value="Miscellaneous">Miscellaneous</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="supplierId"
+            render={({ field }) => {
+              const { data: suppliers = [], isLoading, isError } = useQuery<Supplier[]>({
+                queryKey: ["/api/suppliers"],
+              });
+
+              if (isLoading) return <FormItem><FormLabel>Supplier</FormLabel><p>Loading...</p></FormItem>;
+              if (isError) return <FormItem><FormLabel>Supplier</FormLabel><p>Error loading suppliers</p></FormItem>;
+
+              return (
+                <FormItem>
+                  <FormLabel>Supplier</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-between">
+                        {field.value
+                          ? suppliers.find(s => s.id.toString() === field.value)?.name
+                          : "Select supplier..."}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[300px] p-0">
+                      <Command>
+                        <CommandInput placeholder="Search suppliers..." />
+                        <CommandList>
+                          <CommandEmpty>No suppliers found.</CommandEmpty>
+                          <CommandGroup>
+                            {suppliers.map((supplier) => (
+                              <CommandItem
+                                key={supplier.id}
+                                value={supplier.name}
+                                onSelect={() => {
+                                  field.onChange(supplier.id.toString());
+                                  const popoverElement = document.querySelector('[data-radix-popper-content-id]');
+                                  if (popoverElement) {
+                                    (popoverElement as HTMLElement).style.display = 'none';
+                                  }
+                                }}
+                              >
+                                {supplier.name}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
+          />
+
+          <FormField
+            control={form.control}
+            name="location"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Location</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select location" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="British Columbia">British Columbia</SelectItem>
+                    <SelectItem value="Ontario">Ontario</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="grid grid-cols-3 gap-4">
+            <FormField
+              control={form.control}
+              name="loadCost"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Load Cost</FormLabel>
+                  <FormControl>
+                    <Input type="number" step="0.01" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="freightCost"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Freight Cost</FormLabel>
+                  <FormControl>
+                    <Input type="number" step="0.01" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="profitRoi"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Profit ROI</FormLabel>
+                  <FormControl>
+                    <Input type="number" step="0.01" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="referenceNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Reference #</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="scheduledPickup"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Scheduled Pickup</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="date"
+                      {...field}
+                      value={field.value || ''}
+                      onChange={(e) => field.onChange(e.target.value || null)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="scheduledDelivery"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Scheduled Delivery</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="date"
+                      {...field}
+                      value={field.value || ''}
+                      onChange={(e) => field.onChange(e.target.value || null)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="carrier"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Carrier</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="notes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Notes</FormLabel>
+                <FormControl>
+                  <Textarea {...field} placeholder="Add any relevant notes here..." />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="space-y-4">
+            <div>
+              <FormLabel>BOL</FormLabel>
+              <Input
+                type="file"
+                onChange={(e) => handleFileChange('bol', e)}
+                accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+              />
+            </div>
+            <div>
+              <FormLabel>Material Invoice</FormLabel>
+              <Input
+                type="file"
+                onChange={(e) => handleFileChange('materialInvoice', e)}
+                accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+              />
+            </div>
+            <div>
+              <FormLabel>Freight Invoice</FormLabel>
+              <Input
+                type="file"
+                onChange={(e) => handleFileChange('freightInvoice', e)}
+                accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+              />
+            </div>
+            <div>
+              <FormLabel>Load Performance</FormLabel>
+              <Input
+                type="file"
+                onChange={(e) => handleFileChange('loadPerformance', e)}
+                accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+              />
+            </div>
+          </div>
+
+          <Button type="submit">{initialData ? "Update Load" : "Create Load"}</Button>
+        </form>
+      </Form>
+    </DialogContent>
+  );
+
+  if (initialData) {
+    return (
+      <Dialog open={open} onOpenChange={setOpen}>
+        {content}
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -133,323 +424,7 @@ export function LoadForm({ onClose, initialData }: LoadFormProps) {
           <LuPlus className="mr-2 h-4 w-4" /> New Load
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{initialData ? "Edit Load" : "Create New Load"}</DialogTitle>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="loadType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Load Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select load type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Incoming">Incoming</SelectItem>
-                        <SelectItem value="Wholesale">Wholesale</SelectItem>
-                        <SelectItem value="Miscellaneous">Miscellaneous</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="supplierId"
-              render={({ field }) => {
-                const { data: suppliers = [], isLoading, isError } = useQuery<Supplier[]>({
-                  queryKey: ["/api/suppliers"],
-                });
-
-                if (isLoading) return <FormItem><FormLabel>Supplier</FormLabel><p>Loading...</p></FormItem>;
-                if (isError) return <FormItem><FormLabel>Supplier</FormLabel><p>Error loading suppliers</p></FormItem>;
-
-                return (
-                  <FormItem>
-                    <FormLabel>Supplier</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-between">
-                          {field.value
-                            ? suppliers.find(s => s.id.toString() === field.value)?.name
-                            : "Select supplier..."}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[300px] p-0">
-                        <Command>
-                          <CommandInput placeholder="Search suppliers..." />
-                          <CommandList>
-                            <CommandEmpty>No suppliers found.</CommandEmpty>
-                            <CommandGroup>
-                              {suppliers.map((supplier) => (
-                                <CommandItem
-                                  key={supplier.id}
-                                  value={supplier.name}
-                                  onSelect={() => {
-                                    field.onChange(supplier.id.toString());
-                                    const popoverElement = document.querySelector('[data-radix-popper-content-id]');
-                                    if (popoverElement) {
-                                      (popoverElement as HTMLElement).style.display = 'none';
-                                    }
-                                  }}
-                                >
-                                  {supplier.name}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                );
-              }}
-            />
-
-            <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Location</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select location" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="British Columbia">British Columbia</SelectItem>
-                      <SelectItem value="Ontario">Ontario</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="loadCost"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Load Cost</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.01" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="freightCost"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Freight Cost</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.01" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="profitRoi"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Profit ROI</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.01" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="referenceNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Reference #</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="scheduledPickup"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Scheduled Pickup</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="date"
-                        {...field}
-                        value={field.value || ''}
-                        onChange={(e) => field.onChange(e.target.value || null)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="scheduledDelivery"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Scheduled Delivery</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="date"
-                        {...field}
-                        value={field.value || ''}
-                        onChange={(e) => field.onChange(e.target.value || null)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="carrier"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Carrier</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/*Conditional rendering based on load type remains the same*/}
-            {initialData?.loadType === 'Wholesale' && (
-              <>
-                <FormField
-                  control={form.control}
-                  name="poNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>PO Number</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="orderNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Order Number</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </>
-            )}
-
-            {initialData?.loadType === 'Miscellaneous' && (
-              <FormField
-                control={form.control}
-                name="warehouseLocation"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Warehouse Location</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes</FormLabel>
-                  <FormControl>
-                    <Textarea {...field} placeholder="Add any relevant notes here..." />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="space-y-4">
-              <div>
-                <FormLabel>BOL</FormLabel>
-                <Input
-                  type="file"
-                  onChange={(e) => handleFileChange('bol', e)}
-                  accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
-                />
-              </div>
-              <div>
-                <FormLabel>Material Invoice</FormLabel>
-                <Input
-                  type="file"
-                  onChange={(e) => handleFileChange('materialInvoice', e)}
-                  accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
-                />
-              </div>
-              <div>
-                <FormLabel>Freight Invoice</FormLabel>
-                <Input
-                  type="file"
-                  onChange={(e) => handleFileChange('freightInvoice', e)}
-                  accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
-                />
-              </div>
-              <div>
-                <FormLabel>Load Performance</FormLabel>
-                <Input
-                  type="file"
-                  onChange={(e) => handleFileChange('loadPerformance', e)}
-                  accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
-                />
-              </div>
-            </div>
-
-            <Button type="submit">{initialData ? "Update Load" : "Create Load"}</Button>
-          </form>
-        </Form>
-      </DialogContent>
+      {content}
     </Dialog>
   );
 }

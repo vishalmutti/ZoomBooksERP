@@ -41,23 +41,22 @@ const statusColors = {
   "Final Delivery": "bg-green-500/10 text-green-500"
 };
 
-const FileLink = ({ file, label }: { file: string | null; label: string }) => {
+const FileLink = ({ file }: { file: string | null }) => {
   if (!file) return null;
 
   return (
     <Button
       variant="ghost"
       size="sm"
-      className="h-8 w-full justify-start gap-2 px-2"
+      className="h-8 w-8 p-0"
       onClick={() => window.open(`/uploads/${file}`, "_blank")}
     >
       <LuFileText className="h-4 w-4" />
-      <span className="text-sm">{label}</span>
     </Button>
   );
 };
 
-export function LoadTable({ loads, isLoading }: LoadTableProps) {
+export function LoadTable({ loads, isLoading, onEdit, onDelete }: LoadTableProps) {
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -101,7 +100,10 @@ export function LoadTable({ loads, isLoading }: LoadTableProps) {
             <TableHead>Load Cost</TableHead>
             <TableHead>Freight Cost</TableHead>
             <TableHead>Profit/ROI</TableHead>
-            <TableHead>Documents</TableHead>
+            <TableHead>BOL</TableHead>
+            <TableHead>Material Invoice</TableHead>
+            <TableHead>Freight Invoice</TableHead>
+            <TableHead>Load Performance</TableHead>
             <TableHead>Notes</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
@@ -138,12 +140,16 @@ export function LoadTable({ loads, isLoading }: LoadTableProps) {
               <TableCell>${Number(load.freightCost).toFixed(2)}</TableCell>
               <TableCell>{Number(load.profitRoi).toFixed(2)}%</TableCell>
               <TableCell>
-                <div className="space-y-1">
-                  <FileLink file={load.bolFile} label="BOL" />
-                  <FileLink file={load.materialInvoiceFile} label="Material Invoice" />
-                  <FileLink file={load.freightInvoiceFile} label="Freight Invoice" />
-                  <FileLink file={load.loadPerformanceFile} label="Load Performance" />
-                </div>
+                <FileLink file={load.bolFile} />
+              </TableCell>
+              <TableCell>
+                <FileLink file={load.materialInvoiceFile} />
+              </TableCell>
+              <TableCell>
+                <FileLink file={load.freightInvoiceFile} />
+              </TableCell>
+              <TableCell>
+                <FileLink file={load.loadPerformanceFile} />
               </TableCell>
               <TableCell>{load.notes}</TableCell>
               <TableCell>
@@ -151,7 +157,7 @@ export function LoadTable({ loads, isLoading }: LoadTableProps) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onEdit?.(load)}
+                    onClick={() => onEdit && onEdit(load)}
                   >
                     <LuPencil className="h-4 w-4" />
                   </Button>
@@ -160,7 +166,7 @@ export function LoadTable({ loads, isLoading }: LoadTableProps) {
                     size="sm"
                     onClick={() => {
                       if (window.confirm('Are you sure you want to delete this load?')) {
-                        onDelete?.(load.id);
+                        onDelete && onDelete(load.id);
                       }
                     }}
                   >

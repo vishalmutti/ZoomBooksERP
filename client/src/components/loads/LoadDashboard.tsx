@@ -28,7 +28,7 @@ export function LoadDashboard() {
     setEditingLoad(load);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     try {
       await fetch(`/api/loads/${id}`, { method: 'DELETE' });
       refetch();
@@ -64,54 +64,57 @@ export function LoadDashboard() {
 
         <TabsContent value="incoming" className="space-y-4">
           <div className="flex justify-end">
-            <LoadForm defaultType="Incoming" />
+            <LoadForm defaultType="Incoming" onClose={() => setEditingLoad(null)} />
           </div>
           <LoadTable 
             loads={filteredLoads} 
             isLoading={isLoading}
-            onEdit={(load) => setEditingLoad(load)}
+            onEdit={handleEdit}
             onDelete={handleDelete}
           />
           {editingLoad && (
             <LoadForm
               initialData={editingLoad}
               onClose={() => setEditingLoad(null)}
+              show={true}
             />
           )}
         </TabsContent>
 
         <TabsContent value="wholesale" className="space-y-4">
           <div className="flex justify-end">
-            <LoadForm defaultType="Wholesale" />
+            <LoadForm defaultType="Wholesale" onClose={() => setEditingLoad(null)} />
           </div>
           <LoadTable 
             loads={filteredLoads} 
             isLoading={isLoading}
-            onEdit={(load) => setEditingLoad(load)}
+            onEdit={handleEdit}
             onDelete={handleDelete}
           />
           {editingLoad && (
             <LoadForm
               initialData={editingLoad}
               onClose={() => setEditingLoad(null)}
+              show={true}
             />
           )}
         </TabsContent>
 
         <TabsContent value="miscellaneous" className="space-y-4">
           <div className="flex justify-end">
-            <LoadForm defaultType="Miscellaneous" />
+            <LoadForm defaultType="Miscellaneous" onClose={() => setEditingLoad(null)} />
           </div>
           <LoadTable 
             loads={filteredLoads} 
             isLoading={isLoading}
-            onEdit={(load) => setEditingLoad(load)}
+            onEdit={handleEdit}
             onDelete={handleDelete}
           />
           {editingLoad && (
             <LoadForm
               initialData={editingLoad}
               onClose={() => setEditingLoad(null)}
+              show={true}
             />
           )}
         </TabsContent>
