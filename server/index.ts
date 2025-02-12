@@ -1,8 +1,8 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-// Add database import here.  Adapt to your database library.
-import { pool } from "./db";
+import { pool, db } from "./db";
+import { alterSupplierContacts } from "@shared/schema";
 
 const app = express();
 app.use(express.json());
@@ -10,12 +10,13 @@ app.use(express.json());
 // Run migrations
 (async () => {
   try {
-    await db.execute(schema.alterSupplierContacts);
+    await db.execute(alterSupplierContacts);
     console.log("Supplier contacts migration completed");
   } catch (err) {
     console.error("Migration error:", err);
   }
 })();
+
 app.use(express.urlencoded({ extended: false }));
 
 // Create the server instance at the top level
@@ -58,7 +59,6 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   console.error(err);
 });
 
-const alterSupplierContacts = `ALTER TABLE supplier_contacts ADD COLUMN IF NOT EXISTS notes TEXT;`;
 
 (async () => {
   if (app.get("env") === "development") {
@@ -69,15 +69,6 @@ const alterSupplierContacts = `ALTER TABLE supplier_contacts ADD COLUMN IF NOT E
 
   // Try a single port (5000)
   const PORT = 5000;
-
-  // Apply database migrations
-  try {
-    await pool.query(alterSupplierContacts);
-    console.log('Database migration successful.');
-  } catch (error) {
-    console.error('Database migration failed:', error);
-    // Handle the error appropriately (e.g., exit the process)
-  }
 
   server.listen(PORT, "0.0.0.0", () => {
     log(`✨ Server running at http://0.0.0.0:${PORT}`);
