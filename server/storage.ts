@@ -285,7 +285,36 @@ export class DatabaseStorage implements IStorage {
 
   async getLoads(): Promise<Load[]> {
     return await db
-      .select()
+      .select({
+        id: loads.id,
+        loadId: loads.loadId,
+        loadType: loads.loadType,
+        supplierId: loads.supplierId,
+        notes: loads.notes,
+        location: loads.location,
+        scheduledPickup: loads.scheduledPickup,
+        scheduledDelivery: loads.scheduledDelivery,
+        carrier: loads.carrier,
+        loadCost: loads.loadCost,
+        freightCost: loads.freightCost,
+        totalCost: loads.totalCost,
+        profitRoi: loads.profitRoi,
+        poNumber: loads.poNumber,
+        orderNumber: loads.orderNumber,
+        brokerName: loads.brokerName,
+        brokerContact: loads.brokerContact,
+        containerNumber: loads.containerNumber,
+        bookingNumber: loads.bookingNumber,
+        vesselName: loads.vesselName,
+        voyageNumber: loads.voyageNumber,
+        estimatedPortArrival: loads.estimatedPortArrival,
+        actualPortArrival: loads.actualPortArrival,
+        customsClearanceDate: loads.customsClearanceDate,
+        referenceNumber: loads.referenceNumber,
+        warehouseLocation: loads.warehouseLocation,
+        handlingInstructions: loads.handlingInstructions,
+        createdAt: loads.createdAt
+      })
       .from(loads)
       .orderBy(loads.createdAt);
   }

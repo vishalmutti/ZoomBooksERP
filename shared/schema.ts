@@ -57,7 +57,7 @@ export const loads = pgTable("loads", {
   id: serial("id").primaryKey(),
   loadId: varchar("load_id", { length: 50 }).notNull().unique(), // Format: TYPE-YYYYMMDD-XXX
   loadType: varchar("load_type", { length: 20}).notNull().$type<'Incoming' | 'Wholesale' | 'Miscellaneous'>(),
-  supplierId: integer("supplier_id").references(() => suppliers.id),
+  supplierId: integer("supplierid").references(() => suppliers.id),
   notes: text("notes"),
 
   // Common fields for all load types
