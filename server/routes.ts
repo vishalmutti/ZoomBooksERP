@@ -10,7 +10,7 @@ import fs from "fs";
 import express from "express";
 import { eq } from "drizzle-orm";
 import { db } from "./db";
-import { insertLoadSchema, insertFreightInvoiceSchema } from "@shared/schema";
+import { insertIncomingLoadSchema, insertFreightInvoiceSchema } from "@shared/schema";
 
 const uploadDir = path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(uploadDir)) {
@@ -358,7 +358,7 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/loads", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
-    const parsed = insertLoadSchema.safeParse(req.body);
+    const parsed = insertIncomingLoadSchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json(parsed.error);
     }
