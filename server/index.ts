@@ -6,6 +6,16 @@ import { pool } from "./db";
 
 const app = express();
 app.use(express.json());
+
+// Run migrations
+(async () => {
+  try {
+    await db.execute(schema.alterSupplierContacts);
+    console.log("Supplier contacts migration completed");
+  } catch (err) {
+    console.error("Migration error:", err);
+  }
+})();
 app.use(express.urlencoded({ extended: false }));
 
 // Create the server instance at the top level

@@ -153,7 +153,11 @@ export class DatabaseStorage implements IStorage {
         if (updates.contacts.length > 0) {
           await tx.insert(supplierContacts).values(
             updates.contacts.map(contact => ({
-              ...contact,
+              name: contact.name,
+              email: contact.email,
+              phone: contact.phone,
+              isPrimary: contact.isPrimary,
+              notes: contact.notes || null,
               supplierId: id,
             }))
           );
