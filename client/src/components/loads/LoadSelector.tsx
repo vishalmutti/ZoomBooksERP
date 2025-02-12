@@ -2,8 +2,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { LoadForm } from "./LoadForm";
-import { IncomingLoadForm } from "./IncomingLoadForm";
-import { WholesaleLoadForm } from "./WholesaleLoadForm";
 import { LuPlus, LuShip, LuStore, LuPackage2 } from "react-icons/lu";
 
 export function LoadSelector() {
@@ -48,15 +46,7 @@ export function LoadSelector() {
         <div className="grid gap-4">
           {selectedType ? (
             <>
-              {selectedType === "incoming" && (
-                <IncomingLoadForm onClose={() => setOpen(false)} />
-              )}
-              {selectedType === "wholesale" && (
-                <WholesaleLoadForm onClose={() => setOpen(false)} />
-              )}
-              {selectedType === "miscellaneous" && (
-                <LoadForm onClose={() => setOpen(false)} />
-              )}
+              <LoadForm onClose={() => setOpen(false)} />
               <Button
                 variant="outline"
                 onClick={() => setSelectedType(null)}
