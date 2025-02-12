@@ -48,14 +48,14 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
   // Reset form when dialog opens/closes or supplier changes
   React.useEffect(() => {
     if (open) {
-      // When editing, wait for contacts to load before setting form values
-      if (supplier && (!isLoadingContacts || contacts.length > 0)) {
+      if (supplier && !isLoadingContacts) {
+        const supplierContacts = contacts.filter(contact => contact.supplierId === supplier.id);
         form.reset({
           name: supplier.name,
           address: supplier.address ?? "",
           email: supplier.email ?? "",
           phone: supplier.phone ?? "",
-          contacts: contacts.map(contact => ({
+          contacts: supplierContacts.map(contact => ({
             name: contact.name,
             email: contact.email ?? "",
             phone: contact.phone ?? "",
@@ -64,7 +64,6 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
           })),
         });
       } else if (!supplier) {
-        // When creating new, reset to empty form
         form.reset({
           name: "",
           address: "",
