@@ -23,7 +23,11 @@ function generateLoadId(type: string) {
   return `${typePrefix}-${dateStr}-${random}`;
 }
 
-export function LoadForm() {
+interface LoadFormProps {
+  defaultType: 'Incoming' | 'Wholesale' | 'Miscellaneous';
+}
+
+export function LoadForm({ defaultType }: LoadFormProps) {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -270,6 +274,97 @@ export function LoadForm() {
                 )}
               />
             </div>
+
+            {defaultType === 'Incoming' && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="containerNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Container Number</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="vesselName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Vessel Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="estimatedPortArrival"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Estimated Port Arrival</FormLabel>
+                      <FormControl>
+                        <Input type="datetime-local" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
+
+            {defaultType === 'Wholesale' && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="poNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>PO Number</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="orderNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Order Number</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
+
+            {defaultType === 'Miscellaneous' && (
+              <FormField
+                control={form.control}
+                name="warehouseLocation"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Warehouse Location</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}
