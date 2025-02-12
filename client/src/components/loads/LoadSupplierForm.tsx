@@ -27,7 +27,7 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
     queryKey: ["/api/suppliers", supplier?.id, "contacts"],
     enabled: !!supplier?.id && open,
     staleTime: 0, // Always fetch fresh data
-    cacheTime: 0
+    cacheTime: 0  // Don't cache the data
   });
 
   const form = useForm<InsertSupplier>({
@@ -94,15 +94,18 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
       }
 
       // Invalidate both the suppliers list and the specific supplier's contacts
-      queryClient.invalidateQueries({ queryKey: ["/api/suppliers"] });
-      if (supplier?.id) {
-        queryClient.invalidateQueries({ 
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["/api/suppliers"] }),
+        supplier?.id && queryClient.invalidateQueries({ 
           queryKey: ["/api/suppliers", supplier.id, "contacts"]
-        });
-      }
+        }),
+        queryClient.invalidateQueries({ 
+          queryKey: ["/api/suppliers", "contacts"]
+        })
+      ]);
 
       onOpenChange(false);
-      form.reset();
+      form.reset(); // Reset form after successful submission
       toast({
         title: "Success",
         description: supplier 

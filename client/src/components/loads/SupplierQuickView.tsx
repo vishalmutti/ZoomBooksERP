@@ -54,11 +54,6 @@ export function SupplierQuickView({ supplierName, contacts = [] }: SupplierQuick
                       </a>
                     </div>
                   )}
-                  {contact.notes && (
-                    <p className="text-sm text-muted-foreground mt-1 pl-6">
-                      {contact.notes}
-                    </p>
-                  )}
                 </div>
               ))}
             </div>

@@ -356,9 +356,24 @@ export class DatabaseStorage implements IStorage {
     const [newLoad] = await db
       .insert(incomingLoads)
       .values({
-        ...load,
+        supplierId: load.supplierId,
+        loadType: load.loadType,
+        referenceNumber: load.referenceNumber,
+        location: load.location,
+        notes: load.notes,
+        loadCost: load.loadCost,
+        freightCost: load.freightCost,
+        profitRoi: load.profitRoi,
+        status: load.status ?? 'Pending',
         scheduledPickup: load.scheduledPickup ? new Date(load.scheduledPickup).toISOString() : null,
         scheduledDelivery: load.scheduledDelivery ? new Date(load.scheduledDelivery).toISOString() : null,
+        carrier: load.carrier,
+        bolFile: load.bolFile,
+        materialInvoiceFile: load.materialInvoiceFile,
+        freightInvoiceFile: load.freightInvoiceFile,
+        loadPerformanceFile: load.loadPerformanceFile,
+        materialInvoiceStatus: load.materialInvoiceStatus ?? 'UNPAID',
+        freightInvoiceStatus: load.freightInvoiceStatus ?? 'UNPAID',
       })
       .returning();
     return newLoad;
