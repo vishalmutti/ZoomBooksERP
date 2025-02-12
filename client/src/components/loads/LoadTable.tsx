@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { IncomingLoad } from "@shared/schema";
 import { format } from "date-fns";
-import { LuTruck, LuPackage2, LuStore, LuBox } from "react-icons/lu";
+import { LuTruck, LuPackage2, LuStore, LuBox, LuFileText } from "react-icons/lu";
+import { Button } from "@/components/ui/button";
 
 interface LoadTableProps {
   loads?: IncomingLoad[];
@@ -30,12 +31,28 @@ const statusColors = {
   "Freight Invoice Attached": "bg-purple-500/10 text-purple-500",
   Paid: "bg-emerald-500/10 text-emerald-500",
   Completed: "bg-gray-500/10 text-gray-500",
-  "Order Placed": "bg-indigo-500/10 text-indigo-500",
-  Scheduled: "bg-cyan-500/10 text-cyan-500",
+  "Order Placed": "bg-cyan-500/10 text-cyan-500",
+  Scheduled: "bg-indigo-500/10 text-indigo-500",
   Loading: "bg-orange-500/10 text-orange-500",
   Customs: "bg-red-500/10 text-red-500",
   "Port Arrival": "bg-teal-500/10 text-teal-500",
   "Final Delivery": "bg-green-500/10 text-green-500"
+};
+
+const FileLink = ({ file, label }: { file: string | null; label: string }) => {
+  if (!file) return null;
+
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="h-8 w-full justify-start gap-2 px-2"
+      onClick={() => window.open(`/uploads/${file}`, "_blank")}
+    >
+      <LuFileText className="h-4 w-4" />
+      <span className="text-sm">{label}</span>
+    </Button>
+  );
 };
 
 export function LoadTable({ loads, isLoading }: LoadTableProps) {
@@ -76,14 +93,13 @@ export function LoadTable({ loads, isLoading }: LoadTableProps) {
             <TableHead>Status</TableHead>
             <TableHead>Reference Number</TableHead>
             <TableHead>Location</TableHead>
-            <TableHead>Pickup Location</TableHead>
-            <TableHead>Delivery Location</TableHead>
             <TableHead>Carrier</TableHead>
             <TableHead>Scheduled Pickup</TableHead>
             <TableHead>Scheduled Delivery</TableHead>
             <TableHead>Load Cost</TableHead>
             <TableHead>Freight Cost</TableHead>
             <TableHead>Profit/ROI</TableHead>
+            <TableHead>Documents</TableHead>
             <TableHead>Notes</TableHead>
           </TableRow>
         </TableHeader>
@@ -106,18 +122,26 @@ export function LoadTable({ loads, isLoading }: LoadTableProps) {
               </TableCell>
               <TableCell>{load.referenceNumber}</TableCell>
               <TableCell>{load.location}</TableCell>
-              <TableCell>{load.pickupLocation}</TableCell>
-              <TableCell>{load.deliveryLocation}</TableCell>
               <TableCell>{load.carrier}</TableCell>
               <TableCell>
-                {load.scheduledPickup && format(new Date(load.scheduledPickup), "MMM d, yyyy")}
+                {load.scheduledPickup &&
+                  format(new Date(load.scheduledPickup), "MMM d, yyyy")}
               </TableCell>
               <TableCell>
-                {load.scheduledDelivery && format(new Date(load.scheduledDelivery), "MMM d, yyyy")}
+                {load.scheduledDelivery &&
+                  format(new Date(load.scheduledDelivery), "MMM d, yyyy")}
               </TableCell>
               <TableCell>${Number(load.loadCost).toFixed(2)}</TableCell>
               <TableCell>${Number(load.freightCost).toFixed(2)}</TableCell>
               <TableCell>{Number(load.profitRoi).toFixed(2)}%</TableCell>
+              <TableCell>
+                <div className="space-y-1">
+                  <FileLink file={load.bolFile} label="BOL" />
+                  <FileLink file={load.materialInvoiceFile} label="Material Invoice" />
+                  <FileLink file={load.freightInvoiceFile} label="Freight Invoice" />
+                  <FileLink file={load.loadPerformanceFile} label="Load Performance" />
+                </div>
+              </TableCell>
               <TableCell>{load.notes}</TableCell>
             </TableRow>
           ))}

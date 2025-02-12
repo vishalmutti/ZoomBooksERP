@@ -311,7 +311,11 @@ export class DatabaseStorage implements IStorage {
   async createLoad(load: InsertIncomingLoad): Promise<IncomingLoad> {
     const [newLoad] = await db
       .insert(incomingLoads)
-      .values(load)
+      .values({
+        ...load,
+        scheduledPickup: load.scheduledPickup ? new Date(load.scheduledPickup).toISOString() : null,
+        scheduledDelivery: load.scheduledDelivery ? new Date(load.scheduledDelivery).toISOString() : null,
+      })
       .returning();
     return newLoad;
   }
@@ -319,7 +323,11 @@ export class DatabaseStorage implements IStorage {
   async updateLoad(id: number, updates: Partial<IncomingLoad>): Promise<IncomingLoad> {
     const [updatedLoad] = await db
       .update(incomingLoads)
-      .set(updates)
+      .set({
+        ...updates,
+        scheduledPickup: updates.scheduledPickup ? new Date(updates.scheduledPickup).toISOString() : undefined,
+        scheduledDelivery: updates.scheduledDelivery ? new Date(updates.scheduledDelivery).toISOString() : undefined,
+      })
       .where(eq(incomingLoads.id, id))
       .returning();
     return updatedLoad;

@@ -22,8 +22,6 @@ interface Supplier {
   name: string;
 }
 
-
-
 interface LoadFormProps {
   defaultType: 'Incoming' | 'Wholesale' | 'Miscellaneous';
 }
@@ -32,12 +30,6 @@ export function LoadForm({ defaultType }: LoadFormProps) {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [files, setFiles] = useState({
-    bol: null,
-    materialInvoice: null,
-    freightInvoice: null,
-    loadPerformance: null
-  });
 
   const form = useForm<InsertLoad>({
     resolver: zodResolver(insertLoadSchema),
@@ -46,31 +38,33 @@ export function LoadForm({ defaultType }: LoadFormProps) {
       notes: "",
       location: "",
       referenceNumber: "",
-      pickupDate: null,
-      deliveryDate: null,
+      scheduledPickup: undefined,
+      scheduledDelivery: undefined,
       loadCost: "0",
       freightCost: "0",
       profitRoi: "0",
     }
   });
 
-  const handleFileChange = (type: string, e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) {
-      setFiles(prev => ({
-        ...prev,
-        [type]: e.target.files?.[0]
-      }));
-    }
-  };
-
   async function onSubmit(data: InsertLoad) {
     try {
+      const formData = new FormData();
+
+      // Append all the form data
+      Object.entries(data).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          formData.append(key, value.toString());
+        }
+      });
+
       const response = await fetch('/api/loads', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
+        body: JSON.stringify({
+          ...data,
+          // Ensure dates are in ISO format
+          scheduledPickup: data.scheduledPickup ? new Date(data.scheduledPickup).toISOString() : null,
+          scheduledDelivery: data.scheduledDelivery ? new Date(data.scheduledDelivery).toISOString() : null,
+        })
       });
 
       if (response.ok) {
@@ -134,81 +128,81 @@ export function LoadForm({ defaultType }: LoadFormProps) {
             </div>
 
             <FormField
-                control={form.control}
-                name="supplierId"
-                render={({ field }) => {
-                  const { data: suppliers = [], isLoading, isError } = useQuery<Supplier[]>({
-                    queryKey: ["/api/suppliers"],
-                  });
+              control={form.control}
+              name="supplierId"
+              render={({ field }) => {
+                const { data: suppliers = [], isLoading, isError } = useQuery<Supplier[]>({
+                  queryKey: ["/api/suppliers"],
+                });
 
-                  if (isLoading) return <FormItem><FormLabel>Supplier</FormLabel><p>Loading...</p></FormItem>;
-                  if (isError) return <FormItem><FormLabel>Supplier</FormLabel><p>Error loading suppliers</p></FormItem>;
+                if (isLoading) return <FormItem><FormLabel>Supplier</FormLabel><p>Loading...</p></FormItem>;
+                if (isError) return <FormItem><FormLabel>Supplier</FormLabel><p>Error loading suppliers</p></FormItem>;
 
-                  return (
-                    <FormItem>
-                      <FormLabel>Supplier</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button variant="outline" className="w-full justify-between">
-                            {field.value 
-                              ? suppliers.find(s => s.id.toString() === field.value)?.name 
-                              : "Select supplier..."}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[300px] p-0">
-                          <Command>
-                            <CommandInput placeholder="Search suppliers..." />
-                            <CommandList>
-                              <CommandEmpty>No suppliers found.</CommandEmpty>
-                              <CommandGroup>
-                                {suppliers.map((supplier) => (
-                                  <CommandItem
-                                    key={supplier.id}
-                                    value={supplier.name}
-                                    onSelect={() => {
-                                      field.onChange(supplier.id.toString());
-                                      // Close the popover after selection
-                                      const popoverElement = document.querySelector('[data-radix-popper-content-id]');
-                                      if (popoverElement) {
-                                        (popoverElement as HTMLElement).style.display = 'none';
-                                      }
-                                    }}
-                                  >
-                                    {supplier.name}
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  );
-                }}
-              />
-
-            <FormField
-                control={form.control}
-                name="location"
-                render={({ field }) => (
+                return (
                   <FormItem>
-                    <FormLabel>Location</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select location" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="British Columbia">British Columbia</SelectItem>
-                        <SelectItem value="Ontario">Ontario</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>Supplier</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="w-full justify-between">
+                          {field.value
+                            ? suppliers.find(s => s.id.toString() === field.value)?.name
+                            : "Select supplier..."}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[300px] p-0">
+                        <Command>
+                          <CommandInput placeholder="Search suppliers..." />
+                          <CommandList>
+                            <CommandEmpty>No suppliers found.</CommandEmpty>
+                            <CommandGroup>
+                              {suppliers.map((supplier) => (
+                                <CommandItem
+                                  key={supplier.id}
+                                  value={supplier.name}
+                                  onSelect={() => {
+                                    field.onChange(supplier.id.toString());
+                                    // Close the popover after selection
+                                    const popoverElement = document.querySelector('[data-radix-popper-content-id]');
+                                    if (popoverElement) {
+                                      (popoverElement as HTMLElement).style.display = 'none';
+                                    }
+                                  }}
+                                >
+                                  {supplier.name}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
-                )}
-              />
+                );
+              }}
+            />
+
+            <FormField
+              control={form.control}
+              name="location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Location</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select location" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="British Columbia">British Columbia</SelectItem>
+                      <SelectItem value="Ontario">Ontario</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="grid grid-cols-3 gap-4">
               <FormField
@@ -269,16 +263,16 @@ export function LoadForm({ defaultType }: LoadFormProps) {
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="pickupDate"
+                name="scheduledPickup"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Pickup Date</FormLabel>
+                    <FormLabel>Scheduled Pickup</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="date" 
+                      <Input
+                        type="date"
                         {...field}
                         value={field.value || ''}
-                        onChange={(e) => field.onChange(e.target.value || undefined)}
+                        onChange={(e) => field.onChange(e.target.value || null)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -287,16 +281,16 @@ export function LoadForm({ defaultType }: LoadFormProps) {
               />
               <FormField
                 control={form.control}
-                name="deliveryDate"
+                name="scheduledDelivery"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Delivery Date</FormLabel>
+                    <FormLabel>Scheduled Delivery</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="date" 
+                      <Input
+                        type="date"
                         {...field}
                         value={field.value || ''}
-                        onChange={(e) => field.onChange(e.target.value || undefined)}
+                        onChange={(e) => field.onChange(e.target.value || null)}
                       />
                     </FormControl>
                     <FormMessage />
