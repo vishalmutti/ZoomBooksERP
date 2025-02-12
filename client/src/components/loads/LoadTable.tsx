@@ -12,6 +12,9 @@ import type { IncomingLoad } from "@shared/schema";
 import { format } from "date-fns";
 import { LuTruck, LuPackage2, LuStore, LuBox, LuFileText, LuPencil, LuTrash } from "react-icons/lu";
 import { Button } from "@/components/ui/button";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useMutation } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 interface LoadTableProps {
   loads?: IncomingLoad[];
@@ -54,6 +57,51 @@ const FileLink = ({ file, label }: { file: string | null; label: string }) => {
     >
       <LuFileText className="h-4 w-4" />
     </Button>
+  );
+};
+
+const InvoiceStatus = ({ 
+  loadId, 
+  status, 
+  type 
+}: { 
+  loadId: number; 
+  status: 'PAID' | 'UNPAID'; 
+  type: 'material' | 'freight';
+}) => {
+  const { toast } = useToast();
+  const updateStatusMutation = useMutation({
+    mutationFn: async (newStatus: 'PAID' | 'UNPAID') => {
+      const field = type === 'material' ? 'materialInvoiceStatus' : 'freightInvoiceStatus';
+      await apiRequest("PATCH", `/api/loads/${loadId}`, {
+        [field]: newStatus
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
+      toast({
+        title: "Success",
+        description: `${type === 'material' ? 'Material' : 'Freight'} invoice status updated`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: `Failed to update status: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  return (
+    <select
+      className="w-24 h-8 px-2 py-1 bg-background border border-input rounded-md text-sm"
+      value={status}
+      onChange={(e) => updateStatusMutation.mutate(e.target.value as 'PAID' | 'UNPAID')}
+    >
+      <option value="PAID">PAID</option>
+      <option value="UNPAID">UNPAID</option>
+    </select>
   );
 };
 
@@ -103,7 +151,9 @@ export function LoadTable({ loads, isLoading, onEdit, onDelete }: LoadTableProps
             <TableHead>Profit/ROI</TableHead>
             <TableHead>BOL</TableHead>
             <TableHead>Material Invoice</TableHead>
+            <TableHead>Material Status</TableHead>
             <TableHead>Freight Invoice</TableHead>
+            <TableHead>Freight Status</TableHead>
             <TableHead>Load Performance</TableHead>
             <TableHead>Notes</TableHead>
             <TableHead>Actions</TableHead>
@@ -147,7 +197,21 @@ export function LoadTable({ loads, isLoading, onEdit, onDelete }: LoadTableProps
                 <FileLink file={load.materialInvoiceFile} label="Material Invoice" />
               </TableCell>
               <TableCell>
+                <InvoiceStatus
+                  loadId={load.id}
+                  status={load.materialInvoiceStatus}
+                  type="material"
+                />
+              </TableCell>
+              <TableCell>
                 <FileLink file={load.freightInvoiceFile} label="Freight Invoice" />
+              </TableCell>
+              <TableCell>
+                <InvoiceStatus
+                  loadId={load.id}
+                  status={load.freightInvoiceStatus}
+                  type="freight"
+                />
               </TableCell>
               <TableCell>
                 <FileLink file={load.loadPerformanceFile} label="Load Performance" />

@@ -8,7 +8,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { LuPlus } from "react-icons/lu";
+import { LuPlus, LuFileText } from "react-icons/lu";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import type { InsertLoad } from "@shared/schema";
@@ -28,6 +28,45 @@ interface LoadFormProps {
   show?: boolean;
 }
 
+const FileInputWithPreview = ({ 
+  currentFile, 
+  onChange, 
+  label, 
+  accept = ".pdf,.doc,.docx,.png,.jpg,.jpeg" 
+}: { 
+  currentFile: string | null;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  label: string;
+  accept?: string;
+}) => {
+  return (
+    <div>
+      <FormLabel>{label}</FormLabel>
+      <div className="space-y-2">
+        {currentFile && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Current file:</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8"
+              onClick={() => window.open(`/uploads/${currentFile}`, "_blank")}
+            >
+              <LuFileText className="h-4 w-4 mr-2" />
+              View {label}
+            </Button>
+          </div>
+        )}
+        <Input
+          type="file"
+          onChange={onChange}
+          accept={accept}
+        />
+      </div>
+    </div>
+  );
+};
+
 export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormProps) {
   const [open, setOpen] = useState(show || false);
   const queryClient = useQueryClient();
@@ -44,7 +83,6 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
     loadPerformance: null
   });
 
-  // Update open state when show prop changes
   useEffect(() => {
     if (show !== undefined) {
       setOpen(show);
@@ -369,38 +407,26 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
           />
 
           <div className="space-y-4">
-            <div>
-              <FormLabel>BOL</FormLabel>
-              <Input
-                type="file"
-                onChange={(e) => handleFileChange('bol', e)}
-                accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
-              />
-            </div>
-            <div>
-              <FormLabel>Material Invoice</FormLabel>
-              <Input
-                type="file"
-                onChange={(e) => handleFileChange('materialInvoice', e)}
-                accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
-              />
-            </div>
-            <div>
-              <FormLabel>Freight Invoice</FormLabel>
-              <Input
-                type="file"
-                onChange={(e) => handleFileChange('freightInvoice', e)}
-                accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
-              />
-            </div>
-            <div>
-              <FormLabel>Load Performance</FormLabel>
-              <Input
-                type="file"
-                onChange={(e) => handleFileChange('loadPerformance', e)}
-                accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
-              />
-            </div>
+            <FileInputWithPreview
+              currentFile={initialData?.bolFile || null}
+              onChange={(e) => handleFileChange('bol', e)}
+              label="BOL"
+            />
+            <FileInputWithPreview
+              currentFile={initialData?.materialInvoiceFile || null}
+              onChange={(e) => handleFileChange('materialInvoice', e)}
+              label="Material Invoice"
+            />
+            <FileInputWithPreview
+              currentFile={initialData?.freightInvoiceFile || null}
+              onChange={(e) => handleFileChange('freightInvoice', e)}
+              label="Freight Invoice"
+            />
+            <FileInputWithPreview
+              currentFile={initialData?.loadPerformanceFile || null}
+              onChange={(e) => handleFileChange('loadPerformance', e)}
+              label="Load Performance"
+            />
           </div>
 
           <Button type="submit">{initialData ? "Update Load" : "Create Load"}</Button>
@@ -409,21 +435,15 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
     </DialogContent>
   );
 
-  if (initialData) {
-    return (
-      <Dialog open={open} onOpenChange={setOpen}>
-        {content}
-      </Dialog>
-    );
-  }
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <LuPlus className="mr-2 h-4 w-4" /> New Load
-        </Button>
-      </DialogTrigger>
+      {!initialData && (
+        <DialogTrigger asChild>
+          <Button>
+            <LuPlus className="mr-2 h-4 w-4" /> New Load
+          </Button>
+        </DialogTrigger>
+      )}
       {content}
     </Dialog>
   );

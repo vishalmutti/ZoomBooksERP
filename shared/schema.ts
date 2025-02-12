@@ -73,6 +73,8 @@ export const incomingLoads = pgTable("incoming_loads", {
   materialInvoiceFile: text("material_invoice_file"),
   freightInvoiceFile: text("freight_invoice_file"),
   loadPerformanceFile: text("load_performance_file"),
+  materialInvoiceStatus: varchar("material_invoice_status", { length: 10 }).default('UNPAID').notNull().$type<'PAID' | 'UNPAID'>(),
+  freightInvoiceStatus: varchar("freight_invoice_status", { length: 10 }).default('UNPAID').notNull().$type<'PAID' | 'UNPAID'>(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

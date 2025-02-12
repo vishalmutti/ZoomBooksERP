@@ -46,7 +46,7 @@ export function LoadDashboard() {
         </p>
       </div>
 
-      <Tabs defaultValue="incoming" className="w-full" onValueChange={setActiveTab}>
+      <Tabs defaultValue="incoming" className="w-full" value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="w-full grid grid-cols-3">
           <TabsTrigger value="incoming" className="flex items-center gap-2">
             <LuShip className="h-4 w-4" />
@@ -62,6 +62,14 @@ export function LoadDashboard() {
           </TabsTrigger>
         </TabsList>
 
+        {editingLoad && (
+          <LoadForm
+            initialData={editingLoad}
+            onClose={() => setEditingLoad(null)}
+            show={true}
+          />
+        )}
+
         <TabsContent value="incoming" className="space-y-4">
           <div className="flex justify-end">
             <LoadForm defaultType="Incoming" onClose={() => setEditingLoad(null)} />
@@ -72,13 +80,6 @@ export function LoadDashboard() {
             onEdit={handleEdit}
             onDelete={handleDelete}
           />
-          {editingLoad && (
-            <LoadForm
-              initialData={editingLoad}
-              onClose={() => setEditingLoad(null)}
-              show={true}
-            />
-          )}
         </TabsContent>
 
         <TabsContent value="wholesale" className="space-y-4">
@@ -91,13 +92,6 @@ export function LoadDashboard() {
             onEdit={handleEdit}
             onDelete={handleDelete}
           />
-          {editingLoad && (
-            <LoadForm
-              initialData={editingLoad}
-              onClose={() => setEditingLoad(null)}
-              show={true}
-            />
-          )}
         </TabsContent>
 
         <TabsContent value="miscellaneous" className="space-y-4">
@@ -110,13 +104,6 @@ export function LoadDashboard() {
             onEdit={handleEdit}
             onDelete={handleDelete}
           />
-          {editingLoad && (
-            <LoadForm
-              initialData={editingLoad}
-              onClose={() => setEditingLoad(null)}
-              show={true}
-            />
-          )}
         </TabsContent>
       </Tabs>
 
