@@ -222,6 +222,18 @@ export class DatabaseStorage implements IStorage {
       // Delete loads
       await tx.delete(incomingLoads).where(eq(incomingLoads.supplierId, id.toString()));
 
+      // Delete all related invoices and their items
+      await tx.delete(invoiceItems)
+        .where(
+          eq(invoiceItems.invoiceId,
+            tx.select({ id: invoices.id })
+              .from(invoices)
+              .where(eq(invoices.supplierId, id))
+              .limit(1)
+          )
+        );
+      await tx.delete(invoices).where(eq(invoices.supplierId, id));
+
       // Delete supplier's contacts
       await tx.delete(supplierContacts).where(eq(supplierContacts.supplierId, id));
       
