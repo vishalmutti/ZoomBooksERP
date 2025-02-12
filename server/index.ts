@@ -2,7 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 // Add database import here.  Adapt to your database library.
-import { Pool } from 'pg'; // Example for PostgreSQL
+import { pool } from "./db";
 
 const app = express();
 app.use(express.json());
@@ -48,12 +48,7 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   console.error(err);
 });
 
-// Database setup (adapt to your database)
-const pool = new Pool({
-  // ...your database connection details...
-});
-
-const alterSupplierContacts = `ALTER TABLE supplier_contacts ADD COLUMN notes TEXT;`;
+const alterSupplierContacts = `ALTER TABLE supplier_contacts ADD COLUMN IF NOT EXISTS notes TEXT;`;
 
 (async () => {
   if (app.get("env") === "development") {
