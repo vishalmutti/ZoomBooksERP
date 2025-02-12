@@ -74,17 +74,18 @@ export function LoadForm({ defaultType }: LoadFormProps) {
 
   async function onSubmit(data: InsertLoad) {
     try {
-      const formData = new FormData();
-      formData.append('loadData', JSON.stringify(data));
-
-      if (files.bol) formData.append('bol', files.bol);
-      if (files.materialInvoice) formData.append('materialInvoice', files.materialInvoice);
-      if (files.freightInvoice) formData.append('freightInvoice', files.freightInvoice);
-      if (files.loadPerformance) formData.append('loadPerformance', files.loadPerformance);
+      const loadData = {
+        ...data,
+        loadId: generateLoadId(data.loadType),
+        totalCost: (Number(data.loadCost) + Number(data.freightCost)).toString()
+      };
 
       const response = await fetch('/api/loads', {
         method: 'POST',
-        body: formData
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(loadData)
       });
 
       if (response.ok) {
@@ -96,7 +97,8 @@ export function LoadForm({ defaultType }: LoadFormProps) {
           description: "Load created successfully",
         });
       } else {
-        throw new Error("Failed to create load");
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to create load");
       }
     } catch (error) {
       console.error('Error creating load:', error);
