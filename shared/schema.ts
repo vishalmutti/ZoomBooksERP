@@ -22,7 +22,7 @@ export const suppliers = pgTable("suppliers", {
 
 export const supplierContacts = pgTable("supplier_contacts", {
   id: serial("id").primaryKey(),
-  supplierId: integer("supplier_id").references(() => suppliers.id).notNull(),
+  supplierId: integer("supplier_id").references(() => suppliers.id, { onDelete: 'cascade' }).notNull(),
   name: varchar("name", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }),
   phone: varchar("phone", { length: 50 }),

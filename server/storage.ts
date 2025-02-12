@@ -208,10 +208,9 @@ export class DatabaseStorage implements IStorage {
 
   async deleteSupplier(id: number): Promise<void> {
     await db.transaction(async (tx) => {
-      // Delete related records first
+      // Delete related invoices first
       await tx.delete(invoices).where(eq(invoices.supplierId, id));
-      await tx.delete(supplierContacts).where(eq(supplierContacts.supplierId, id));
-      // Finally delete the supplier
+      // Delete supplier - contacts will be deleted automatically via cascade
       await tx.delete(suppliers).where(eq(suppliers.id, id));
     });
   }
