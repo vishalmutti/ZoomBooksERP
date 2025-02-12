@@ -153,12 +153,14 @@ export const insertPaymentSchema = createInsertSchema(payments)
     id: true,
   });
 
-export const insertIncomingLoadSchema = createInsertSchema(incomingLoads)
+export const insertLoadSchema = createInsertSchema(incomingLoads)
   .omit({
     id: true,
     createdAt: true,
     totalCost: true,
   });
+
+export const insertIncomingLoadSchema = insertLoadSchema;
 
 export const insertLoadStatusHistorySchema = createInsertSchema(loadStatusHistory)
   .omit({
