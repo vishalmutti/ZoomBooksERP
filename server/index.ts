@@ -53,38 +53,20 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     serveStatic(app);
   }
 
-  // Try ports starting from 5000 until we find an available one
-  const tryPort = (port: number): Promise<number> => {
-    return new Promise((resolve, reject) => {
-      const cleanupAndRetry = () => {
-        server.close(() => {
-          tryPort(port + 1).then(resolve).catch(reject);
-        });
-      };
-
-      server.once('error', (err: any) => {
-        if (err.code === 'EADDRINUSE') {
-          log(`Port ${port} in use, trying ${port + 1}`);
-          cleanupAndRetry();
-        } else {
-          reject(err);
-        }
-      });
-
-      server.listen(port, "0.0.0.0", () => {
-        log(`✨ Server running at http://0.0.0.0:${port}`);
-        log(`🔒 API available at http://0.0.0.0:${port}/api`);
-        resolve(port);
-      });
-    });
-  };
-
-  try {
-    await tryPort(5000);
-  } catch (err) {
-    console.error('Failed to start server:', err);
+  // Try a single port (5000)
+  const PORT = 5000;
+  
+  server.listen(PORT, "0.0.0.0", () => {
+    log(`✨ Server running at http://0.0.0.0:${PORT}`);
+    log(`🔒 API available at http://0.0.0.0:${PORT}/api`);
+  }).on('error', (err: any) => {
+    if (err.code === 'EADDRINUSE') {
+      log(`Error: Port ${PORT} is already in use`);
+    } else {
+      log(`Error starting server: ${err.message}`);
+    }
     process.exit(1);
-  }
+  });
 })();
 
 // Handle graceful shutdown
