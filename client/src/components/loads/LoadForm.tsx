@@ -318,49 +318,19 @@ export function LoadForm({ defaultType }: LoadFormProps) {
               />
             </div>
 
-            {defaultType === 'Incoming' && (
-              <>
-                <FormField
-                  control={form.control}
-                  name="containerNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Container Number</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="vesselName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Vessel Name</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="estimatedPortArrival"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Estimated Port Arrival</FormLabel>
-                      <FormControl>
-                        <Input type="datetime-local" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </>
-            )}
+            <FormField
+              control={form.control}
+              name="carrier"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Carrier</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             {defaultType === 'Wholesale' && (
               <>

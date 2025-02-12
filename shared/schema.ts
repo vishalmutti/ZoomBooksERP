@@ -72,6 +72,7 @@ export const incomingLoads = pgTable("incoming_loads", {
   freightInvoiceFile: text("freight_invoice_file"),
   loadPerformanceFile: text("load_performance_file"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  carrier: varchar("carrier", { length: 100 }),
 });
 
 export const loadStatusHistory = pgTable("load_status_history", {
