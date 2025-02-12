@@ -11,20 +11,13 @@ import { LuPackage2, LuShip, LuStore } from "react-icons/lu";
 export function LoadDashboard() {
   const [activeTab, setActiveTab] = useState("incoming");
   const { data: loads, isLoading } = useQuery<Load[]>({
-    queryKey: ["/api/loads"],
+    queryKey: ["loads"],
   });
 
   const filteredLoads = loads?.filter(load => load.loadType.toLowerCase() === activeTab);
 
-  const openNewLoadForm = (type: string) => {
-    const dialog = document.createElement('dialog');
-    dialog.innerHTML = '<load-form type="' + type + '"></load-form>';
-    document.body.appendChild(dialog);
-    dialog.showModal();
-  };
-
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Load Management</h1>
         <p className="text-muted-foreground mt-1">
@@ -32,8 +25,8 @@ export function LoadDashboard() {
         </p>
       </div>
 
-      <Tabs defaultValue="incoming" onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs defaultValue="incoming" className="w-full" onValueChange={setActiveTab}>
+        <TabsList className="w-full grid grid-cols-3">
           <TabsTrigger value="incoming" className="flex items-center gap-2">
             <LuShip className="h-4 w-4" />
             Incoming
