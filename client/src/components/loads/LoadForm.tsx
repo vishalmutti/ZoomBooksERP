@@ -35,15 +35,15 @@ export function LoadForm() {
       notes: "",
       status: "Pending",
       loadId: generateLoadId("Incoming"),
-      pickupLocation: "",
-      deliveryLocation: "",
-      scheduledPickup: new Date().toISOString(),
-      scheduledDelivery: new Date().toISOString(),
+      pickup_location: "",
+      delivery_location: "",
+      scheduled_pickup: new Date().toISOString(),
+      scheduled_delivery: new Date().toISOString(),
       carrier: "",
-      driverName: "",
-      driverPhone: "",
+      driver_name: "",
+      driver_phone: "",
       equipment: "",
-      freightCost: "0",
+      freight_cost: "0",
       // Optional fields
       containerNumber: "",
       bookingNumber: "",
@@ -57,8 +57,8 @@ export function LoadForm() {
       warehouseLocation: "",
       handlingInstructions: "",
       // Dates
-      actualPickup: null,
-      actualDelivery: null,
+      actual_pickup: null,
+      actual_delivery: null,
       estimatedPortArrival: null,
       actualPortArrival: null,
       customsClearanceDate: null,
@@ -175,7 +175,7 @@ export function LoadForm() {
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="pickupLocation"
+                name="pickup_location"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Pickup Location</FormLabel>
@@ -188,7 +188,7 @@ export function LoadForm() {
               />
               <FormField
                 control={form.control}
-                name="deliveryLocation"
+                name="delivery_location"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Delivery Location</FormLabel>
@@ -204,7 +204,7 @@ export function LoadForm() {
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="scheduledPickup"
+                name="scheduled_pickup"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Scheduled Pickup</FormLabel>
@@ -222,7 +222,7 @@ export function LoadForm() {
               />
               <FormField
                 control={form.control}
-                name="scheduledDelivery"
+                name="scheduled_delivery"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Scheduled Delivery</FormLabel>
@@ -272,7 +272,7 @@ export function LoadForm() {
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="driverName"
+                name="driver_name"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Driver Name</FormLabel>
@@ -285,7 +285,7 @@ export function LoadForm() {
               />
               <FormField
                 control={form.control}
-                name="driverPhone"
+                name="driver_phone"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Driver Phone</FormLabel>
@@ -300,7 +300,7 @@ export function LoadForm() {
 
             <FormField
               control={form.control}
-              name="freightCost"
+              name="freight_cost"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Freight Cost</FormLabel>
