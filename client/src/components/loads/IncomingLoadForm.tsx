@@ -38,6 +38,7 @@ export function IncomingLoadForm() {
     resolver: zodResolver(insertLoadSchema),
     defaultValues: {
       loadId: generateLoadId(),
+      loadType: "Incoming",
       supplierId: "",
       location: "",
       notes: "",
@@ -67,24 +68,24 @@ export function IncomingLoadForm() {
       if (files.freightInvoice) formData.append('freightInvoice', files.freightInvoice);
       if (files.loadPerformance) formData.append('loadPerformance', files.loadPerformance);
 
-      const response = await fetch('/api/incoming-loads', {
+      const response = await fetch('/api/loads', {
         method: 'POST',
         body: formData
       });
 
       if (response.ok) {
-        queryClient.invalidateQueries({ queryKey: ["/api/incoming-loads"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
         setOpen(false);
         form.reset();
         toast({
           title: "Success",
-          description: "Incoming load created successfully",
+          description: "Load created successfully",
         });
       } else {
         throw new Error("Failed to create load");
       }
     } catch (error) {
-      console.error("Failed to create load:", error);
+      console.error('Error creating load:', error);
       toast({
         title: "Error",
         description: "Failed to create load. Please try again.",
@@ -149,20 +150,6 @@ export function IncomingLoadForm() {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes</FormLabel>
-                  <FormControl>
-                    <Textarea {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -171,7 +158,7 @@ export function IncomingLoadForm() {
                   <FormItem>
                     <FormLabel>Load Cost</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} />
+                      <Input type="number" step="0.01" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -184,7 +171,7 @@ export function IncomingLoadForm() {
                   <FormItem>
                     <FormLabel>Freight Cost</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} />
+                      <Input type="number" step="0.01" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -199,7 +186,21 @@ export function IncomingLoadForm() {
                 <FormItem>
                   <FormLabel>Profit ROI</FormLabel>
                   <FormControl>
-                    <Input type="number" {...field} />
+                    <Input type="number" step="0.01" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notes</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -225,7 +226,7 @@ export function IncomingLoadForm() {
               </div>
             </div>
 
-            <Button type="submit">Create Incoming Load</Button>
+            <Button type="submit">Create Load</Button>
           </form>
         </Form>
       </DialogContent>

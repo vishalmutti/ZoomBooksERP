@@ -55,7 +55,8 @@ export const payments = pgTable("payments", {
 
 export const incomingLoads = pgTable("incoming_loads", {
   id: serial("id").primaryKey(),
-  loadId: varchar("load_id", { length: 50 }).notNull().unique(), // Format: INC-YYYYMMDD-XXX
+  loadId: varchar("load_id", { length: 50 }).notNull().unique(),
+  loadType: varchar("load_type", { length: 50 }).notNull(),
   supplierId: integer("supplier_id").references(() => suppliers.id),
   location: varchar("location", { length: 50 }).notNull().$type<'British Columbia' | 'Ontario'>(),
   notes: text("notes"),
@@ -122,7 +123,6 @@ export const paymentsRelations = relations(payments, ({ one }) => ({
   }),
 }));
 
-// Relations will be updated when implementing other load types
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
