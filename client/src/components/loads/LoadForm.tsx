@@ -74,18 +74,12 @@ export function LoadForm({ defaultType }: LoadFormProps) {
 
   async function onSubmit(data: InsertLoad) {
     try {
-      const loadData = {
-        ...data,
-        loadId: generateLoadId(data.loadType),
-        totalCost: (Number(data.loadCost) + Number(data.freightCost)).toString()
-      };
-
       const response = await fetch('/api/loads', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(loadData)
+        body: JSON.stringify(data)
       });
 
       if (response.ok) {
