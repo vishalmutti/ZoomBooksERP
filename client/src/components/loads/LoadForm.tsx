@@ -16,7 +16,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
-
 interface Supplier {
   id: number;
   name: string;
@@ -30,6 +29,17 @@ export function LoadForm({ defaultType }: LoadFormProps) {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [files, setFiles] = useState<{
+    bol: File | null;
+    materialInvoice: File | null;
+    freightInvoice: File | null;
+    loadPerformance: File | null;
+  }>({
+    bol: null,
+    materialInvoice: null,
+    freightInvoice: null,
+    loadPerformance: null
+  });
 
   const form = useForm<InsertLoad>({
     resolver: zodResolver(insertLoadSchema),
@@ -46,6 +56,15 @@ export function LoadForm({ defaultType }: LoadFormProps) {
     }
   });
 
+  const handleFileChange = (type: keyof typeof files, e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) {
+      setFiles(prev => ({
+        ...prev,
+        [type]: e.target.files![0]
+      }));
+    }
+  };
+
   async function onSubmit(data: InsertLoad) {
     try {
       const formData = new FormData();
@@ -57,20 +76,27 @@ export function LoadForm({ defaultType }: LoadFormProps) {
         }
       });
 
+      // Append files if they exist
+      if (files.bol) formData.append('bolFile', files.bol);
+      if (files.materialInvoice) formData.append('materialInvoiceFile', files.materialInvoice);
+      if (files.freightInvoice) formData.append('freightInvoiceFile', files.freightInvoice);
+      if (files.loadPerformance) formData.append('loadPerformanceFile', files.loadPerformance);
+
       const response = await fetch('/api/loads', {
         method: 'POST',
-        body: JSON.stringify({
-          ...data,
-          // Ensure dates are in ISO format
-          scheduledPickup: data.scheduledPickup ? new Date(data.scheduledPickup).toISOString() : null,
-          scheduledDelivery: data.scheduledDelivery ? new Date(data.scheduledDelivery).toISOString() : null,
-        })
+        body: formData,
       });
 
       if (response.ok) {
         queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
         setOpen(false);
         form.reset();
+        setFiles({
+          bol: null,
+          materialInvoice: null,
+          freightInvoice: null,
+          loadPerformance: null
+        });
         toast({
           title: "Success",
           description: "Load created successfully",
@@ -377,19 +403,35 @@ export function LoadForm({ defaultType }: LoadFormProps) {
             <div className="space-y-4">
               <div>
                 <FormLabel>BOL</FormLabel>
-                <Input type="file" onChange={(e) => handleFileChange('bol', e)} />
+                <Input 
+                  type="file" 
+                  onChange={(e) => handleFileChange('bol', e)} 
+                  accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                />
               </div>
               <div>
                 <FormLabel>Material Invoice</FormLabel>
-                <Input type="file" onChange={(e) => handleFileChange('materialInvoice', e)} />
+                <Input 
+                  type="file" 
+                  onChange={(e) => handleFileChange('materialInvoice', e)} 
+                  accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                />
               </div>
               <div>
                 <FormLabel>Freight Invoice</FormLabel>
-                <Input type="file" onChange={(e) => handleFileChange('freightInvoice', e)} />
+                <Input 
+                  type="file" 
+                  onChange={(e) => handleFileChange('freightInvoice', e)} 
+                  accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                />
               </div>
               <div>
                 <FormLabel>Load Performance</FormLabel>
-                <Input type="file" onChange={(e) => handleFileChange('loadPerformance', e)} />
+                <Input 
+                  type="file" 
+                  onChange={(e) => handleFileChange('loadPerformance', e)} 
+                  accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                />
               </div>
             </div>
 
