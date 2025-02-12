@@ -1,4 +1,4 @@
-import { invoices, suppliers, invoiceItems, users, payments, incomingLoads, freightInvoices, type User, type InsertUser, type Invoice, type InsertInvoice, type Supplier, type InsertSupplier, type Payment, type InsertPayment, type InvoiceItem, type IncomingLoad, type InsertIncomingLoad, type FreightInvoice, type InsertFreightInvoice } from "@shared/schema";
+import { invoices, suppliers, invoiceItems, users, payments, incomingLoads, freightInvoices, type User, type InsertUser, type Invoice, type InsertInvoice, type Supplier, type InsertSupplier, type Payment, type InsertPayment, type InvoiceItem, type IncomingLoad, type InsertIncomingLoad, type FreightInvoice, type InsertFreightInvoice, type SupplierContact } from "@shared/schema";
 import { db } from "./db";
 import { eq, ilike, and, gte, lte, sql, desc } from "drizzle-orm";
 import session from "express-session";
@@ -49,6 +49,7 @@ export interface IStorage {
   createFreightInvoice(freightInvoice: InsertFreightInvoice): Promise<FreightInvoice>;
   updateFreightInvoice(id: number, updates: Partial<FreightInvoice>): Promise<FreightInvoice>;
   deleteFreightInvoice(id: number): Promise<void>;
+  getSupplierContacts(supplierId: number): Promise<SupplierContact[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -110,17 +111,57 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createSupplier(supplier: InsertSupplier): Promise<Supplier> {
-    const [newSupplier] = await db.insert(suppliers).values(supplier).returning();
-    return newSupplier;
+    return await db.transaction(async (tx) => {
+      const [newSupplier] = await tx.insert(suppliers).values({
+        name: supplier.name,
+        address: supplier.address,
+        contactPerson: supplier.contactPerson,
+        email: supplier.email,
+        phone: supplier.phone,
+      }).returning();
+
+      if (supplier.contacts?.length) {
+        await tx.insert(supplierContacts).values(
+          supplier.contacts.map(contact => ({
+            ...contact,
+            supplierId: newSupplier.id,
+          }))
+        );
+      }
+
+      return newSupplier;
+    });
   }
 
   async updateSupplier(id: number, updates: Partial<InsertSupplier>): Promise<Supplier | undefined> {
-    const [supplier] = await db
-      .update(suppliers)
-      .set(updates)
-      .where(eq(suppliers.id, id))
-      .returning();
-    return supplier;
+    return await db.transaction(async (tx) => {
+      const [supplier] = await tx
+        .update(suppliers)
+        .set({
+          name: updates.name,
+          address: updates.address,
+          contactPerson: updates.contactPerson,
+          email: updates.email,
+          phone: updates.phone,
+        })
+        .where(eq(suppliers.id, id))
+        .returning();
+
+      if (updates.contacts) {
+        await tx.delete(supplierContacts).where(eq(supplierContacts.supplierId, id));
+
+        if (updates.contacts.length > 0) {
+          await tx.insert(supplierContacts).values(
+            updates.contacts.map(contact => ({
+              ...contact,
+              supplierId: id,
+            }))
+          );
+        }
+      }
+
+      return supplier;
+    });
   }
 
   async getSupplier(id: number): Promise<(Supplier & { outstandingAmount: string }) | undefined> {
@@ -367,6 +408,14 @@ export class DatabaseStorage implements IStorage {
 
   async deleteFreightInvoice(id: number): Promise<void> {
     await db.delete(freightInvoices).where(eq(freightInvoices.id, id));
+  }
+
+  async getSupplierContacts(supplierId: number): Promise<SupplierContact[]> {
+    return await db
+      .select()
+      .from(supplierContacts)
+      .where(eq(supplierContacts.supplierId, supplierId))
+      .orderBy(supplierContacts.createdAt);
   }
 }
 

@@ -1,4 +1,4 @@
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertSupplierSchema } from "@shared/schema";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import type { InsertSupplier, Supplier } from "@shared/schema";
+import { LuPlus, LuTrash } from "react-icons/lu";
 
 interface LoadSupplierFormProps {
   open: boolean;
@@ -21,13 +22,24 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
 
   const form = useForm<InsertSupplier>({
     resolver: zodResolver(insertSupplierSchema),
-    defaultValues: supplier || {
+    defaultValues: supplier ? {
+      name: supplier.name,
+      address: supplier.address ?? "",
+      email: supplier.email ?? "",
+      phone: supplier.phone ?? "",
+      contacts: [],
+    } : {
       name: "",
-      contactPerson: "",
+      address: "",
       email: "",
       phone: "",
-      address: "",
+      contacts: [],
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "contacts",
   });
 
   async function onSubmit(data: InsertSupplier) {
@@ -69,7 +81,7 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>{supplier ? "Edit Supplier" : "Add New Supplier"}</DialogTitle>
         </DialogHeader>
@@ -80,53 +92,15 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>Company Name</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} value={field.value ?? ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="contactPerson"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Contact Person</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input type="email" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Phone</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
             <FormField
               control={form.control}
               name="address"
@@ -134,13 +108,85 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
                 <FormItem>
                   <FormLabel>Address</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} value={field.value ?? ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit">
+
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-medium">Contacts</h3>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => append({ name: "", email: "", phone: "", isPrimary: false })}
+                >
+                  <LuPlus className="h-4 w-4 mr-2" />
+                  Add Contact
+                </Button>
+              </div>
+
+              {fields.map((field, index) => (
+                <div key={field.id} className="space-y-4 p-4 border rounded-lg relative">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute top-2 right-2"
+                    onClick={() => remove(index)}
+                  >
+                    <LuTrash className="h-4 w-4" />
+                  </Button>
+
+                  <FormField
+                    control={form.control}
+                    name={`contacts.${index}.name`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Contact Name</FormLabel>
+                        <FormControl>
+                          <Input {...field} value={field.value ?? ""} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name={`contacts.${index}.email`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input type="email" {...field} value={field.value ?? ""} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name={`contacts.${index}.phone`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone</FormLabel>
+                        <FormControl>
+                          <Input {...field} value={field.value ?? ""} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              ))}
+            </div>
+
+            <Button type="submit" className="w-full">
               {supplier ? "Update Supplier" : "Create Supplier"}
             </Button>
           </form>

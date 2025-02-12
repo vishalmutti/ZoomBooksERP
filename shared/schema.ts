@@ -19,6 +19,33 @@ export const suppliers = pgTable("suppliers", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const supplierContacts = pgTable("supplier_contacts", {
+  id: serial("id").primaryKey(),
+  supplierId: integer("supplier_id").references(() => suppliers.id).notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }),
+  phone: varchar("phone", { length: 50 }),
+  isPrimary: boolean("is_primary").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Define the insert schema for supplier contacts first
+export const insertSupplierContactSchema = createInsertSchema(supplierContacts).omit({
+  id: true,
+  createdAt: true,
+  supplierId: true,
+});
+
+// Then use it in the supplier schema
+export const insertSupplierSchema = createInsertSchema(suppliers)
+  .omit({
+    id: true,
+    createdAt: true,
+  })
+  .extend({
+    contacts: z.array(insertSupplierContactSchema).optional(),
+  });
+
 export const invoices = pgTable("invoices", {
   id: serial("id").primaryKey(),
   supplierId: integer("supplier_id").references(() => suppliers.id),
@@ -130,15 +157,20 @@ export const paymentsRelations = relations(payments, ({ one }) => ({
   }),
 }));
 
+export const supplierRelations = relations(suppliers, ({ many }) => ({
+  contacts: many(supplierContacts),
+}));
+
+export const supplierContactsRelations = relations(supplierContacts, ({ one }) => ({
+  supplier: one(suppliers, {
+    fields: [supplierContacts.supplierId],
+    references: [suppliers.id],
+  }),
+}));
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
-});
-
-export const insertSupplierSchema = createInsertSchema(suppliers).omit({
-  id: true,
-  createdAt: true,
 });
 
 export const insertInvoiceItemSchema = createInsertSchema(invoiceItems).omit({
@@ -179,6 +211,12 @@ export const insertLoadDocumentSchema = createInsertSchema(loadDocuments)
     uploadedAt: true,
   });
 
+export const insertFreightInvoiceSchema = createInsertSchema(freightInvoices)
+  .omit({
+    id: true,
+    createdAt: true,
+  });
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
@@ -202,9 +240,5 @@ export type InsertLoadStatusHistory = z.infer<typeof insertLoadStatusHistorySche
 export type InsertLoadDocument = z.infer<typeof insertLoadDocumentSchema>;
 export type InsertFreightInvoice = z.infer<typeof insertFreightInvoiceSchema>;
 export type FreightInvoice = typeof freightInvoices.$inferSelect;
-
-export const insertFreightInvoiceSchema = createInsertSchema(freightInvoices)
-  .omit({
-    id: true,
-    createdAt: true,
-  });
+export type InsertSupplierContact = z.infer<typeof insertSupplierContactSchema>;
+export type SupplierContact = typeof supplierContacts.$inferSelect;

@@ -10,7 +10,7 @@ import { LoadSupplierList } from "./LoadSupplierList";
 import { LoadSupplierForm } from "./LoadSupplierForm";
 
 export function LoadDashboard() {
-  const [activeTab, setActiveTab] = useState("incoming");
+  const [activeTab, setActiveTab] = useState<"Incoming" | "Wholesale" | "Miscellaneous">("Incoming");
   const [showAddSupplier, setShowAddSupplier] = useState(false);
   const [editingLoad, setEditingLoad] = useState<IncomingLoad | null>(null);
   const [showAddLoad, setShowAddLoad] = useState(false);
@@ -18,6 +18,7 @@ export function LoadDashboard() {
   const { data: loads, isLoading, refetch } = useQuery<IncomingLoad[]>({
     queryKey: ["/api/loads"],
   });
+
   const { data: suppliers = [] } = useQuery<Supplier[]>({
     queryKey: ["/api/suppliers"],
   });
@@ -48,17 +49,17 @@ export function LoadDashboard() {
         </p>
       </div>
 
-      <Tabs defaultValue="incoming" className="w-full" value={activeTab} onValueChange={setActiveTab}>
+      <Tabs defaultValue="Incoming" className="w-full" value={activeTab} onValueChange={(value) => setActiveTab(value as typeof activeTab)}>
         <TabsList className="w-full grid grid-cols-3">
-          <TabsTrigger value="incoming" className="flex items-center gap-2">
+          <TabsTrigger value="Incoming" className="flex items-center gap-2">
             <LuShip className="h-4 w-4" />
             Incoming
           </TabsTrigger>
-          <TabsTrigger value="wholesale" className="flex items-center gap-2">
+          <TabsTrigger value="Wholesale" className="flex items-center gap-2">
             <LuStore className="h-4 w-4" />
             Wholesale
           </TabsTrigger>
-          <TabsTrigger value="miscellaneous" className="flex items-center gap-2">
+          <TabsTrigger value="Miscellaneous" className="flex items-center gap-2">
             <LuPackage2 className="h-4 w-4" />
             Miscellaneous
           </TabsTrigger>
@@ -72,7 +73,7 @@ export function LoadDashboard() {
           />
         )}
 
-        <TabsContent value="incoming" className="space-y-4">
+        <TabsContent value={activeTab} className="space-y-4">
           <div className="flex justify-end">
             <Button onClick={() => setShowAddLoad(true)}>
               <LuPlus className="h-4 w-4 mr-2" />
@@ -84,45 +85,17 @@ export function LoadDashboard() {
             isLoading={isLoading}
             onEdit={handleEdit}
             onDelete={handleDelete}
-          />
-        </TabsContent>
-
-        <TabsContent value="wholesale" className="space-y-4">
-          <div className="flex justify-end">
-            <Button onClick={() => setShowAddLoad(true)}>
-              <LuPlus className="h-4 w-4 mr-2" />
-              Add Load
-            </Button>
-          </div>
-          <LoadTable 
-            loads={filteredLoads} 
-            isLoading={isLoading}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-        </TabsContent>
-
-        <TabsContent value="miscellaneous" className="space-y-4">
-          <div className="flex justify-end">
-            <Button onClick={() => setShowAddLoad(true)}>
-              <LuPlus className="h-4 w-4 mr-2" />
-              Add Load
-            </Button>
-          </div>
-          <LoadTable 
-            loads={filteredLoads} 
-            isLoading={isLoading}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
+            suppliers={suppliers}
           />
         </TabsContent>
       </Tabs>
 
       {showAddLoad && (
         <LoadForm
-          defaultType={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+          defaultType={activeTab}
           onClose={() => setShowAddLoad(false)}
           show={true}
+          suppliers={suppliers}
         />
       )}
 

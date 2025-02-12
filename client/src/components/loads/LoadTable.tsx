@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { IncomingLoad } from "@shared/schema";
+import type { IncomingLoad, Supplier } from "@shared/schema";
 import { format } from "date-fns";
 import { LuTruck, LuPackage2, LuStore, LuBox, LuFileText, LuPencil, LuTrash } from "react-icons/lu";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 
 interface LoadTableProps {
   loads?: IncomingLoad[];
+  suppliers?: Supplier[];
   isLoading: boolean;
   onEdit?: (load: IncomingLoad) => void;
   onDelete?: (id: number) => void;
@@ -105,7 +106,7 @@ const InvoiceStatus = ({
   );
 };
 
-export function LoadTable({ loads, isLoading, onEdit, onDelete }: LoadTableProps) {
+export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }: LoadTableProps) {
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -140,6 +141,7 @@ export function LoadTable({ loads, isLoading, onEdit, onDelete }: LoadTableProps
         <TableHeader>
           <TableRow>
             <TableHead>Type</TableHead>
+            <TableHead>Supplier</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Reference Number</TableHead>
             <TableHead>Location</TableHead>
@@ -160,89 +162,93 @@ export function LoadTable({ loads, isLoading, onEdit, onDelete }: LoadTableProps
           </TableRow>
         </TableHeader>
         <TableBody>
-          {loads.map((load) => (
-            <TableRow key={load.id}>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  {loadTypeIcons[load.loadType as keyof typeof loadTypeIcons]}
-                  <span>{load.loadType}</span>
-                </div>
-              </TableCell>
-              <TableCell>
-                <Badge
-                  variant="outline"
-                  className={statusColors[load.status as keyof typeof statusColors]}
-                >
-                  {load.status}
-                </Badge>
-              </TableCell>
-              <TableCell>{load.referenceNumber}</TableCell>
-              <TableCell>{load.location}</TableCell>
-              <TableCell>{load.carrier}</TableCell>
-              <TableCell>
-                {load.scheduledPickup &&
-                  format(new Date(load.scheduledPickup), "MMM d, yyyy")}
-              </TableCell>
-              <TableCell>
-                {load.scheduledDelivery &&
-                  format(new Date(load.scheduledDelivery), "MMM d, yyyy")}
-              </TableCell>
-              <TableCell>${Number(load.loadCost).toFixed(2)}</TableCell>
-              <TableCell>${Number(load.freightCost).toFixed(2)}</TableCell>
-              <TableCell>{Number(load.profitRoi).toFixed(2)}%</TableCell>
-              <TableCell>
-                <FileLink file={load.bolFile} label="BOL Document" />
-              </TableCell>
-              <TableCell>
-                <FileLink file={load.materialInvoiceFile} label="Material Invoice" />
-              </TableCell>
-              <TableCell>
-                <InvoiceStatus
-                  loadId={load.id}
-                  status={load.materialInvoiceStatus}
-                  type="material"
-                />
-              </TableCell>
-              <TableCell>
-                <FileLink file={load.freightInvoiceFile} label="Freight Invoice" />
-              </TableCell>
-              <TableCell>
-                <InvoiceStatus
-                  loadId={load.id}
-                  status={load.freightInvoiceStatus}
-                  type="freight"
-                />
-              </TableCell>
-              <TableCell>
-                <FileLink file={load.loadPerformanceFile} label="Load Performance" />
-              </TableCell>
-              <TableCell>{load.notes}</TableCell>
-              <TableCell>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0"
-                    onClick={() => onEdit?.(load)}
+          {loads.map((load) => {
+            const supplier = suppliers.find(s => s.id.toString() === load.supplierId);
+            return (
+              <TableRow key={load.id}>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    {loadTypeIcons[load.loadType as keyof typeof loadTypeIcons]}
+                    <span>{load.loadType}</span>
+                  </div>
+                </TableCell>
+                <TableCell>{supplier?.name || 'Unknown Supplier'}</TableCell>
+                <TableCell>
+                  <Badge
+                    variant="outline"
+                    className={statusColors[load.status as keyof typeof statusColors]}
                   >
-                    <LuPencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0"
-                    onClick={() => {
-                      if (window.confirm('Are you sure you want to delete this load?')) {
-                        onDelete?.(load.id);
-                      }
-                    }}
-                  >
-                    <LuTrash className="h-4 w-4" />
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
+                    {load.status}
+                  </Badge>
+                </TableCell>
+                <TableCell>{load.referenceNumber}</TableCell>
+                <TableCell>{load.location}</TableCell>
+                <TableCell>{load.carrier}</TableCell>
+                <TableCell>
+                  {load.scheduledPickup &&
+                    format(new Date(load.scheduledPickup), "MMM d, yyyy")}
+                </TableCell>
+                <TableCell>
+                  {load.scheduledDelivery &&
+                    format(new Date(load.scheduledDelivery), "MMM d, yyyy")}
+                </TableCell>
+                <TableCell>${Number(load.loadCost).toFixed(2)}</TableCell>
+                <TableCell>${Number(load.freightCost).toFixed(2)}</TableCell>
+                <TableCell>{Number(load.profitRoi).toFixed(2)}%</TableCell>
+                <TableCell>
+                  <FileLink file={load.bolFile} label="BOL Document" />
+                </TableCell>
+                <TableCell>
+                  <FileLink file={load.materialInvoiceFile} label="Material Invoice" />
+                </TableCell>
+                <TableCell>
+                  <InvoiceStatus
+                    loadId={load.id}
+                    status={load.materialInvoiceStatus}
+                    type="material"
+                  />
+                </TableCell>
+                <TableCell>
+                  <FileLink file={load.freightInvoiceFile} label="Freight Invoice" />
+                </TableCell>
+                <TableCell>
+                  <InvoiceStatus
+                    loadId={load.id}
+                    status={load.freightInvoiceStatus}
+                    type="freight"
+                  />
+                </TableCell>
+                <TableCell>
+                  <FileLink file={load.loadPerformanceFile} label="Load Performance" />
+                </TableCell>
+                <TableCell>{load.notes}</TableCell>
+                <TableCell>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => onEdit?.(load)}
+                    >
+                      <LuPencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => {
+                        if (window.confirm('Are you sure you want to delete this load?')) {
+                          onDelete?.(load.id);
+                        }
+                      }}
+                    >
+                      <LuTrash className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>
