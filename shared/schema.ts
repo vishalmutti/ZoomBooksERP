@@ -57,24 +57,18 @@ export const loads = pgTable("loads", {
   id: serial("id").primaryKey(),
   loadId: varchar("load_id", { length: 50 }).notNull().unique(), // Format: TYPE-YYYYMMDD-XXX
   loadType: varchar("load_type", { length: 20}).notNull().$type<'Incoming' | 'Wholesale' | 'Miscellaneous'>(),
-  status: varchar("status", { length: 30}).notNull().default('Pending').$type<
-    'Pending' | 'In Transit' | 'Delivered' | 'Freight Invoice Attached' | 'Paid' | 'Completed' |
-    'Order Placed' | 'Scheduled' | 'Loading' | 'Customs' | 'Port Arrival' | 'Final Delivery'
-  >(),
+  supplierId: integer("supplier_id").references(() => suppliers.id),
   notes: text("notes"),
 
   // Common fields for all load types
-  pickupLocation: text("pickup_location").notNull(),
-  deliveryLocation: text("delivery_location").notNull(),
+  location: varchar("location", { length: 50 }).notNull().$type<'British Columbia' | 'Ontario'>(),
   scheduledPickup: timestamp("scheduled_pickup").notNull(),
   scheduledDelivery: timestamp("scheduled_delivery").notNull(),
-  actualPickup: timestamp("actual_pickup"),
-  actualDelivery: timestamp("actual_delivery"),
   carrier: varchar("carrier", { length: 255 }),
-  driverName: varchar("driver_name", { length: 255 }),
-  driverPhone: varchar("driver_phone", { length: 50 }),
-  equipment: varchar("equipment", { length: 100 }),
+  loadCost: decimal("load_cost", { precision: 10, scale: 2 }),
   freightCost: decimal("freight_cost", { precision: 10, scale: 2 }),
+  totalCost: decimal("total_cost", { precision: 10, scale: 2 }),
+  profitRoi: decimal("profit_roi", { precision: 10, scale: 2 }),
 
   // Wholesale specific fields
   poNumber: varchar("po_number", { length: 50 }),
