@@ -208,9 +208,20 @@ export class DatabaseStorage implements IStorage {
 
   async deleteSupplier(id: number): Promise<void> {
     await db.transaction(async (tx) => {
-      // Delete related invoices first
-      await tx.delete(invoices).where(eq(invoices.supplierId, id));
-      // Delete supplier - contacts will be deleted automatically via cascade
+      // First check if supplier has any AR invoices
+      const supplierInvoices = await tx
+        .select({ id: invoices.id })
+        .from(invoices)
+        .where(eq(invoices.supplierId, id));
+
+      if (supplierInvoices.length > 0) {
+        throw new Error("Cannot delete supplier with existing invoices. Please clear invoices first.");
+      }
+
+      // Delete supplier's contacts (will be handled by cascade, but being explicit)
+      await tx.delete(supplierContacts).where(eq(supplierContacts.supplierId, id));
+      
+      // Finally delete the supplier
       await tx.delete(suppliers).where(eq(suppliers.id, id));
     });
   }
