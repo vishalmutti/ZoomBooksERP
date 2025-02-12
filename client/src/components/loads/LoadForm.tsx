@@ -27,6 +27,12 @@ export function LoadForm() {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [files, setFiles] = useState({
+    bol: null,
+    materialInvoice: null,
+    freightInvoice: null,
+    loadPerformance: null
+  });
 
   const form = useForm<InsertLoad>({
     resolver: zodResolver(insertLoadSchema),
@@ -35,51 +41,35 @@ export function LoadForm() {
       notes: "",
       status: "Pending",
       loadId: generateLoadId("Incoming"),
-      pickupLocation: "",
-      deliveryLocation: "",
-      scheduledPickup: new Date().toISOString(),
-      scheduledDelivery: new Date().toISOString(),
-      carrier: "",
-      driverName: "",
-      driverPhone: "",
-      equipment: "",
+      location: "",
+      loadCost: "0",
       freightCost: "0",
-      // Optional fields
-      containerNumber: "",
-      bookingNumber: "",
-      vesselName: "",
-      voyageNumber: "",
-      poNumber: "",
-      orderNumber: "",
-      brokerName: "",
-      brokerContact: "",
-      referenceNumber: "",
-      warehouseLocation: "",
-      handlingInstructions: "",
-      // Dates
-      actualPickup: null,
-      actualDelivery: null,
-      estimatedPortArrival: null,
-      actualPortArrival: null,
-      customsClearanceDate: null,
+      profitRoi: "0",
     }
   });
 
-  const loadType = form.watch("loadType");
+  const handleFileChange = (type: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) {
+      setFiles(prev => ({
+        ...prev,
+        [type]: e.target.files?.[0]
+      }));
+    }
+  };
 
   async function onSubmit(data: InsertLoad) {
     try {
-      const loadId = generateLoadId(data.loadType);
+      const formData = new FormData();
+      formData.append('loadData', JSON.stringify(data));
+
+      if (files.bol) formData.append('bol', files.bol);
+      if (files.materialInvoice) formData.append('materialInvoice', files.materialInvoice);
+      if (files.freightInvoice) formData.append('freightInvoice', files.freightInvoice);
+      if (files.loadPerformance) formData.append('loadPerformance', files.loadPerformance);
 
       const response = await fetch('/api/loads', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          ...data,
-          loadId,
-        })
+        body: formData
       });
 
       if (response.ok) {
@@ -155,15 +145,7 @@ export function LoadForm() {
                         <SelectItem value="Pending">Pending</SelectItem>
                         <SelectItem value="In Transit">In Transit</SelectItem>
                         <SelectItem value="Delivered">Delivered</SelectItem>
-                        <SelectItem value="Freight Invoice Attached">Freight Invoice Attached</SelectItem>
-                        <SelectItem value="Paid">Paid</SelectItem>
                         <SelectItem value="Completed">Completed</SelectItem>
-                        <SelectItem value="Order Placed">Order Placed</SelectItem>
-                        <SelectItem value="Scheduled">Scheduled</SelectItem>
-                        <SelectItem value="Loading">Loading</SelectItem>
-                        <SelectItem value="Customs">Customs</SelectItem>
-                        <SelectItem value="Port Arrival">Port Arrival</SelectItem>
-                        <SelectItem value="Final Delivery">Final Delivery</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -172,330 +154,82 @@ export function LoadForm() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="pickupLocation"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Pickup Location</FormLabel>
+            <FormField
+              control={form.control}
+              name="supplierId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Supplier</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <Input {...field} placeholder="Enter pickup location" />
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select supplier" />
+                      </SelectTrigger>
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="deliveryLocation"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Delivery Location</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Enter delivery location" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="scheduledPickup"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Scheduled Pickup</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="datetime-local" 
-                        {...field}
-                        value={field.value ? new Date(field.value).toISOString().slice(0, 16) : ''}
-                        onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value).toISOString() : '')}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="scheduledDelivery"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Scheduled Delivery</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="datetime-local" 
-                        {...field}
-                        value={field.value ? new Date(field.value).toISOString().slice(0, 16) : ''}
-                        onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value).toISOString() : '')}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="carrier"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Carrier</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Enter carrier name" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="equipment"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Equipment</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Enter equipment details" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="driverName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Driver Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Enter driver's name" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="driverPhone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Driver Phone</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Enter driver's phone" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                    <SelectContent>
+                      {/* Add supplier options dynamically */}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}
-              name="freightCost"
+              name="location"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Freight Cost</FormLabel>
+                  <FormLabel>Location</FormLabel>
                   <FormControl>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      {...field}
-                      placeholder="Enter freight cost"
-                    />
+                    <Input {...field} placeholder="Enter location" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            {/* Conditional fields based on load type */}
-            {loadType === "Incoming" && (
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="containerNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Container Number</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Enter container number" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="bookingNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Booking Number</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Enter booking number" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="vesselName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Vessel Name</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Enter vessel name" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="voyageNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Voyage Number</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Enter voyage number" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="estimatedPortArrival"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Estimated Port Arrival</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="datetime-local" 
-                          {...field}
-                          value={field.value ? new Date(field.value).toISOString().slice(0, 16) : ''}
-                          onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value).toISOString() : null)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
-
-            {loadType === "Wholesale" && (
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="poNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>PO Number</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Enter PO number" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="orderNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Order Number</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Enter order number" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="brokerName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Broker Name</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Enter broker name" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="brokerContact"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Broker Contact</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Enter broker contact" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
-
-            {loadType === "Miscellaneous" && (
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="referenceNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Reference Number</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Enter reference number" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="warehouseLocation"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Warehouse Location</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Enter warehouse location" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="handlingInstructions"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Handling Instructions</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          {...field}
-                          placeholder="Enter special handling instructions"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
+            <div className="grid grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="loadCost"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Load Cost</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.01" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="freightCost"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Freight Cost</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.01" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="profitRoi"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Profit ROI</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.01" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}
@@ -504,15 +238,31 @@ export function LoadForm() {
                 <FormItem>
                   <FormLabel>Notes</FormLabel>
                   <FormControl>
-                    <Textarea
-                      {...field}
-                      placeholder="Add any relevant notes here..."
-                    />
+                    <Textarea {...field} placeholder="Add any relevant notes here..." />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            <div className="space-y-4">
+              <div>
+                <FormLabel>BOL</FormLabel>
+                <Input type="file" onChange={(e) => handleFileChange('bol', e)} />
+              </div>
+              <div>
+                <FormLabel>Material Invoice</FormLabel>
+                <Input type="file" onChange={(e) => handleFileChange('materialInvoice', e)} />
+              </div>
+              <div>
+                <FormLabel>Freight Invoice</FormLabel>
+                <Input type="file" onChange={(e) => handleFileChange('freightInvoice', e)} />
+              </div>
+              <div>
+                <FormLabel>Load Performance</FormLabel>
+                <Input type="file" onChange={(e) => handleFileChange('loadPerformance', e)} />
+              </div>
+            </div>
 
             <Button type="submit">Create Load</Button>
           </form>
