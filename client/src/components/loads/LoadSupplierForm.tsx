@@ -53,6 +53,7 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
         form.reset({
           name: supplier.name,
           address: supplier.address ?? "",
+          contactPerson: supplier.contactPerson ?? "",
           email: supplier.email ?? "",
           phone: supplier.phone ?? "",
           contacts: supplierContacts.map(contact => ({
