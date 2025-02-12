@@ -25,28 +25,16 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
   // Fetch supplier contacts if editing
   const { data: contacts = [] } = useQuery<SupplierContact[]>({
     queryKey: ["/api/suppliers", supplier?.id, "contacts"],
-    enabled: !!supplier,
+    enabled: !!supplier?.id, // Only fetch if we have a supplier id
   });
 
   const form = useForm<InsertSupplier>({
     resolver: zodResolver(insertSupplierSchema),
-    defaultValues: supplier ? {
-      name: supplier.name,
-      address: supplier.address ?? "",
-      email: supplier.email ?? "",
-      phone: supplier.phone ?? "",
-      contacts: contacts.map(contact => ({
-        name: contact.name,
-        email: contact.email ?? "",
-        phone: contact.phone ?? "",
-        isPrimary: contact.isPrimary,
-        notes: contact.notes ?? "",
-      })),
-    } : {
-      name: "",
-      address: "",
-      email: "",
-      phone: "",
+    defaultValues: {
+      name: supplier?.name ?? "",
+      address: supplier?.address ?? "",
+      email: supplier?.email ?? "",
+      phone: supplier?.phone ?? "",
       contacts: [],
     },
   });
@@ -61,6 +49,9 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
         isPrimary: contact.isPrimary,
         notes: contact.notes ?? "",
       })));
+    } else if (!supplier) {
+      // Reset contacts when creating a new supplier
+      form.setValue("contacts", []);
     }
   }, [contacts, supplier, form.setValue]);
 
@@ -86,10 +77,14 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
         throw new Error("Failed to save supplier");
       }
 
+      // Invalidate both the suppliers list and the specific supplier's contacts
       queryClient.invalidateQueries({ queryKey: ["/api/suppliers"] });
-      if (supplier) {
-        queryClient.invalidateQueries({ queryKey: ["/api/suppliers", supplier.id, "contacts"] });
+      if (supplier?.id) {
+        queryClient.invalidateQueries({ 
+          queryKey: ["/api/suppliers", supplier.id, "contacts"]
+        });
       }
+
       onOpenChange(false);
       form.reset();
       toast({
