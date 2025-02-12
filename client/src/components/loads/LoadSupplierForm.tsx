@@ -292,19 +292,7 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
-                      name={`contacts.${index}.notes`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Notes</FormLabel>
-                          <FormControl>
-                            <Textarea {...field} value={field.value ?? ""} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    
                   </div>
                 ))
               )}

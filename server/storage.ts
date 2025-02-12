@@ -157,7 +157,6 @@ export class DatabaseStorage implements IStorage {
               email: contact.email,
               phone: contact.phone,
               isPrimary: contact.isPrimary,
-              notes: contact.notes || null,
               supplierId: id,
             }))
           );

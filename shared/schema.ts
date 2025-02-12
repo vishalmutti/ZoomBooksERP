@@ -27,7 +27,6 @@ export const supplierContacts = pgTable("supplier_contacts", {
   email: varchar("email", { length: 255 }),
   phone: varchar("phone", { length: 50 }),
   isPrimary: boolean("is_primary").default(false).notNull(),
-  notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
