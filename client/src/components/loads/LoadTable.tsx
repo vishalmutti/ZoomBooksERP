@@ -16,6 +16,8 @@ import { Button } from "@/components/ui/button";
 interface LoadTableProps {
   loads?: IncomingLoad[];
   isLoading: boolean;
+  onEdit?: (load: IncomingLoad) => void;
+  onDelete?: (id: number) => void;
 }
 
 const loadTypeIcons = {
@@ -101,6 +103,7 @@ export function LoadTable({ loads, isLoading }: LoadTableProps) {
             <TableHead>Profit/ROI</TableHead>
             <TableHead>Documents</TableHead>
             <TableHead>Notes</TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -143,6 +146,28 @@ export function LoadTable({ loads, isLoading }: LoadTableProps) {
                 </div>
               </TableCell>
               <TableCell>{load.notes}</TableCell>
+              <TableCell>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onEdit?.(load)}
+                  >
+                    <LuEdit2 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      if (window.confirm('Are you sure you want to delete this load?')) {
+                        onDelete?.(load.id);
+                      }
+                    }}
+                  >
+                    <LuTrash className="h-4 w-4" />
+                  </Button>
+                </div>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

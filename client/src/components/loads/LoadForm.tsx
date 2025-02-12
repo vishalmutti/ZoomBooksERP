@@ -22,10 +22,11 @@ interface Supplier {
 }
 
 interface LoadFormProps {
-  defaultType: 'Incoming' | 'Wholesale' | 'Miscellaneous';
+  onClose: () => void;
+  initialData?: any; // Placeholder until IncomingLoad is defined
 }
 
-export function LoadForm({ defaultType }: LoadFormProps) {
+export function LoadForm({ onClose, initialData }: LoadFormProps) {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -43,8 +44,8 @@ export function LoadForm({ defaultType }: LoadFormProps) {
 
   const form = useForm<InsertLoad>({
     resolver: zodResolver(insertLoadSchema),
-    defaultValues: {
-      loadType: defaultType,
+    defaultValues: initialData || {
+      loadType: "Incoming", // Default value added
       notes: "",
       location: "",
       referenceNumber: "",
@@ -53,6 +54,7 @@ export function LoadForm({ defaultType }: LoadFormProps) {
       loadCost: "0",
       freightCost: "0",
       profitRoi: "0",
+      supplierId: "" // Added for completeness
     }
   });
 
@@ -86,21 +88,23 @@ export function LoadForm({ defaultType }: LoadFormProps) {
       if (files.freightInvoice) formData.append('freightInvoiceFile', files.freightInvoice);
       if (files.loadPerformance) formData.append('loadPerformanceFile', files.loadPerformance);
 
-      console.log('Submitting form data:', Object.fromEntries(formData.entries()));
 
-      const response = await fetch('/api/loads', {
-        method: 'POST',
-        body: formData, // FormData will automatically set the correct Content-Type header
+      const url = initialData ? `/api/loads/${initialData.id}` : '/api/loads';
+      const method = initialData ? 'PATCH' : 'POST';
+
+      const response = await fetch(url, {
+        method,
+        body: formData,
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
         console.error('Server response:', errorData);
-        throw new Error(errorData?.message || 'Failed to create load');
+        throw new Error(errorData?.message || 'Failed to create/update load');
       }
 
       queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
-      setOpen(false);
+      onClose(); // Use onClose prop
       form.reset();
       setFiles({
         bol: null,
@@ -109,14 +113,14 @@ export function LoadForm({ defaultType }: LoadFormProps) {
         loadPerformance: null
       });
       toast({
-        title: "Success",
-        description: "Load created successfully",
+        title: initialData ? "Success: Load updated successfully" : "Success: Load created successfully",
+        description: initialData ? "Load updated successfully" : "Load created successfully",
       });
     } catch (error) {
-      console.error('Error creating load:', error);
+      console.error('Error creating/updating load:', error);
       toast({
         title: "Error",
-        description: "Failed to create load. Please try again.",
+        description: "Failed to create/update load. Please try again.",
         variant: "destructive",
       });
     }
@@ -131,7 +135,7 @@ export function LoadForm({ defaultType }: LoadFormProps) {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create New Load</DialogTitle>
+          <DialogTitle>{initialData ? "Edit Load" : "Create New Load"}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -194,7 +198,6 @@ export function LoadForm({ defaultType }: LoadFormProps) {
                                   value={supplier.name}
                                   onSelect={() => {
                                     field.onChange(supplier.id.toString());
-                                    // Close the popover after selection
                                     const popoverElement = document.querySelector('[data-radix-popper-content-id]');
                                     if (popoverElement) {
                                       (popoverElement as HTMLElement).style.display = 'none';
@@ -346,7 +349,8 @@ export function LoadForm({ defaultType }: LoadFormProps) {
               )}
             />
 
-            {defaultType === 'Wholesale' && (
+            {/*Conditional rendering based on load type remains the same*/}
+            {initialData?.loadType === 'Wholesale' && (
               <>
                 <FormField
                   control={form.control}
@@ -377,7 +381,7 @@ export function LoadForm({ defaultType }: LoadFormProps) {
               </>
             )}
 
-            {defaultType === 'Miscellaneous' && (
+            {initialData?.loadType === 'Miscellaneous' && (
               <FormField
                 control={form.control}
                 name="warehouseLocation"
@@ -442,7 +446,7 @@ export function LoadForm({ defaultType }: LoadFormProps) {
               </div>
             </div>
 
-            <Button type="submit">Create Load</Button>
+            <Button type="submit">{initialData ? "Update Load" : "Create Load"}</Button>
           </form>
         </Form>
       </DialogContent>

@@ -12,6 +12,7 @@ import { LoadSupplierForm } from "./LoadSupplierForm";
 export function LoadDashboard() {
   const [activeTab, setActiveTab] = useState("incoming");
   const [showAddSupplier, setShowAddSupplier] = useState(false);
+  const [editingLoad, setEditingLoad] = useState<IncomingLoad | null>(null);
   const { data: loads, isLoading } = useQuery<IncomingLoad[]>({
     queryKey: ["/api/loads"],
   });
@@ -22,6 +23,16 @@ export function LoadDashboard() {
   const filteredLoads = loads?.filter(load => 
     load.loadType?.toLowerCase() === activeTab.toLowerCase()
   );
+
+  const handleEdit = (load: IncomingLoad) => {
+    setEditingLoad(load);
+  };
+
+  const handleDelete = (loadId: string) => {
+    // Implement delete logic here.  This is a placeholder.
+    console.log("Deleting load with ID:", loadId);
+    // You would typically make an API call to delete the load.
+  };
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -52,21 +63,54 @@ export function LoadDashboard() {
           <div className="flex justify-end">
             <LoadForm defaultType="Incoming" />
           </div>
-          <LoadTable loads={filteredLoads} isLoading={isLoading} />
+          <LoadTable 
+            loads={filteredLoads} 
+            isLoading={isLoading}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+          {editingLoad && (
+            <LoadForm
+              initialData={editingLoad}
+              onClose={() => setEditingLoad(null)}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="wholesale" className="space-y-4">
           <div className="flex justify-end">
             <LoadForm defaultType="Wholesale" />
           </div>
-          <LoadTable loads={filteredLoads} isLoading={isLoading} />
+          <LoadTable 
+            loads={filteredLoads} 
+            isLoading={isLoading}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+          {editingLoad && (
+            <LoadForm
+              initialData={editingLoad}
+              onClose={() => setEditingLoad(null)}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="miscellaneous" className="space-y-4">
           <div className="flex justify-end">
             <LoadForm defaultType="Miscellaneous" />
           </div>
-          <LoadTable loads={filteredLoads} isLoading={isLoading} />
+          <LoadTable 
+            loads={filteredLoads} 
+            isLoading={isLoading}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+          {editingLoad && (
+            <LoadForm
+              initialData={editingLoad}
+              onClose={() => setEditingLoad(null)}
+            />
+          )}
         </TabsContent>
       </Tabs>
 
