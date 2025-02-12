@@ -133,9 +133,9 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  async updateSupplier(id: number, updates: Partial<InsertSupplier>): Promise<Supplier | undefined> {
+  async updateSupplier(id: number, updates: Partial<InsertSupplier>): Promise<(Supplier & { outstandingAmount: string, contacts: SupplierContact[] }) | undefined> {
     return await db.transaction(async (tx) => {
-      const [supplier] = await tx
+      await tx
         .update(suppliers)
         .set({
           name: updates.name,
@@ -144,8 +144,7 @@ export class DatabaseStorage implements IStorage {
           email: updates.email,
           phone: updates.phone,
         })
-        .where(eq(suppliers.id, id))
-        .returning();
+        .where(eq(suppliers.id, id));
 
       if (updates.contacts) {
         await tx.delete(supplierContacts).where(eq(supplierContacts.supplierId, id));
@@ -163,7 +162,34 @@ export class DatabaseStorage implements IStorage {
         }
       }
 
-      return supplier;
+      const [result] = await tx
+        .select({
+          id: suppliers.id,
+          name: suppliers.name,
+          email: suppliers.email,
+          address: suppliers.address,
+          contactPerson: suppliers.contactPerson,
+          phone: suppliers.phone,
+          createdAt: suppliers.createdAt,
+          outstandingAmount: sql<string>`COALESCE(
+            SUM(CASE WHEN ${invoices.isPaid} = false THEN ${invoices.totalAmount}::numeric ELSE 0 END),
+            0
+          )::text`
+        })
+        .from(suppliers)
+        .leftJoin(invoices, eq(invoices.supplierId, suppliers.id))
+        .where(eq(suppliers.id, id))
+        .groupBy(suppliers.id);
+
+      if (!result) return undefined;
+
+      const contacts = await tx
+        .select()
+        .from(supplierContacts)
+        .where(eq(supplierContacts.supplierId, id))
+        .orderBy(supplierContacts.createdAt);
+
+      return { ...result, contacts };
     });
   }
 
