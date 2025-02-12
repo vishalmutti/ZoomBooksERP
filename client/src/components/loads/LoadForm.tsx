@@ -43,7 +43,7 @@ export function LoadForm() {
       driver_name: "",
       driver_phone: "",
       equipment: "",
-      freight_cost: "0",
+      freightCost: "0",
       // Optional fields
       containerNumber: "",
       bookingNumber: "",
@@ -300,7 +300,7 @@ export function LoadForm() {
 
             <FormField
               control={form.control}
-              name="freight_cost"
+              name="freightCost"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Freight Cost</FormLabel>
