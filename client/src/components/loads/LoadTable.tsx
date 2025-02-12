@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { IncomingLoad } from "@shared/schema";
 import { format } from "date-fns";
-import { LuTruck, LuPackage2, LuStore, LuBox, LuFileText } from "react-icons/lu";
+import { LuTruck, LuPackage2, LuStore, LuBox, LuFileText, LuEdit2, LuTrash } from "react-icons/lu";
 import { Button } from "@/components/ui/button";
 
 interface LoadTableProps {
