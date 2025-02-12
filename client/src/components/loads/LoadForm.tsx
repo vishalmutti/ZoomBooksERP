@@ -290,8 +290,8 @@ export function LoadForm({ defaultType }: LoadFormProps) {
                       <Input 
                         type="date" 
                         {...field}
-                        value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
-                        onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value).toISOString() : null)}
+                        value={field.value || ''}
+                        onChange={(e) => field.onChange(e.target.value || undefined)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -308,8 +308,8 @@ export function LoadForm({ defaultType }: LoadFormProps) {
                       <Input 
                         type="date" 
                         {...field}
-                        value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
-                        onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value).toISOString() : null)}
+                        value={field.value || ''}
+                        onChange={(e) => field.onChange(e.target.value || undefined)}
                       />
                     </FormControl>
                     <FormMessage />
