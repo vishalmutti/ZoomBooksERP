@@ -160,7 +160,6 @@ export const insertLoadSchema = createInsertSchema(incomingLoads)
   .omit({
     id: true,
     createdAt: true,
-    totalCost: true,
   });
 
 export const insertIncomingLoadSchema = insertLoadSchema;
