@@ -153,33 +153,11 @@ export const insertPaymentSchema = createInsertSchema(payments)
     id: true,
   });
 
-export const insertLoadSchema = createInsertSchema(loads)
+export const insertIncomingLoadSchema = createInsertSchema(incomingLoads)
   .omit({
     id: true,
     createdAt: true,
-  })
-  .extend({
-    scheduledPickup: z.coerce.date(),
-    scheduledDelivery: z.coerce.date(),
-    actualPickup: z.coerce.date().optional().nullable(),
-    actualDelivery: z.coerce.date().optional().nullable(),
-    estimatedPortArrival: z.coerce.date().optional().nullable(),
-    actualPortArrival: z.coerce.date().optional().nullable(),
-    customsClearanceDate: z.coerce.date().optional().nullable(),
-    freightCost: z.string().optional().nullable(),
-
-    // Make fields optional based on load type
-    poNumber: z.string().optional().nullable(),
-    orderNumber: z.string().optional().nullable(),
-    brokerName: z.string().optional().nullable(),
-    brokerContact: z.string().optional().nullable(),
-    containerNumber: z.string().optional().nullable(),
-    bookingNumber: z.string().optional().nullable(),
-    vesselName: z.string().optional().nullable(),
-    voyageNumber: z.string().optional().nullable(),
-    referenceNumber: z.string().optional().nullable(),
-    warehouseLocation: z.string().optional().nullable(),
-    handlingInstructions: z.string().optional().nullable(),
+    totalCost: true,
   });
 
 export const insertLoadStatusHistorySchema = createInsertSchema(loadStatusHistory)
@@ -208,8 +186,8 @@ export type Invoice = typeof invoices.$inferSelect;
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 export type Payment = typeof payments.$inferSelect;
 
-export type InsertLoad = z.infer<typeof insertLoadSchema>;
-export type Load = typeof loads.$inferSelect;
+export type InsertIncomingLoad = z.infer<typeof insertIncomingLoadSchema>;
+export type IncomingLoad = typeof incomingLoads.$inferSelect;
 export type LoadStatusHistory = typeof loadStatusHistory.$inferSelect;
 export type LoadDocument = typeof loadDocuments.$inferSelect;
 export type InsertLoadStatusHistory = z.infer<typeof insertLoadStatusHistorySchema>;
