@@ -26,17 +26,17 @@ export const supplierContacts = pgTable("supplier_contacts", {
   email: varchar("email", { length: 255 }),
   phone: varchar("phone", { length: 50 }),
   isPrimary: boolean("is_primary").default(false).notNull(),
+  notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Define the insert schema for supplier contacts first
+// Update the insert schema to include notes
 export const insertSupplierContactSchema = createInsertSchema(supplierContacts).omit({
   id: true,
   createdAt: true,
   supplierId: true,
 });
 
-// Then use it in the supplier schema
 export const insertSupplierSchema = createInsertSchema(suppliers)
   .omit({
     id: true,

@@ -8,13 +8,14 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { IncomingLoad, Supplier } from "@shared/schema";
+import type { IncomingLoad, Supplier, SupplierContact } from "@shared/schema";
 import { format } from "date-fns";
 import { LuTruck, LuPackage2, LuStore, LuBox, LuFileText, LuPencil, LuTrash } from "react-icons/lu";
 import { Button } from "@/components/ui/button";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { SupplierQuickView } from "./SupplierQuickView";
 
 interface LoadTableProps {
   loads?: IncomingLoad[];
@@ -107,6 +108,14 @@ const InvoiceStatus = ({
 };
 
 export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }: LoadTableProps) {
+  const supplierContactsQueries = suppliers.map(supplier => ({
+    supplier,
+    contactsQuery: useQuery<SupplierContact[]>({
+      queryKey: ["/api/suppliers", supplier.id, "contacts"],
+      enabled: !!supplier.id,
+    })
+  }));
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -164,6 +173,10 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
         <TableBody>
           {loads.map((load) => {
             const supplier = suppliers.find(s => s.id.toString() === load.supplierId);
+            const supplierContacts = supplierContactsQueries
+              .find(q => q.supplier.id.toString() === load.supplierId)
+              ?.contactsQuery.data || [];
+
             return (
               <TableRow key={load.id}>
                 <TableCell>
@@ -172,7 +185,16 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
                     <span>{load.loadType}</span>
                   </div>
                 </TableCell>
-                <TableCell>{supplier?.name || 'Unknown Supplier'}</TableCell>
+                <TableCell>
+                  {supplier ? (
+                    <SupplierQuickView 
+                      supplierName={supplier.name} 
+                      contacts={supplierContacts}
+                    />
+                  ) : (
+                    'Unknown Supplier'
+                  )}
+                </TableCell>
                 <TableCell>
                   <Badge
                     variant="outline"

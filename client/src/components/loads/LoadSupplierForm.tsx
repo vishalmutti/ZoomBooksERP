@@ -9,6 +9,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import type { InsertSupplier, Supplier, SupplierContact } from "@shared/schema";
 import { LuPlus, LuTrash } from "react-icons/lu";
+import { Textarea } from "@/components/ui/textarea";
 import React from 'react';
 
 interface LoadSupplierFormProps {
@@ -39,6 +40,7 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
         email: contact.email ?? "",
         phone: contact.phone ?? "",
         isPrimary: contact.isPrimary,
+        notes: contact.notes ?? "",
       })),
     } : {
       name: "",
@@ -57,6 +59,7 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
         email: contact.email ?? "",
         phone: contact.phone ?? "",
         isPrimary: contact.isPrimary,
+        notes: contact.notes ?? "",
       })));
     }
   }, [contacts, supplier, form.setValue]);
@@ -84,6 +87,9 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
       }
 
       queryClient.invalidateQueries({ queryKey: ["/api/suppliers"] });
+      if (supplier) {
+        queryClient.invalidateQueries({ queryKey: ["/api/suppliers", supplier.id, "contacts"] });
+      }
       onOpenChange(false);
       form.reset();
       toast({
@@ -105,7 +111,7 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{supplier ? "Edit Supplier" : "Add New Supplier"}</DialogTitle>
         </DialogHeader>
@@ -146,7 +152,13 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => append({ name: "", email: "", phone: "", isPrimary: false })}
+                  onClick={() => append({ 
+                    name: "", 
+                    email: "", 
+                    phone: "", 
+                    isPrimary: false,
+                    notes: "" 
+                  })}
                 >
                   <LuPlus className="h-4 w-4 mr-2" />
                   Add Contact
@@ -201,6 +213,20 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
                         <FormLabel>Phone</FormLabel>
                         <FormControl>
                           <Input {...field} value={field.value ?? ""} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name={`contacts.${index}.notes`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Notes</FormLabel>
+                        <FormControl>
+                          <Textarea {...field} value={field.value ?? ""} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
