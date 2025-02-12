@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Invoice } from "@shared/schema";
 import { AROverview } from "@/components/dashboard/ar-overview";
@@ -7,10 +6,14 @@ import { InvoiceForm } from "@/components/dashboard/invoice-form";
 import { SupplierList } from "@/components/dashboard/supplier-list";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
-import { LogOut } from "lucide-react";
+import { LogOut, Plus } from "lucide-react";
+import { useState } from "react";
+import { SupplierForm } from "@/components/dashboard/supplier-form"; // Import the SupplierForm component
+
 
 export default function DashboardPage() {
   const { logoutMutation } = useAuth();
+  const [showAddSupplier, setShowAddSupplier] = useState(false); // Add state for SupplierForm
 
   const { data: invoices = [], isLoading: invoicesLoading } = useQuery<Invoice[]>({
     queryKey: ["/api/invoices"],
@@ -54,8 +57,18 @@ export default function DashboardPage() {
           </div>
 
           <div>
-            <h3 className="text-xl font-semibold mb-4">Suppliers</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold">Suppliers</h3>
+              <Button onClick={() => setShowAddSupplier(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Supplier
+              </Button>
+            </div>
             <SupplierList suppliers={suppliers} />
+            <SupplierForm
+              open={showAddSupplier}
+              onOpenChange={setShowAddSupplier}
+            />
           </div>
         </div>
       </main>
