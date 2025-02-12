@@ -43,7 +43,6 @@ export const invoiceItems = pgTable("invoice_items", {
   totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
 });
 
-// Add new payments table
 export const payments = pgTable("payments", {
   id: serial("id").primaryKey(),
   invoiceId: integer("invoice_id").references(() => invoices.id).notNull(),
@@ -54,17 +53,71 @@ export const payments = pgTable("payments", {
   notes: text("notes"),
 });
 
-// Define load types and status as varchar with check constraints
 export const loads = pgTable("loads", {
   id: serial("id").primaryKey(),
   loadId: varchar("load_id", { length: 50 }).notNull().unique(), // Format: TYPE-YYYYMMDD-XXX
-  loadType: varchar("load_type", { length: 20}).notNull().$type<'Inventory' | 'Wholesale' | 'Miscellaneous'>(),
-  status: varchar("status", { length: 30}).notNull().default('Pending').$type<'Pending' | 'In Transit' | 'Delivered' | 'Freight Invoice Attached' | 'Paid' | 'Completed'>(),
+  loadType: varchar("load_type", { length: 20}).notNull().$type<'Incoming' | 'Wholesale' | 'Miscellaneous'>(),
+  status: varchar("status", { length: 30}).notNull().default('Pending').$type<
+    'Pending' | 'In Transit' | 'Delivered' | 'Freight Invoice Attached' | 'Paid' | 'Completed' |
+    'Order Placed' | 'Scheduled' | 'Loading' | 'Customs' | 'Port Arrival' | 'Final Delivery'
+  >(),
   notes: text("notes"),
+
+  // Common fields for all load types
+  pickupLocation: text("pickup_location").notNull(),
+  deliveryLocation: text("delivery_location").notNull(),
+  scheduledPickup: timestamp("scheduled_pickup").notNull(),
+  scheduledDelivery: timestamp("scheduled_delivery").notNull(),
+  actualPickup: timestamp("actual_pickup"),
+  actualDelivery: timestamp("actual_delivery"),
+  carrier: varchar("carrier", { length: 255 }),
+  driverName: varchar("driver_name", { length: 255 }),
+  driverPhone: varchar("driver_phone", { length: 50 }),
+  equipment: varchar("equipment", { length: 100 }),
+  freightCost: decimal("freight_cost", { precision: 10, scale: 2 }),
+
+  // Wholesale specific fields
+  poNumber: varchar("po_number", { length: 50 }),
+  orderNumber: varchar("order_number", { length: 50 }),
+  brokerName: varchar("broker_name", { length: 255 }),
+  brokerContact: varchar("broker_contact", { length: 255 }),
+
+  // Incoming specific fields
+  containerNumber: varchar("container_number", { length: 50 }),
+  bookingNumber: varchar("booking_number", { length: 50 }),
+  vesselName: varchar("vessel_name", { length: 255 }),
+  voyageNumber: varchar("voyage_number", { length: 50 }),
+  estimatedPortArrival: timestamp("estimated_port_arrival"),
+  actualPortArrival: timestamp("actual_port_arrival"),
+  customsClearanceDate: timestamp("customs_clearance_date"),
+
+  // Miscellaneous specific fields
+  referenceNumber: varchar("reference_number", { length: 50 }),
+  warehouseLocation: varchar("warehouse_location", { length: 100 }),
+  handlingInstructions: text("handling_instructions"),
+
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Add new freight invoices table
+export const loadStatusHistory = pgTable("load_status_history", {
+  id: serial("id").primaryKey(),
+  loadId: integer("load_id").references(() => loads.id).notNull(),
+  status: varchar("status", { length: 30 }).notNull(),
+  notes: text("notes"),
+  location: text("location"),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  updatedBy: varchar("updated_by", { length: 255 }).notNull(),
+});
+
+export const loadDocuments = pgTable("load_documents", {
+  id: serial("id").primaryKey(),
+  loadId: integer("load_id").references(() => loads.id).notNull(),
+  documentType: varchar("document_type", { length: 50 }).notNull().$type<'BOL' | 'Invoice' | 'POD' | 'Other'>(),
+  fileName: text("file_name").notNull(),
+  uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
+  notes: text("notes"),
+});
+
 export const freightInvoices = pgTable("freight_invoices", {
   id: serial("id").primaryKey(),
   loadId: integer("load_id").references(() => loads.id).notNull(),
@@ -75,7 +128,6 @@ export const freightInvoices = pgTable("freight_invoices", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Relations
 export const invoicesRelations = relations(invoices, ({ one, many }) => ({
   supplier: one(suppliers, {
     fields: [invoices.supplierId],
@@ -99,9 +151,24 @@ export const paymentsRelations = relations(payments, ({ one }) => ({
   }),
 }));
 
-// Add relations
 export const loadsRelations = relations(loads, ({ many }) => ({
+  statusHistory: many(loadStatusHistory),
   freightInvoices: many(freightInvoices),
+  documents: many(loadDocuments),
+}));
+
+export const loadStatusHistoryRelations = relations(loadStatusHistory, ({ one }) => ({
+  load: one(loads, {
+    fields: [loadStatusHistory.loadId],
+    references: [loads.id],
+  }),
+}));
+
+export const loadDocumentsRelations = relations(loadDocuments, ({ one }) => ({
+  load: one(loads, {
+    fields: [loadDocuments.loadId],
+    references: [loads.id],
+  }),
 }));
 
 export const freightInvoicesRelations = relations(freightInvoices, ({ one }) => ({
@@ -111,8 +178,6 @@ export const freightInvoicesRelations = relations(freightInvoices, ({ one }) => 
   }),
 }));
 
-
-// Schemas for inserts
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -142,20 +207,46 @@ export const insertPaymentSchema = createInsertSchema(payments)
     id: true,
   });
 
-// Add new schemas
 export const insertLoadSchema = createInsertSchema(loads)
   .omit({
     id: true,
     createdAt: true,
+  })
+  .extend({
+    scheduledPickup: z.coerce.date(),
+    scheduledDelivery: z.coerce.date(),
+    actualPickup: z.coerce.date().optional().nullable(),
+    actualDelivery: z.coerce.date().optional().nullable(),
+    estimatedPortArrival: z.coerce.date().optional().nullable(),
+    actualPortArrival: z.coerce.date().optional().nullable(),
+    customsClearanceDate: z.coerce.date().optional().nullable(),
+    freightCost: z.string().optional().nullable(),
+
+    // Make fields optional based on load type
+    poNumber: z.string().optional().nullable(),
+    orderNumber: z.string().optional().nullable(),
+    brokerName: z.string().optional().nullable(),
+    brokerContact: z.string().optional().nullable(),
+    containerNumber: z.string().optional().nullable(),
+    bookingNumber: z.string().optional().nullable(),
+    vesselName: z.string().optional().nullable(),
+    voyageNumber: z.string().optional().nullable(),
+    referenceNumber: z.string().optional().nullable(),
+    warehouseLocation: z.string().optional().nullable(),
+    handlingInstructions: z.string().optional().nullable(),
   });
 
-export const insertFreightInvoiceSchema = createInsertSchema(freightInvoices)
+export const insertLoadStatusHistorySchema = createInsertSchema(loadStatusHistory)
   .omit({
     id: true,
-    createdAt: true,
   });
 
-// Types
+export const insertLoadDocumentSchema = createInsertSchema(loadDocuments)
+  .omit({
+    id: true,
+    uploadedAt: true,
+  });
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
@@ -171,9 +262,17 @@ export type Invoice = typeof invoices.$inferSelect;
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 export type Payment = typeof payments.$inferSelect;
 
-// Add new types
 export type InsertLoad = z.infer<typeof insertLoadSchema>;
 export type Load = typeof loads.$inferSelect;
-
+export type LoadStatusHistory = typeof loadStatusHistory.$inferSelect;
+export type LoadDocument = typeof loadDocuments.$inferSelect;
+export type InsertLoadStatusHistory = z.infer<typeof insertLoadStatusHistorySchema>;
+export type InsertLoadDocument = z.infer<typeof insertLoadDocumentSchema>;
 export type InsertFreightInvoice = z.infer<typeof insertFreightInvoiceSchema>;
 export type FreightInvoice = typeof freightInvoices.$inferSelect;
+
+export const insertFreightInvoiceSchema = createInsertSchema(freightInvoices)
+  .omit({
+    id: true,
+    createdAt: true,
+  });
