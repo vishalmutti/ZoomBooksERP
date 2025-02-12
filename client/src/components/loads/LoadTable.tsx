@@ -108,13 +108,22 @@ const InvoiceStatus = ({
 };
 
 export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }: LoadTableProps) {
-  const supplierContactsQueries = suppliers.map(supplier => ({
-    supplier,
-    contactsQuery: useQuery<SupplierContact[]>({
+  const supplierContactsQueries = useQueries({
+    queries: suppliers.map(supplier => ({
       queryKey: ["/api/suppliers", supplier.id, "contacts"],
+      queryFn: async () => {
+        const response = await fetch(`/api/suppliers/${supplier.id}/contacts`);
+        if (!response.ok) throw new Error('Failed to fetch contacts');
+        return response.json();
+      },
       enabled: !!supplier.id,
-    })
-  }));
+    }))
+  });
+
+  const contactsBySupplier = suppliers.reduce((acc, supplier, index) => {
+    acc[supplier.id] = supplierContactsQueries[index].data || [];
+    return acc;
+  }, {} as Record<number, SupplierContact[]>);
 
   if (isLoading) {
     return (
@@ -173,9 +182,7 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
         <TableBody>
           {loads.map((load) => {
             const supplier = suppliers.find(s => s.id.toString() === load.supplierId);
-            const supplierContacts = supplierContactsQueries
-              .find(q => q.supplier.id.toString() === load.supplierId)
-              ?.contactsQuery.data || [];
+            const supplierContacts = contactsBySupplier[Number(load.supplierId)] || [];
 
             return (
               <TableRow key={load.id}>
