@@ -122,32 +122,7 @@ export const paymentsRelations = relations(payments, ({ one }) => ({
   }),
 }));
 
-export const loadsRelations = relations(loads, ({ many }) => ({
-  statusHistory: many(loadStatusHistory),
-  freightInvoices: many(freightInvoices),
-  documents: many(loadDocuments),
-}));
-
-export const loadStatusHistoryRelations = relations(loadStatusHistory, ({ one }) => ({
-  load: one(loads, {
-    fields: [loadStatusHistory.loadId],
-    references: [loads.id],
-  }),
-}));
-
-export const loadDocumentsRelations = relations(loadDocuments, ({ one }) => ({
-  load: one(loads, {
-    fields: [loadDocuments.loadId],
-    references: [loads.id],
-  }),
-}));
-
-export const freightInvoicesRelations = relations(freightInvoices, ({ one }) => ({
-  load: one(loads, {
-    fields: [freightInvoices.loadId],
-    references: [loads.id],
-  }),
-}));
+// Relations will be updated when implementing other load types
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
