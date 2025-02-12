@@ -22,12 +22,11 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Only fetch contacts when editing a specific supplier and dialog is open
   const { data: contacts = [], isLoading: isLoadingContacts } = useQuery<SupplierContact[]>({
     queryKey: ["/api/suppliers", supplier?.id, "contacts"],
     enabled: !!supplier?.id && open,
-    staleTime: 0, // Always fetch fresh data
-    cacheTime: 0  // Don't cache the data
+    gcTime: 0,
+    staleTime: 0
   });
 
   const form = useForm<InsertSupplier>({
@@ -49,21 +48,23 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
   // Reset form when dialog opens/closes or supplier changes
   React.useEffect(() => {
     if (open) {
-      if (supplier && !isLoadingContacts) {
-        const supplierContacts = contacts.filter(contact => contact.supplierId === supplier.id);
-        form.reset({
-          name: supplier.name,
-          address: supplier.address ?? "",
-          contactPerson: supplier.contactPerson ?? "",
-          email: supplier.email ?? "",
-          phone: supplier.phone ?? "",
-          contacts: supplierContacts.map(contact => ({
-            name: contact.name ?? "",
-            email: contact.email ?? "",
-            phone: contact.phone ?? "",
-            isPrimary: contact.isPrimary,
-          })),
-        });
+      if (supplier) {
+        // Wait for contacts to load before resetting form
+        if (!isLoadingContacts) {
+          form.reset({
+            name: supplier.name,
+            address: supplier.address ?? "",
+            contactPerson: supplier.contactPerson ?? "",
+            email: supplier.email ?? "",
+            phone: supplier.phone ?? "",
+            contacts: contacts.map(contact => ({
+              name: contact.name ?? "",
+              email: contact.email ?? "",
+              phone: contact.phone ?? "",
+              isPrimary: contact.isPrimary,
+            })),
+          });
+        }
       } else {
         form.reset({
           name: "",
@@ -93,25 +94,24 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
         throw new Error("Failed to save supplier");
       }
 
-      // Invalidate both the suppliers list and the specific supplier's contacts
+      // Invalidate queries
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["/api/suppliers"] }),
-        supplier?.id && queryClient.invalidateQueries({ 
-          queryKey: ["/api/suppliers", supplier.id, "contacts"]
-        }),
-        queryClient.invalidateQueries({ 
-          queryKey: ["/api/suppliers", "contacts"]
-        })
+        queryClient.invalidateQueries({ queryKey: ["/api/suppliers", supplier?.id, "contacts"] }),
       ]);
 
+      // Close dialog first
       onOpenChange(false);
-      form.reset(); // Reset form after successful submission
+
       toast({
         title: "Success",
         description: supplier 
           ? "Supplier updated successfully"
           : "Supplier created successfully",
       });
+
+      // Reset form after dialog is closed
+      setTimeout(() => form.reset(), 100);
     } catch (error) {
       toast({
         title: "Error",
