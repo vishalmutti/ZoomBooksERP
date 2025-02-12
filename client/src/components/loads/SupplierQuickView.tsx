@@ -32,11 +32,7 @@ export function SupplierQuickView({ supplierName, contacts = [] }: SupplierQuick
                   <div className="flex items-center gap-2">
                     <LuUser className="h-4 w-4" />
                     <span className="text-sm font-medium">{contact.name}</span>
-                    {contact.isPrimary && (
-                      <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
-                        Primary
-                      </span>
-                    )}
+                    
                   </div>
                   {contact.email && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">

@@ -24,9 +24,7 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
 
   const { data: contacts = [], isLoading: isLoadingContacts } = useQuery<SupplierContact[]>({
     queryKey: ["/api/suppliers", supplier?.id, "contacts"],
-    enabled: !!supplier?.id && open,
-    gcTime: 0,
-    staleTime: 0
+    enabled: !!supplier?.id && open
   });
 
   const form = useForm<InsertSupplier>({
@@ -279,22 +277,7 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
-                      name={`contacts.${index}.isPrimary`}
-                      render={({ field }) => (
-                        <FormItem className="flex items-center space-x-2">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                          <FormLabel className="text-sm font-normal">Primary Contact</FormLabel>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    
                   </div>
                 ))
               )}

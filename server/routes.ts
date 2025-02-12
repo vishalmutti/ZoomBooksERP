@@ -121,7 +121,7 @@ export function registerRoutes(app: Express): Server {
     if (!supplier) return res.status(404).send("Supplier not found");
 
     const contacts = await storage.getSupplierContacts(id);
-    res.json(contacts);
+    res.json(contacts.filter(contact => contact.supplierId === id));
   });
 
   // Invoice routes
