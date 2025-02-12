@@ -13,7 +13,7 @@ export function LoadDashboard() {
   const [activeTab, setActiveTab] = useState("incoming");
   const [showAddSupplier, setShowAddSupplier] = useState(false);
   const [editingLoad, setEditingLoad] = useState<IncomingLoad | null>(null);
-  const { data: loads, isLoading } = useQuery<IncomingLoad[]>({
+  const { data: loads, isLoading, refetch } = useQuery<IncomingLoad[]>({
     queryKey: ["/api/loads"],
   });
   const { data: suppliers = [] } = useQuery<Supplier[]>({
@@ -28,10 +28,13 @@ export function LoadDashboard() {
     setEditingLoad(load);
   };
 
-  const handleDelete = (loadId: string) => {
-    // Implement delete logic here.  This is a placeholder.
-    console.log("Deleting load with ID:", loadId);
-    // You would typically make an API call to delete the load.
+  const handleDelete = async (id: string) => {
+    try {
+      await fetch(`/api/loads/${id}`, { method: 'DELETE' });
+      refetch();
+    } catch (error) {
+      console.error('Failed to delete load:', error);
+    }
   };
 
   return (
@@ -66,7 +69,7 @@ export function LoadDashboard() {
           <LoadTable 
             loads={filteredLoads} 
             isLoading={isLoading}
-            onEdit={handleEdit}
+            onEdit={(load) => setEditingLoad(load)}
             onDelete={handleDelete}
           />
           {editingLoad && (
@@ -84,7 +87,7 @@ export function LoadDashboard() {
           <LoadTable 
             loads={filteredLoads} 
             isLoading={isLoading}
-            onEdit={handleEdit}
+            onEdit={(load) => setEditingLoad(load)}
             onDelete={handleDelete}
           />
           {editingLoad && (
@@ -102,7 +105,7 @@ export function LoadDashboard() {
           <LoadTable 
             loads={filteredLoads} 
             isLoading={isLoading}
-            onEdit={handleEdit}
+            onEdit={(load) => setEditingLoad(load)}
             onDelete={handleDelete}
           />
           {editingLoad && (
