@@ -12,6 +12,14 @@ import { LuPlus } from "react-icons/lu";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import type { InsertLoad } from "@shared/schema";
+import { useQuery } from "@tanstack/react-query";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+
+
+interface Supplier {
+  id: number;
+  name: string;
+}
 
 function generateLoadId(type: string) {
   const date = new Date();
@@ -138,25 +146,46 @@ export function LoadForm({ defaultType }: LoadFormProps) {
             </div>
 
             <FormField
-              control={form.control}
-              name="supplierId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Supplier</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select supplier" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {/* Add supplier options dynamically */}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                control={form.control}
+                name="supplierId"
+                render={({ field }) => {
+                  const { data: suppliers = [], isLoading, isError } = useQuery<Supplier[]>({
+                    queryKey: ["/api/suppliers"],
+                  });
+
+                  if (isLoading) return <FormItem><FormLabel>Supplier</FormLabel><p>Loading...</p></FormItem>;
+                  if (isError) return <FormItem><FormLabel>Supplier</FormLabel><p>Error loading suppliers</p></FormItem>;
+
+                  return (
+                    <FormItem>
+                      <FormLabel>Supplier</FormLabel>
+                      <Command className="rounded-lg border shadow-md">
+                        <CommandInput placeholder="Search suppliers..." />
+                        <CommandList>
+                          {suppliers.length === 0 ? (
+                            <CommandEmpty>No suppliers found.</CommandEmpty>
+                          ) : (
+                            <CommandGroup>
+                              {suppliers.map((supplier) => (
+                                <CommandItem
+                                  key={supplier.id}
+                                  value={supplier.name}
+                                  onSelect={() => {
+                                    field.onChange(supplier.id.toString());
+                                  }}
+                                >
+                                  {supplier.name}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          )}
+                        </CommandList>
+                      </Command>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
+              />
 
             <FormField
                 control={form.control}
