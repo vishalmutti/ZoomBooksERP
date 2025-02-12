@@ -49,24 +49,19 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
   React.useEffect(() => {
     if (open) {
       if (supplier) {
-        // Wait for contacts to load before resetting form
-        if (!isLoadingContacts) {
-          // Filter contacts for this specific supplier
-          const supplierContacts = contacts.filter(contact => contact.supplierId === supplier.id);
-          form.reset({
-            name: supplier.name,
-            address: supplier.address ?? "",
-            contactPerson: supplier.contactPerson ?? "",
-            email: supplier.email ?? "",
-            phone: supplier.phone ?? "",
-            contacts: supplierContacts.map(contact => ({
-              name: contact.name ?? "",
-              email: contact.email ?? "",
-              phone: contact.phone ?? "",
-              isPrimary: contact.isPrimary,
-            })),
-          });
-        }
+        form.reset({
+          name: supplier.name,
+          address: supplier.address ?? "",
+          contactPerson: supplier.contactPerson ?? "",
+          email: supplier.email ?? "",
+          phone: supplier.phone ?? "",
+          contacts: supplier.contacts?.map(contact => ({
+            name: contact.name ?? "",
+            email: contact.email ?? "",
+            phone: contact.phone ?? "",
+            isPrimary: contact.isPrimary,
+          })) || [],
+        });
       } else {
         form.reset({
           name: "",
@@ -77,7 +72,7 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
         });
       }
     }
-  }, [supplier, contacts, open, form, isLoadingContacts]);
+  }, [supplier, open, form]);
 
   async function onSubmit(data: InsertSupplier) {
     try {
@@ -96,7 +91,6 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
         throw new Error("Failed to save supplier");
       }
 
-      // Read the updated supplier from response
       const updatedSupplier = await response.json();
 
       // Invalidate queries
@@ -105,23 +99,8 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
         queryClient.invalidateQueries({ queryKey: ["/api/suppliers", supplier?.id, "contacts"] }),
       ]);
 
-      // Close dialog
+      // Close dialog and show success message
       onOpenChange(false);
-
-      // Reset form with updated data
-      form.reset({
-        name: updatedSupplier.name,
-        address: updatedSupplier.address ?? "",
-        contactPerson: updatedSupplier.contactPerson ?? "",
-        email: updatedSupplier.email ?? "",
-        phone: updatedSupplier.phone ?? "",
-        contacts: updatedSupplier.contacts?.map((contact: SupplierContact) => ({
-          name: contact.name ?? "",
-          email: contact.email ?? "",
-          phone: contact.phone ?? "",
-          isPrimary: contact.isPrimary,
-        })) || [],
-      });
 
       toast({
         title: "Success",
