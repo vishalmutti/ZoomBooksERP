@@ -64,17 +64,17 @@ export const loads = pgTable("loads", {
   notes: text("notes"),
 
   // Common fields for all load types
-  pickup_location: text("pickup_location").notNull(),
-  delivery_location: text("delivery_location").notNull(),
-  scheduled_pickup: timestamp("scheduled_pickup").notNull(),
-  scheduled_delivery: timestamp("scheduled_delivery").notNull(),
-  actual_pickup: timestamp("actual_pickup"),
-  actual_delivery: timestamp("actual_delivery"),
+  pickupLocation: text("pickup_location").notNull(),
+  deliveryLocation: text("delivery_location").notNull(),
+  scheduledPickup: timestamp("scheduled_pickup").notNull(),
+  scheduledDelivery: timestamp("scheduled_delivery").notNull(),
+  actualPickup: timestamp("actual_pickup"),
+  actualDelivery: timestamp("actual_delivery"),
   carrier: varchar("carrier", { length: 255 }),
-  driver_name: varchar("driver_name", { length: 255 }),
-  driver_phone: varchar("driver_phone", { length: 50 }),
+  driverName: varchar("driver_name", { length: 255 }),
+  driverPhone: varchar("driver_phone", { length: 50 }),
   equipment: varchar("equipment", { length: 100 }),
-  freight_cost: decimal("freight_cost", { precision: 10, scale: 2 }),
+  freightCost: decimal("freight_cost", { precision: 10, scale: 2 }),
 
   // Wholesale specific fields
   poNumber: varchar("po_number", { length: 50 }),
