@@ -51,13 +51,15 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
       if (supplier) {
         // Wait for contacts to load before resetting form
         if (!isLoadingContacts) {
+          // Filter contacts for this specific supplier
+          const supplierContacts = contacts.filter(contact => contact.supplierId === supplier.id);
           form.reset({
             name: supplier.name,
             address: supplier.address ?? "",
             contactPerson: supplier.contactPerson ?? "",
             email: supplier.email ?? "",
             phone: supplier.phone ?? "",
-            contacts: contacts.map(contact => ({
+            contacts: supplierContacts.map(contact => ({
               name: contact.name ?? "",
               email: contact.email ?? "",
               phone: contact.phone ?? "",
@@ -203,7 +205,7 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
 
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Contacts</h3>
+                <h3 className="text-lg font-medium">Additional Contact Persons</h3>
                 <Button
                   type="button"
                   variant="outline"
@@ -216,7 +218,7 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
                   })}
                 >
                   <LuPlus className="h-4 w-4 mr-2" />
-                  Add Contact
+                  Add Contact Person
                 </Button>
               </div>
 
@@ -240,7 +242,7 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
                       name={`contacts.${index}.name`}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Contact Name</FormLabel>
+                          <FormLabel>Contact Person</FormLabel>
                           <FormControl>
                             <Input {...field} value={field.value ?? ""} />
                           </FormControl>
