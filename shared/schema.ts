@@ -73,7 +73,7 @@ export const incomingLoads = pgTable("incoming_loads", {
 
 export const loadStatusHistory = pgTable("load_status_history", {
   id: serial("id").primaryKey(),
-  loadId: integer("load_id").references(() => loads.id).notNull(),
+  loadId: integer("load_id").references(() => incomingLoads.id).notNull(),
   status: varchar("status", { length: 30 }).notNull(),
   notes: text("notes"),
   location: text("location"),
@@ -83,7 +83,7 @@ export const loadStatusHistory = pgTable("load_status_history", {
 
 export const loadDocuments = pgTable("load_documents", {
   id: serial("id").primaryKey(),
-  loadId: integer("load_id").references(() => loads.id).notNull(),
+  loadId: integer("load_id").references(() => incomingLoads.id).notNull(),
   documentType: varchar("document_type", { length: 50 }).notNull().$type<'BOL' | 'Invoice' | 'POD' | 'Other'>(),
   fileName: text("file_name").notNull(),
   uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
