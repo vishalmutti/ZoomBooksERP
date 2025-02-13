@@ -12,8 +12,8 @@ import type { IncomingLoad, Supplier, SupplierContact } from "@shared/schema";
 import { format } from "date-fns";
 import { LuTruck, LuPackage2, LuStore, LuBox, LuFileText, LuPencil, LuTrash, LuCheck } from "react-icons/lu";
 import { Button } from "@/components/ui/button";
-import { apiRequest, queryClient, useQueryClient } from "@/lib/queryClient";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { SupplierQuickView } from "./SupplierQuickView";
 
@@ -72,6 +72,7 @@ const InvoiceStatus = ({
   type: "material" | "freight";
 }) => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const updateStatusMutation = useMutation({
     mutationFn: async (newStatus: "PAID" | "UNPAID") => {
       const field = type === "material" ? "materialInvoiceStatus" : "freightInvoiceStatus";
@@ -105,6 +106,16 @@ const InvoiceStatus = ({
       <option value="UNPAID">UNPAID</option>
     </select>
   );
+};
+
+// Create a separate component for supplier details row
+const SupplierDetailsRow = ({ supplierId }: { supplierId: string }) => {
+  const { data: contacts = [] } = useQuery<SupplierContact[]>({
+    queryKey: ["/api/suppliers", supplierId, "contacts"],
+    enabled: !!supplierId,
+  });
+
+  return { contacts };
 };
 
 export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }: LoadTableProps) {
@@ -147,14 +158,6 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
       });
     },
   });
-
-  const supplierContactsQueries = suppliers.map((supplier) => ({
-    supplier,
-    contactsQuery: useQuery<SupplierContact[]>({
-      queryKey: ["/api/suppliers", supplier.id, "contacts"],
-      enabled: !!supplier.id,
-    }),
-  }));
 
   if (isLoading) {
     return (
@@ -221,9 +224,7 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
         <TableBody>
           {loads.map((load) => {
             const supplier = suppliers.find((s) => s.id.toString() === load.supplierId);
-            const supplierContacts = supplierContactsQueries
-              .find((q) => q.supplier.id.toString() === load.supplierId)
-              ?.contactsQuery.data || [];
+            const { contacts: supplierContacts = [] } = SupplierDetailsRow({ supplierId: load.supplierId });
 
             return (
               <TableRow key={load.id}>
