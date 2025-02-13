@@ -1,4 +1,3 @@
-
 import {
   Table,
   TableBody,
@@ -90,7 +89,7 @@ const InvoiceStatus = ({
           loadType: loadType,
         }),
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Failed to update status');
@@ -154,7 +153,7 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
           status: loadData.status
         }),
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to update load');
       }
@@ -329,8 +328,34 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
                 <TableCell>
                   {load.scheduledDelivery && format(new Date(load.scheduledDelivery), "MMM d, yyyy")}
                 </TableCell>
-                <TableCell>${Number(load.loadCost).toFixed(2)}</TableCell>
-                <TableCell>${Number(load.freightCost).toFixed(2)}</TableCell>
+                <TableCell>
+                  <input
+                    type="number"
+                    value={Number(load.loadCost)}
+                    onChange={(e) => {
+                      const newLoadCost = e.target.value;
+                      updateLoadMutation.mutate({
+                        ...load,
+                        loadCost: parseFloat(newLoadCost), //Added parseFloat to handle string to number conversion
+                      });
+                    }}
+                    className="w-24 h-8 px-2 py-1 bg-background border border-input rounded-md text-sm"
+                  />
+                </TableCell>
+                <TableCell>
+                  <input
+                    type="number"
+                    value={Number(load.freightCost)}
+                    onChange={(e) => {
+                      const newFreightCost = e.target.value;
+                      updateLoadMutation.mutate({
+                        ...load,
+                        freightCost: parseFloat(newFreightCost), //Added parseFloat to handle string to number conversion
+                      });
+                    }}
+                    className="w-24 h-8 px-2 py-1 bg-background border border-input rounded-md text-sm"
+                  />
+                </TableCell>
                 <TableCell>{Number(load.profitRoi).toFixed(2)}%</TableCell>
                 <TableCell>
                   <FileLink file={load.bolFile} label="BOL Document" />
