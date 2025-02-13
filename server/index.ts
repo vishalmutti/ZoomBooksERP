@@ -70,6 +70,9 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
 
 const startServer = async (port: number) => {
   try {
+    // Force close any existing connections
+    server.close();
+    
     // Initialize database first
     const dbInitialized = await initializeDatabase();
     if (!dbInitialized) {
