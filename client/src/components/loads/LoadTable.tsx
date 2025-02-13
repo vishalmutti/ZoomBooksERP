@@ -208,21 +208,21 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
                       size="sm"
                       className="h-8 w-8 p-0"
                       onClick={async () => {
-                        if (window.confirm('Are you sure you want to mark this load as complete?')) {
+                        const newStatus = load.status === 'Completed' ? 'Pending' : 'Completed';
+                        if (window.confirm(`Are you sure you want to mark this load as ${newStatus.toLowerCase()}?`)) {
                           const response = await fetch(`/api/loads/${load.id}`, {
                             method: 'PATCH',
                             headers: {
                               'Content-Type': 'application/json',
                             },
-                            body: JSON.stringify({ status: 'Completed' }),
+                            body: JSON.stringify({ status: newStatus }),
                           });
                           if (response.ok) {
                             queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
                           }
                         }
                       }}
-                      disabled={load.status === 'Completed'}
-                      title={load.status === 'Completed' ? 'Load is already completed' : 'Mark as complete'}
+                      title={load.status === 'Completed' ? 'Mark as pending' : 'Mark as complete'}
                     >
                       <LuCheck className="h-4 w-4" />
                     </Button>
