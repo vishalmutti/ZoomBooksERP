@@ -224,7 +224,7 @@ export class DatabaseStorage implements IStorage {
 
       // Delete supplier's contacts
       await tx.delete(supplierContacts).where(eq(supplierContacts.supplierId, id));
-      
+
       // Finally delete the supplier
       await tx.delete(suppliers).where(eq(suppliers.id, id));
     });
@@ -409,28 +409,48 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateLoad(id: number, updates: Partial<IncomingLoad>): Promise<IncomingLoad> {
-    const updateData: Record<string, any> = {};
-    
-    if ('scheduledPickup' in updates) updateData.scheduledPickup = updates.scheduledPickup ? new Date(updates.scheduledPickup).toISOString() : null;
-    if ('scheduledDelivery' in updates) updateData.scheduledDelivery = updates.scheduledDelivery ? new Date(updates.scheduledDelivery).toISOString() : null;
-    if ('loadType' in updates) updateData.loadType = updates.loadType;
-    if ('supplierId' in updates) updateData.supplierId = updates.supplierId;
-    if ('referenceNumber' in updates) updateData.referenceNumber = updates.referenceNumber;
-    if ('location' in updates) updateData.location = updates.location;
-    if ('notes' in updates) updateData.notes = updates.notes;
-    if ('loadCost' in updates) updateData.loadCost = updates.loadCost;
-    if ('freightCost' in updates) updateData.freightCost = updates.freightCost;
-    if ('profitRoi' in updates) updateData.profitRoi = updates.profitRoi;
-    if ('status' in updates) updateData.status = updates.status;
-    if ('carrier' in updates) updateData.carrier = updates.carrier;
-    if ('materialInvoiceStatus' in updates) updateData.materialInvoiceStatus = updates.materialInvoiceStatus;
-    if ('freightInvoiceStatus' in updates) updateData.freightInvoiceStatus = updates.freightInvoiceStatus;
+    // Create the update object with only the fields that are present in updates
+    const updateData: Partial<IncomingLoad> = {};
+
+    // Only include fields that are actually present in the updates object
+    if (updates.scheduledPickup !== undefined) {
+      updateData.scheduledPickup = updates.scheduledPickup ? new Date(updates.scheduledPickup).toISOString() : null;
+    }
+    if (updates.scheduledDelivery !== undefined) {
+      updateData.scheduledDelivery = updates.scheduledDelivery ? new Date(updates.scheduledDelivery).toISOString() : null;
+    }
+    if (updates.loadType !== undefined) updateData.loadType = updates.loadType;
+    if (updates.supplierId !== undefined) updateData.supplierId = updates.supplierId;
+    if (updates.referenceNumber !== undefined) updateData.referenceNumber = updates.referenceNumber;
+    if (updates.location !== undefined) updateData.location = updates.location;
+    if (updates.notes !== undefined) updateData.notes = updates.notes;
+    if (updates.loadCost !== undefined) updateData.loadCost = updates.loadCost;
+    if (updates.freightCost !== undefined) updateData.freightCost = updates.freightCost;
+    if (updates.profitRoi !== undefined) updateData.profitRoi = updates.profitRoi;
+    if (updates.status !== undefined) updateData.status = updates.status;
+    if (updates.carrier !== undefined) updateData.carrier = updates.carrier;
+    if (updates.materialInvoiceStatus !== undefined) updateData.materialInvoiceStatus = updates.materialInvoiceStatus;
+    if (updates.freightInvoiceStatus !== undefined) updateData.freightInvoiceStatus = updates.freightInvoiceStatus;
+    if (updates.bolFile !== undefined) updateData.bolFile = updates.bolFile;
+    if (updates.materialInvoiceFile !== undefined) updateData.materialInvoiceFile = updates.materialInvoiceFile;
+    if (updates.freightInvoiceFile !== undefined) updateData.freightInvoiceFile = updates.freightInvoiceFile;
+    if (updates.loadPerformanceFile !== undefined) updateData.loadPerformanceFile = updates.loadPerformanceFile;
+
+    // Only proceed with update if there are actually fields to update
+    if (Object.keys(updateData).length === 0) {
+      throw new Error('No valid fields to update');
+    }
 
     const [updatedLoad] = await db
       .update(incomingLoads)
       .set(updateData)
       .where(eq(incomingLoads.id, id))
       .returning();
+
+    if (!updatedLoad) {
+      throw new Error('Load not found');
+    }
+
     return updatedLoad;
   }
 
