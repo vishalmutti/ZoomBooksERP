@@ -63,7 +63,7 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, type: 'load' }),
       });
 
       if (!response.ok) {

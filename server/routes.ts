@@ -45,9 +45,10 @@ export function registerRoutes(app: Express): Server {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     const query = req.query.q as string;
+    const type = req.query.type as 'ar' | 'load' || 'ar';
     const suppliers = query
-      ? await storage.searchSuppliers(query)
-      : await storage.getSuppliers();
+      ? await storage.searchSuppliers(query, type)
+      : await storage.getSuppliers(type);
 
     res.json(suppliers);
   });

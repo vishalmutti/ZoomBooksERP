@@ -29,7 +29,7 @@ export function SupplierForm({ open, onOpenChange }: SupplierFormProps) {
 
   const createSupplierMutation = useMutation({
     mutationFn: async (data: InsertSupplier) => {
-      const res = await apiRequest("POST", "/api/suppliers", data);
+      const res = await apiRequest("POST", "/api/suppliers", { ...data, type: 'ar' });
       return res.json();
     },
     onSuccess: () => {

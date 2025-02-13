@@ -21,8 +21,8 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
 
-  getSuppliers(): Promise<(Supplier & { outstandingAmount: string })[]>;
-  searchSuppliers(query: string): Promise<Supplier[]>;
+  getSuppliers(type: 'ar' | 'load'): Promise<(Supplier & { outstandingAmount: string })[]>;
+  searchSuppliers(query: string, type: 'ar' | 'load'): Promise<Supplier[]>;
   createSupplier(supplier: InsertSupplier): Promise<Supplier>;
   updateSupplier(id: number, updates: Partial<InsertSupplier>): Promise<Supplier | undefined>;
   getSupplier(id: number): Promise<(Supplier & { outstandingAmount: string, contacts: SupplierContact[] }) | undefined>;
@@ -77,7 +77,7 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async getSuppliers(): Promise<(Supplier & { outstandingAmount: string })[]> {
+  async getSuppliers(type: 'ar' | 'load' = 'ar'): Promise<(Supplier & { outstandingAmount: string })[]> {
     const result = await db
       .select({
         id: suppliers.id,
@@ -94,6 +94,7 @@ export class DatabaseStorage implements IStorage {
       })
       .from(suppliers)
       .leftJoin(invoices, eq(invoices.supplierId, suppliers.id))
+      .where(eq(suppliers.type, type))
       .groupBy(suppliers.id)
       .orderBy(desc(sql`COALESCE(
         SUM(CASE WHEN ${invoices.isPaid} = false THEN ${invoices.totalAmount}::numeric ELSE 0 END),
@@ -102,11 +103,14 @@ export class DatabaseStorage implements IStorage {
     return result;
   }
 
-  async searchSuppliers(query: string): Promise<Supplier[]> {
+  async searchSuppliers(query: string, type: 'ar' | 'load' = 'ar'): Promise<Supplier[]> {
     return await db
       .select()
       .from(suppliers)
-      .where(ilike(suppliers.name, `%${query}%`))
+      .where(and(
+        ilike(suppliers.name, `%${query}%`),
+        eq(suppliers.type, type)
+      ))
       .orderBy(suppliers.name);
   }
 
@@ -118,6 +122,7 @@ export class DatabaseStorage implements IStorage {
         contactPerson: supplier.contactPerson,
         email: supplier.email,
         phone: supplier.phone,
+        type: supplier.type, // Added type field
       }).returning();
 
       if (supplier.contacts?.length) {
@@ -143,6 +148,7 @@ export class DatabaseStorage implements IStorage {
           contactPerson: updates.contactPerson,
           email: updates.email,
           phone: updates.phone,
+          type: updates.type, // Added type field
         })
         .where(eq(suppliers.id, id));
 
@@ -224,7 +230,7 @@ export class DatabaseStorage implements IStorage {
 
       // Delete supplier's contacts
       await tx.delete(supplierContacts).where(eq(supplierContacts.supplierId, id));
-      
+
       // Finally delete the supplier
       await tx.delete(suppliers).where(eq(suppliers.id, id));
     });
