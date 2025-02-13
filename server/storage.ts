@@ -409,13 +409,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateLoad(id: number, updates: Partial<IncomingLoad>): Promise<IncomingLoad> {
+    const updateData: Record<string, any> = {};
+    
+    if (updates.scheduledPickup) updateData.scheduledPickup = new Date(updates.scheduledPickup).toISOString();
+    if (updates.scheduledDelivery) updateData.scheduledDelivery = new Date(updates.scheduledDelivery).toISOString();
+    if (updates.loadType) updateData.loadType = updates.loadType;
+    if (updates.supplierId) updateData.supplierId = updates.supplierId;
+    if (updates.referenceNumber) updateData.referenceNumber = updates.referenceNumber;
+    if (updates.location) updateData.location = updates.location;
+    if (updates.notes) updateData.notes = updates.notes;
+    if (updates.loadCost) updateData.loadCost = updates.loadCost;
+    if (updates.freightCost) updateData.freightCost = updates.freightCost;
+    if (updates.profitRoi) updateData.profitRoi = updates.profitRoi;
+    if (updates.status) updateData.status = updates.status;
+    if (updates.carrier) updateData.carrier = updates.carrier;
+    if (updates.materialInvoiceStatus) updateData.materialInvoiceStatus = updates.materialInvoiceStatus;
+    if (updates.freightInvoiceStatus) updateData.freightInvoiceStatus = updates.freightInvoiceStatus;
+
     const [updatedLoad] = await db
       .update(incomingLoads)
-      .set({
-        ...updates,
-        scheduledPickup: updates.scheduledPickup ? new Date(updates.scheduledPickup).toISOString() : undefined,
-        scheduledDelivery: updates.scheduledDelivery ? new Date(updates.scheduledDelivery).toISOString() : undefined,
-      })
+      .set(updateData)
       .where(eq(incomingLoads.id, id))
       .returning();
     return updatedLoad;
