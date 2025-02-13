@@ -17,8 +17,8 @@ export function LoadDashboard() {
 
   const { data: loads, isLoading, refetch } = useQuery<IncomingLoad[]>({
     queryKey: ["/api/loads"],
-    refetchInterval: 0, // Disable automatic refetching
-    staleTime: 0, // Consider data immediately stale
+    refetchOnWindowFocus: true,
+    staleTime: 0,
   });
 
   const { data: suppliers = [] } = useQuery<Supplier[]>({

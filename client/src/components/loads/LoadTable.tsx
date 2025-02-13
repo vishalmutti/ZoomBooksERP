@@ -97,7 +97,7 @@ const InvoiceStatus = ({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
-      queryClient.refetchQueries({ queryKey: ["/api/loads"] });
+      queryClient.refetchQueries({ queryKey: ["/api/loads"] }, { force: true });
       toast({
         title: "Success",
         description: `${type === "material" ? "Material" : "Freight"} invoice status updated`,
