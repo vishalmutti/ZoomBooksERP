@@ -39,6 +39,27 @@ const resetPool = async () => {
   Object.assign(pool, createPool());
 };
 
+// Add initial connection test with retries
+const testInitialConnection = async (retries = 3, delay = 2000) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const client = await pool.connect();
+      await client.query('SELECT 1');
+      client.release();
+      return true;
+    } catch (error) {
+      console.error(`Connection attempt ${i + 1} failed:`, error);
+      if (i < retries - 1) {
+        await new Promise(resolve => setTimeout(resolve, delay));
+        await resetPool();
+      }
+    }
+  }
+  return false;
+};
+
+testInitialConnection().catch(console.error);
+
 // Handle pool errors and reconnection
 pool.on('error', async (err) => {
   console.error('Pool error:', err);
