@@ -167,19 +167,25 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
     // Apply filters
     filtered = filtered.filter(load => {
       const supplier = suppliers.find(s => s.id.toString() === load.supplierId);
-      const matchesSupplier = !filters.supplier || 
-        supplier?.name.toLowerCase().includes(filters.supplier.toLowerCase());
-      const matchesReference = !filters.referenceNumber || 
-        load.referenceNumber.toLowerCase().includes(filters.referenceNumber.toLowerCase());
-      const matchesCarrier = !filters.carrier || 
-        load.carrier?.toLowerCase().includes(filters.carrier.toLowerCase());
-      const matchesLoadCost = (!filters.minLoadCost || Number(load.loadCost) >= Number(filters.minLoadCost)) &&
-        (!filters.maxLoadCost || Number(load.loadCost) <= Number(filters.maxLoadCost));
+      const searchTerm = filters.searchTerm?.toLowerCase() || '';
+      const matchesSearch = !searchTerm || 
+        supplier?.name.toLowerCase().includes(searchTerm) ||
+        load.referenceNumber.toLowerCase().includes(searchTerm) ||
+        load.carrier?.toLowerCase().includes(searchTerm);
+
+      const matchesStatus = !filters.status || load.status === filters.status;
+      
+      const matchesInvoiceStatus = !filters.invoiceStatus || (
+        (filters.invoiceStatus === 'material_paid' && load.materialInvoiceStatus === 'PAID') ||
+        (filters.invoiceStatus === 'material_unpaid' && load.materialInvoiceStatus === 'UNPAID') ||
+        (filters.invoiceStatus === 'freight_paid' && load.freightInvoiceStatus === 'PAID') ||
+        (filters.invoiceStatus === 'freight_unpaid' && load.freightInvoiceStatus === 'UNPAID')
+      );
+
       const matchesDeliveryDate = (!filters.deliveryDateStart || new Date(load.scheduledDelivery) >= new Date(filters.deliveryDateStart)) &&
         (!filters.deliveryDateEnd || new Date(load.scheduledDelivery) <= new Date(filters.deliveryDateEnd));
 
-      return matchesSupplier && matchesReference && matchesCarrier && 
-        matchesLoadCost && matchesDeliveryDate;
+      return matchesSearch && matchesStatus && matchesInvoiceStatus && matchesDeliveryDate;
     });
 
     // Apply sorting
@@ -320,36 +326,35 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
   return (
     <div className="rounded-md border overflow-x-auto">
       <div className="space-y-4">
-        <div className="grid grid-cols-3 gap-4">
-          <Input
-            placeholder="Filter by supplier"
-            value={filters.supplier}
-            onChange={(e) => setFilters(prev => ({ ...prev, supplier: e.target.value }))}
-          />
-          <Input
-            placeholder="Filter by reference number"
-            value={filters.referenceNumber}
-            onChange={(e) => setFilters(prev => ({ ...prev, referenceNumber: e.target.value }))}
-          />
-          <Input
-            placeholder="Filter by carrier"
-            value={filters.carrier}
-            onChange={(e) => setFilters(prev => ({ ...prev, carrier: e.target.value }))}
-          />
-        </div>
         <div className="grid grid-cols-4 gap-4">
           <Input
-            type="number"
-            placeholder="Min load cost"
-            value={filters.minLoadCost}
-            onChange={(e) => setFilters(prev => ({ ...prev, minLoadCost: e.target.value }))}
+            placeholder="Search supplier, reference number, or carrier..."
+            value={filters.searchTerm}
+            onChange={(e) => setFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
+            className="col-span-2"
           />
-          <Input
-            type="number"
-            placeholder="Max load cost"
-            value={filters.maxLoadCost}
-            onChange={(e) => setFilters(prev => ({ ...prev, maxLoadCost: e.target.value }))}
-          />
+          <select
+            className="w-full px-3 py-2 bg-background border border-input rounded-md"
+            value={filters.status}
+            onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+          >
+            <option value="">All Statuses</option>
+            <option value="Pending">Pending</option>
+            <option value="Completed">Completed</option>
+          </select>
+          <select
+            className="w-full px-3 py-2 bg-background border border-input rounded-md"
+            value={filters.invoiceStatus}
+            onChange={(e) => setFilters(prev => ({ ...prev, invoiceStatus: e.target.value }))}
+          >
+            <option value="">All Invoice Statuses</option>
+            <option value="material_paid">Material - Paid</option>
+            <option value="material_unpaid">Material - Unpaid</option>
+            <option value="freight_paid">Freight - Paid</option>
+            <option value="freight_unpaid">Freight - Unpaid</option>
+          </select>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
           <Input
             type="date"
             placeholder="Delivery date start"
