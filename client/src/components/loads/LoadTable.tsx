@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -444,9 +444,6 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
                     </Button>
                   </div>
                 </TableCell>
-
-import React, { useState, useMemo } from 'react';
-import { Input } from "@/components/ui/input";
                 <TableCell>{load.referenceNumber}</TableCell>
                 <TableCell>{load.location}</TableCell>
                 <TableCell>{load.carrier}</TableCell>
