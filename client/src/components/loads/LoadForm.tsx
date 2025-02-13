@@ -133,17 +133,11 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
     try {
       const formData = new FormData();
 
-      // Ensure all necessary fields are included
-      const dataToSend = {
-        ...data,
-        loadType: data.loadType || initialData?.loadType,
-        loadCost: data.loadCost?.toString() || initialData?.loadCost,
-        freightCost: data.freightCost?.toString() || initialData?.freightCost,
-        profitRoi: data.profitRoi?.toString() || initialData?.profitRoi,
-      };
+      // Log the files state before appending
+      console.log('Files to upload:', files);
 
       // Append each field from the form data
-      Object.entries(dataToSend).forEach(([key, value]) => {
+      Object.entries(data).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
           if (key === 'scheduledPickup' || key === 'scheduledDelivery') {
             formData.append(key, value ? new Date(value).toISOString() : '');
@@ -154,10 +148,27 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
       });
 
       // Append files with correct field names
-      if (files.bol) formData.append('bolFile', files.bol);
-      if (files.materialInvoice) formData.append('materialInvoiceFile', files.materialInvoice);
-      if (files.freightInvoice) formData.append('freightInvoiceFile', files.freightInvoice);
-      if (files.loadPerformance) formData.append('loadPerformanceFile', files.loadPerformance);
+      if (files.bol) {
+        console.log('Appending BOL file:', files.bol);
+        formData.append('bolFile', files.bol);
+      }
+      if (files.materialInvoice) {
+        console.log('Appending Material Invoice file:', files.materialInvoice);
+        formData.append('materialInvoiceFile', files.materialInvoice);
+      }
+      if (files.freightInvoice) {
+        console.log('Appending Freight Invoice file:', files.freightInvoice);
+        formData.append('freightInvoiceFile', files.freightInvoice);
+      }
+      if (files.loadPerformance) {
+        console.log('Appending Load Performance file:', files.loadPerformance);
+        formData.append('loadPerformanceFile', files.loadPerformance);
+      }
+
+      // Log the final FormData (note: FormData cannot be directly stringified)
+      for (const pair of formData.entries()) {
+        console.log('FormData entry:', pair[0], pair[1]);
+      }
 
       const url = initialData ? `/api/loads/${initialData.id}` : '/api/loads';
       const method = initialData ? 'PATCH' : 'POST';
