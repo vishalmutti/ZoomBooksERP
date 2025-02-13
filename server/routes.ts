@@ -405,12 +405,12 @@ export function registerRoutes(app: Express): Server {
       const loadData = req.body;
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
-      console.log('Received raw body:', req.body);
-      console.log('Received files:', JSON.stringify(files, null, 2));
+      console.log('Received raw body:', loadData);
+      console.log('Received files:', files);
 
       // Parse the loadData if it's a string
       const parsedLoadData = typeof loadData === 'string' ? JSON.parse(loadData) : loadData;
-      console.log('Parsed load data:', JSON.stringify(parsedLoadData, null, 2));
+      console.log('Parsed load data:', parsedLoadData);
 
       // Extract file names from the uploaded files
       const fileData = {
@@ -420,14 +420,15 @@ export function registerRoutes(app: Express): Server {
         loadPerformanceFile: files?.loadPerformanceFile?.[0]?.filename,
       };
 
-      console.log('Extracted file data:', JSON.stringify(fileData, null, 2));
+      console.log('Extracted file data:', fileData);
+      console.log('Material Invoice File details:', files?.materialInvoiceFile?.[0]);
 
       const dataToValidate = {
         ...parsedLoadData,
         ...fileData
       };
 
-      console.log('Data to validate:', JSON.stringify(dataToValidate, null, 2));
+      console.log('Data to validate:', dataToValidate);
 
       const parsed = insertIncomingLoadSchema.safeParse(dataToValidate);
 
@@ -436,10 +437,10 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).json({ message: 'Invalid load data', error: parsed.error });
       }
 
-      console.log('Parsed data before storage:', JSON.stringify(parsed.data, null, 2));
+      console.log('Parsed data before storage:', parsed.data);
 
       const load = await storage.createLoad(parsed.data);
-      console.log('Created load:', JSON.stringify(load, null, 2));
+      console.log('Created load:', load);
 
       res.status(201).json(load);
     } catch (error) {
@@ -448,7 +449,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.patch("/api/loads/:id", async (req, res) => {
+  app.patch("/api/loads/:id", upload, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     try {
@@ -459,16 +460,36 @@ export function registerRoutes(app: Express): Server {
         return res.status(404).json({ message: "Load not found" });
       }
 
-      const parsed = insertIncomingLoadSchema.partial().safeParse({
+      console.log('Received update data:', req.body);
+      console.log('Received files:', req.files);
+
+      // Handle file uploads
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      const fileData = {
+        bolFile: files?.bolFile?.[0]?.filename || existingLoad.bolFile,
+        materialInvoiceFile: files?.materialInvoiceFile?.[0]?.filename || existingLoad.materialInvoiceFile,
+        freightInvoiceFile: files?.freightInvoiceFile?.[0]?.filename || existingLoad.freightInvoiceFile,
+        loadPerformanceFile: files?.loadPerformanceFile?.[0]?.filename || existingLoad.loadPerformanceFile,
+      };
+
+      // Combine form data with file data
+      const updateData = {
         ...req.body,
-        loadType: req.body.loadType || existingLoad.loadType,
-      });
+        ...fileData,
+      };
+
+      console.log('Final update data:', updateData);
+
+      const parsed = insertIncomingLoadSchema.partial().safeParse(updateData);
 
       if (!parsed.success) {
+        console.error('Validation error:', parsed.error);
         return res.status(400).json({ message: "Invalid data", errors: parsed.error });
       }
 
       const updatedLoad = await storage.updateLoad(id, parsed.data);
+      console.log('Updated load:', updatedLoad);
+
       res.json(updatedLoad);
     } catch (error) {
       console.error('Error updating load:', error);

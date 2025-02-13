@@ -104,15 +104,18 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
       loadCost: "0",
       freightCost: "0",
       profitRoi: "0",
-      supplierId: ""
+      supplierId: "",
+      carrier: "" // Added carrier field to default values
     }
   });
 
   const handleFileChange = (type: keyof typeof files, e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
+      const file = e.target.files[0];
+      console.log(`Setting ${type} file:`, file);
       setFiles(prev => ({
         ...prev,
-        [type]: e.target.files![0]
+        [type]: file
       }));
     }
   };
@@ -133,10 +136,11 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
     try {
       const formData = new FormData();
 
-      // Log the files state before appending
-      console.log('Files to upload:', files);
+      // Log form data and files for debugging
+      console.log('Form data to submit:', data);
+      console.log('Files to submit:', files);
 
-      // Append each field from the form data
+      // Append form fields
       Object.entries(data).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
           if (key === 'scheduledPickup' || key === 'scheduledDelivery') {
@@ -147,31 +151,21 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
         }
       });
 
-      // Append files with correct field names
-      if (files.bol) {
-        console.log('Appending BOL file:', files.bol);
-        formData.append('bolFile', files.bol);
-      }
-      if (files.materialInvoice) {
-        console.log('Appending Material Invoice file:', files.materialInvoice);
-        formData.append('materialInvoiceFile', files.materialInvoice);
-      }
-      if (files.freightInvoice) {
-        console.log('Appending Freight Invoice file:', files.freightInvoice);
-        formData.append('freightInvoiceFile', files.freightInvoice);
-      }
-      if (files.loadPerformance) {
-        console.log('Appending Load Performance file:', files.loadPerformance);
-        formData.append('loadPerformanceFile', files.loadPerformance);
-      }
+      // Append files only if they exist
+      if (files.bol) formData.append('bolFile', files.bol);
+      if (files.materialInvoice) formData.append('materialInvoiceFile', files.materialInvoice);
+      if (files.freightInvoice) formData.append('freightInvoiceFile', files.freightInvoice);
+      if (files.loadPerformance) formData.append('loadPerformanceFile', files.loadPerformance);
 
-      // Log the final FormData (note: FormData cannot be directly stringified)
-      for (const pair of formData.entries()) {
-        console.log('FormData entry:', pair[0], pair[1]);
+      // Log FormData entries for verification
+      for (const [key, value] of formData.entries()) {
+        console.log(`FormData entry - ${key}:`, value);
       }
 
       const url = initialData ? `/api/loads/${initialData.id}` : '/api/loads';
       const method = initialData ? 'PATCH' : 'POST';
+
+      console.log(`Making ${method} request to ${url}`);
 
       const response = await fetch(url, {
         method,
@@ -179,23 +173,27 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        console.error('Server response:', errorData);
-        throw new Error(errorData?.message || 'Failed to create/update load');
+        const errorData = await response.json();
+        console.error('Server response error:', errorData);
+        throw new Error(errorData?.message || `Failed to ${initialData ? 'update' : 'create'} load`);
       }
 
+      const savedLoad = await response.json();
+      console.log('Server response success:', savedLoad);
+
+      // Invalidate and refetch queries
       await queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
-      await queryClient.refetchQueries({ queryKey: ["/api/loads"] });
+
       handleClose();
       toast({
         title: initialData ? "Load updated successfully" : "Load created successfully",
         description: initialData ? "The load has been updated" : "New load has been created",
       });
     } catch (error) {
-      console.error('Error creating/updating load:', error);
+      console.error('Error saving load:', error);
       toast({
         title: "Error",
-        description: "Failed to create/update load. Please try again.",
+        description: `Failed to ${initialData ? 'update' : 'create'} load. Please try again.`,
         variant: "destructive",
       });
     }

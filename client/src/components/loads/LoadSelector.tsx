@@ -14,23 +14,25 @@ export function LoadSelector() {
       name: "Incoming Load",
       description: "For incoming container shipments and imports",
       icon: <LuShip className="w-8 h-8" />,
-      component: IncomingLoadForm,
+      defaultType: "Incoming" as const,
     },
     {
       id: "wholesale",
       name: "Wholesale Load",
       description: "For wholesale orders and distributions",
       icon: <LuStore className="w-8 h-8" />,
-      component: WholesaleLoadForm,
+      defaultType: "Wholesale" as const,
     },
     {
       id: "miscellaneous",
       name: "Miscellaneous",
       description: "For other warehouse operations and miscellaneous loads",
       icon: <LuPackage2 className="w-8 h-8" />,
-      component: LoadForm,
+      defaultType: "Miscellaneous" as const,
     },
   ];
+
+  const selectedLoadType = loadTypes.find(type => type.id === selectedType);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -46,7 +48,11 @@ export function LoadSelector() {
         <div className="grid gap-4">
           {selectedType ? (
             <>
-              <LoadForm onClose={() => setOpen(false)} />
+              <LoadForm 
+                onClose={() => setOpen(false)} 
+                defaultType={selectedLoadType?.defaultType}
+                show={true}
+              />
               <Button
                 variant="outline"
                 onClick={() => setSelectedType(null)}
