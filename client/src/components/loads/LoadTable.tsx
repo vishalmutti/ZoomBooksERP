@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { IncomingLoad, Supplier, SupplierContact } from "@shared/schema";
 import { format } from "date-fns";
 import { LuTruck, LuPackage2, LuStore, LuBox, LuFileText, LuPencil, LuTrash, LuCheck } from "react-icons/lu";
+import { SupplierContactsQuery } from "./SupplierContactsQuery";
 import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
