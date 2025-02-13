@@ -98,8 +98,8 @@ const startServer = async (initialPort: number) => {
   }
 };
 
-// Start the server with initial port 3000
-startServer(3000).catch((err) => {
+// Start the server with initial port 5000
+startServer(5000).catch((err) => {
   console.error('Failed to start server:', err);
   process.exit(1);
 });
