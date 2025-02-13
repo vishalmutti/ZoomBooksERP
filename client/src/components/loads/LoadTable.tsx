@@ -68,10 +68,12 @@ const InvoiceStatus = ({
   loadId,
   status,
   type,
+  loadType,
 }: {
   loadId: number;
   status: "PAID" | "UNPAID";
   type: "material" | "freight";
+  loadType: string;
 }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -85,7 +87,7 @@ const InvoiceStatus = ({
         },
         body: JSON.stringify({
           [field]: newStatus,
-          loadType: loads?.find(l => l.id === loadId)?.loadType,
+          loadType: loadType,
         }),
       });
       
@@ -138,13 +140,13 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
   const queryClient = useQueryClient();
 
   const updateLoadMutation = useMutation({
-    mutationFn: async (loadData: IncomingLoad) => {
-      const response = await fetch(`/api/loads/${loadData.id}`, {
+    mutationFn: async ({ id, updates }: { id: number, updates: Partial<IncomingLoad> }) => {
+      const response = await fetch(`/api/loads/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(loadData),
+        body: JSON.stringify(updates),
       });
       
       if (!response.ok) {
@@ -335,6 +337,7 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
                     loadId={load.id}
                     status={load.materialInvoiceStatus}
                     type="material"
+                    loadType={load.loadType}
                   />
                 </TableCell>
                 <TableCell>
