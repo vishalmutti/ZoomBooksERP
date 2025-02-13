@@ -319,7 +319,7 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
 
   return (
     <div className="rounded-md border overflow-x-auto">
-      <div className="space-y-4 mb-4">
+      <div className="space-y-4">
         <div className="grid grid-cols-3 gap-4">
           <Input
             placeholder="Filter by supplier"

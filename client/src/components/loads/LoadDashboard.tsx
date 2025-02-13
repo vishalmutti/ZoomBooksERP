@@ -83,10 +83,7 @@ export function LoadDashboard() {
 
         <TabsContent value={activeTab} className="space-y-4">
           <div className="flex justify-end">
-            <Button onClick={() => setShowAddLoad(true)}>
-              <LuPlus className="h-4 w-4 mr-2" />
-              Add Load
-            </Button>
+            <LoadSelector />
           </div>
           <LoadTable 
             loads={filteredLoads} 
