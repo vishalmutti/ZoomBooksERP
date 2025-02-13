@@ -140,15 +140,27 @@ export function registerRoutes(app: Express): Server {
       !isNaN(Number(load.loadCost)) && !isNaN(Number(load.freightCost))
     );
 
+    const loadsWithRoi = incomingLoads.filter(load =>
+      load.profitRoi && Number(load.profitRoi) !== 0 &&
+      !isNaN(Number(load.profitRoi))
+    );
+
     const averageCost = loadsWithBothCosts.length > 0
       ? loadsWithBothCosts.reduce((acc, load) =>
           acc + Number(load.loadCost) + Number(load.freightCost), 0
         ) / loadsWithBothCosts.length
       : 0;
 
+    const averageRoi = loadsWithRoi.length > 0
+      ? loadsWithRoi.reduce((acc, load) =>
+          acc + Number(load.profitRoi), 0
+        ) / loadsWithRoi.length
+      : 0;
+
     res.json({
       count: incomingLoads.length,
-      averageCost: averageCost
+      averageCost: averageCost,
+      averageRoi: averageRoi
     });
   });
 

@@ -13,7 +13,7 @@ interface LoadSupplierViewProps {
 }
 
 function SupplierMetrics({ supplierId }: { supplierId: number }) {
-  const { data, isLoading } = useQuery<{ count: number, averageCost: number }>({
+  const { data, isLoading } = useQuery<{ count: number, averageCost: number, averageRoi: number }>({
     queryKey: ["suppliers", supplierId, "loads", "metrics"],
     queryFn: async () => {
       const response = await fetch(`/api/suppliers/${supplierId}/loads/count`);
@@ -51,6 +51,18 @@ function SupplierMetrics({ supplierId }: { supplierId: number }) {
             ${data?.averageCost ? data.averageCost.toFixed(2) : '0.00'}
           </div>
           <p className="text-xs text-muted-foreground">Load Cost + Freight Cost</p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Average ROI</CardTitle>
+          <LuPackage className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">
+            {data?.averageRoi ? data.averageRoi.toFixed(2) : '0.00'}%
+          </div>
+          <p className="text-xs text-muted-foreground">Profit Return on Investment</p>
         </CardContent>
       </Card>
     </div>
