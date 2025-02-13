@@ -187,7 +187,7 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
       filtered.sort((a, b) => {
         let aValue = a[sortConfig.key as keyof typeof a];
         let bValue = b[sortConfig.key as keyof typeof b];
-        
+
         if (sortConfig.key === 'scheduledPickup' || sortConfig.key === 'scheduledDelivery') {
           aValue = new Date(aValue as string).getTime();
           bValue = new Date(bValue as string).getTime();
@@ -412,7 +412,10 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
                 </TableCell>
                 <TableCell>
                   {supplier ? (
-                    <SupplierContactsQuery supplier={supplier} />
+                    <SupplierQuickView
+                      supplierName={supplier?.name || ''}
+                      supplierId={supplier?.id || 0}
+                    />
                   ) : (
                     "Unknown Supplier"
                   )}
