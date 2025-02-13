@@ -129,13 +129,20 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
   async function onSubmit(data: InsertLoad) {
     try {
       const formData = new FormData();
+      
+      // Ensure all necessary fields are included
+      const dataToSend = {
+        ...data,
+        loadType: data.loadType || initialData?.loadType,
+        loadCost: data.loadCost?.toString() || initialData?.loadCost,
+        freightCost: data.freightCost?.toString() || initialData?.freightCost,
+        profitRoi: data.profitRoi?.toString() || initialData?.profitRoi,
+      };
 
-      Object.entries(data).forEach(([key, value]) => {
+      Object.entries(dataToSend).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
           if (key === 'scheduledPickup' || key === 'scheduledDelivery') {
             formData.append(key, value ? new Date(value).toISOString() : '');
-          } else if (key === 'loadCost' || key === 'freightCost' || key === 'profitRoi') {
-            formData.append(key, value.toString());
           } else {
             formData.append(key, value.toString());
           }
