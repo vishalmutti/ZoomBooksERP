@@ -123,6 +123,37 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  const updateLoadMutation = useMutation({
+    mutationFn: async (loadData: IncomingLoad) => {
+      const response = await fetch(`/api/loads/${loadData.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(loadData),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update load');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
+      toast({
+        title: "Success",
+        description: "Load updated successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: `Failed to update load: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
   const updateStatusMutation = useMutation({
     mutationFn: async ({ loadId, newStatus }: { loadId: number; newStatus: string }) => {
       const load = loads?.find(l => l.id === loadId);
@@ -310,7 +341,13 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
                       variant="ghost"
                       size="sm"
                       className="h-8 w-8 p-0"
-                      onClick={() => onEdit?.(load)}
+                      onClick={() => {
+                        if (onEdit) {
+                          onEdit(load);
+                        } else {
+                          updateLoadMutation.mutate(load);
+                        }
+                      }}
                     >
                       <LuPencil className="h-4 w-4" />
                     </Button>
