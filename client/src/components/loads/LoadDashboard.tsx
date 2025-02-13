@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoadForm } from "./LoadForm";
 import { LoadTable } from "./LoadTable";
+import { LoadSelector } from "./LoadSelector";
 import { Button } from "@/components/ui/button";
 import type { IncomingLoad, Supplier } from "@shared/schema";
 import { LuPackage2, LuPlus, LuShip, LuStore } from "react-icons/lu";
