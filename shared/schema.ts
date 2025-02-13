@@ -17,7 +17,6 @@ export const suppliers = pgTable("suppliers", {
   contactPerson: varchar("contact_person", { length: 255 }),
   email: varchar("email", { length: 255 }),
   phone: varchar("phone", { length: 50 }),
-  type: varchar("type", { length: 20 }).notNull().default('ar').$type<'ar' | 'load'>(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
