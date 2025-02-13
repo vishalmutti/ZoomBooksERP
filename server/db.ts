@@ -16,8 +16,16 @@ const RETRY_DELAY = 5000; // 5 seconds
 
 const createConnection = async (retryCount = 0) => {
   try {
-    const sql = neon(process.env.DATABASE_URL!);
-    return sql;
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+    // Test the connection
+    await pool.connect();
+    return pool;
   } catch (error) {
     if (retryCount < MAX_RETRIES) {
       console.log(`Database connection attempt ${retryCount + 1} failed, retrying in ${RETRY_DELAY}ms...`);
