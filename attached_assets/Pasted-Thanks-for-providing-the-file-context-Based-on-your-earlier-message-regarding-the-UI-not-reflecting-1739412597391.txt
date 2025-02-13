@@ -1,0 +1,53 @@
+Thanks for providing the file context! Based on your earlier message regarding the UI not reflecting the updated freight cost, please ensure that the LoadTable component's mutation handling the edit properly updates the local state after a successful server response.
+
+In the onSuccess callback of your useMutation, you can refetch or directly update the state. Here's how you can do it:
+
+Modify the LoadTable component's useMutation for updating loads to ensure that the loads state reflects the updated load data:
+
+const updateLoadMutation = useMutation({
+  mutationFn: async (loadData: IncomingLoad) => {
+    const response = await fetch(`/api/loads/${loadData.id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(loadData),
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to update load');
+    }
+    return response.json();
+  },
+  // Update loads in state after mutation
+  onSuccess: (updatedLoad) => {
+    queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
+    toast({
+      title: "Success",
+      description: "Load updated successfully",
+    });
+  },
+  onError: (error: Error) => {
+    toast({
+      title: "Error",
+      description: `Failed to update load: ${error.message}`,
+      variant: "destructive",
+    });
+  },
+});
+Then, ensure that you call this mutation correctly when you handle the edit action within the LoadTable component. Here’s an example of how you might handle the edit user interaction:
+
+<Button
+  variant="ghost"
+  size="sm"
+  className="h-8 w-8 p-0"
+  onClick={() => {
+    const loadData = { ...load, freightCost: updatedFreightCost }; // Ensure this has the correct updated values
+    updateLoadMutation.mutate(loadData);
+  }}
+>
+  <LuCheck className="h-4 w-4" />
+</Button>
+Make sure that the updated freight cost value (updatedFreightCost) is properly derived from user inputs before triggering the mutation. This ensures that the new data is reflected in both the backend and the UI.
+
+Let me know if you need further assistance!
