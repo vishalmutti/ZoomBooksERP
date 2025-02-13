@@ -409,59 +409,70 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateLoad(id: number, updates: Partial<IncomingLoad>): Promise<IncomingLoad> {
-    // Create the update object with only the fields that are present in updates
-    const updateData: Partial<IncomingLoad> = {};
-
-    // Only include fields that are actually present in the updates object
-    if (updates.scheduledPickup !== undefined) {
-      updateData.scheduledPickup = updates.scheduledPickup ? new Date(updates.scheduledPickup).toISOString() : null;
-    }
-    if (updates.scheduledDelivery !== undefined) {
-      updateData.scheduledDelivery = updates.scheduledDelivery ? new Date(updates.scheduledDelivery).toISOString() : null;
-    }
-    if (updates.loadType !== undefined) updateData.loadType = updates.loadType;
-    if (updates.supplierId !== undefined) updateData.supplierId = updates.supplierId;
-    if (updates.referenceNumber !== undefined) updateData.referenceNumber = updates.referenceNumber;
-    if (updates.location !== undefined) updateData.location = updates.location;
-    if (updates.notes !== undefined) updateData.notes = updates.notes;
-    if (updates.loadCost !== undefined) {
-      updateData.loadCost = typeof updates.loadCost === 'string'
-        ? updates.loadCost
-        : updates.loadCost.toString();
-    }
-    if (updates.freightCost !== undefined) {
-      updateData.freightCost = typeof updates.freightCost === 'string'
-        ? updates.freightCost
-        : updates.freightCost.toString();
-    }
-    if (updates.profitRoi !== undefined) {
-      updateData.profitRoi = typeof updates.profitRoi === 'string'
-        ? updates.profitRoi
-        : updates.profitRoi.toString();
-    }
-    if (updates.status !== undefined) updateData.status = updates.status;
-    if (updates.carrier !== undefined) updateData.carrier = updates.carrier;
-    if (updates.materialInvoiceStatus !== undefined) updateData.materialInvoiceStatus = updates.materialInvoiceStatus;
-    if (updates.freightInvoiceStatus !== undefined) updateData.freightInvoiceStatus = updates.freightInvoiceStatus;
-    if (updates.bolFile !== undefined) updateData.bolFile = updates.bolFile;
-    if (updates.materialInvoiceFile !== undefined) updateData.materialInvoiceFile = updates.materialInvoiceFile;
-    if (updates.freightInvoiceFile !== undefined) updateData.freightInvoiceFile = updates.freightInvoiceFile;
-    if (updates.loadPerformanceFile !== undefined) updateData.loadPerformanceFile = updates.loadPerformanceFile;
-
-    // Only proceed with update if there are actually fields to update
-    if (Object.keys(updateData).length === 0) {
-      throw new Error('No valid fields to update');
-    }
-
     try {
+      // Create the update object with only the fields that are present in updates
+      const updateData: Partial<IncomingLoad> = {};
+
+      // Only include fields that are actually present in the updates object
+      if (updates.scheduledPickup !== undefined) {
+        updateData.scheduledPickup = updates.scheduledPickup ? new Date(updates.scheduledPickup).toISOString() : null;
+      }
+      if (updates.scheduledDelivery !== undefined) {
+        updateData.scheduledDelivery = updates.scheduledDelivery ? new Date(updates.scheduledDelivery).toISOString() : null;
+      }
+      if (updates.loadType !== undefined) updateData.loadType = updates.loadType;
+      if (updates.supplierId !== undefined) updateData.supplierId = updates.supplierId;
+      if (updates.referenceNumber !== undefined) updateData.referenceNumber = updates.referenceNumber;
+      if (updates.location !== undefined) updateData.location = updates.location;
+      if (updates.notes !== undefined) updateData.notes = updates.notes;
+      if (updates.loadCost !== undefined) {
+        updateData.loadCost = typeof updates.loadCost === 'string'
+          ? updates.loadCost
+          : updates.loadCost.toString();
+      }
+      if (updates.freightCost !== undefined) {
+        updateData.freightCost = typeof updates.freightCost === 'string'
+          ? updates.freightCost
+          : updates.freightCost.toString();
+      }
+      if (updates.profitRoi !== undefined) {
+        updateData.profitRoi = typeof updates.profitRoi === 'string'
+          ? updates.profitRoi
+          : updates.profitRoi.toString();
+      }
+      if (updates.status !== undefined) updateData.status = updates.status;
+      if (updates.carrier !== undefined) updateData.carrier = updates.carrier;
+      if (updates.materialInvoiceStatus !== undefined) updateData.materialInvoiceStatus = updates.materialInvoiceStatus;
+      if (updates.freightInvoiceStatus !== undefined) updateData.freightInvoiceStatus = updates.freightInvoiceStatus;
+      if (updates.bolFile !== undefined) updateData.bolFile = updates.bolFile;
+      if (updates.materialInvoiceFile !== undefined) updateData.materialInvoiceFile = updates.materialInvoiceFile;
+      if (updates.freightInvoiceFile !== undefined) updateData.freightInvoiceFile = updates.freightInvoiceFile;
+      if (updates.loadPerformanceFile !== undefined) updateData.loadPerformanceFile = updates.loadPerformanceFile;
+
+      // Get the current load data
+      const [currentLoad] = await db
+        .select()
+        .from(incomingLoads)
+        .where(eq(incomingLoads.id, id));
+
+      if (!currentLoad) {
+        throw new Error('Load not found');
+      }
+
+      // Merge current data with updates to ensure we have all required fields
+      const mergedData = {
+        ...currentLoad,
+        ...updateData
+      };
+
       const [updatedLoad] = await db
         .update(incomingLoads)
-        .set(updateData)
+        .set(mergedData)
         .where(eq(incomingLoads.id, id))
         .returning();
 
       if (!updatedLoad) {
-        throw new Error('Load not found');
+        throw new Error('Failed to update load');
       }
 
       return updatedLoad;

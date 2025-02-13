@@ -62,13 +62,13 @@ const FileLink = ({ file, label }: { file: string | null; label: string }) => {
   );
 };
 
-const InvoiceStatus = ({ 
-  loadId, 
-  status, 
-  type 
-}: { 
-  loadId: number; 
-  status: 'PAID' | 'UNPAID'; 
+const InvoiceStatus = ({
+  loadId,
+  status,
+  type
+}: {
+  loadId: number;
+  status: 'PAID' | 'UNPAID';
   type: 'material' | 'freight';
 }) => {
   const { toast } = useToast();
@@ -144,6 +144,30 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
     );
   }
 
+  const handleStatusUpdate = async (loadId: number, newStatus: string) => {
+    try {
+      const response = await fetch(`/api/loads/${loadId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: newStatus,
+          loadType: loads?.find(l => l.id === loadId)?.loadType,
+          supplierId: loads?.find(l => l.id === loadId)?.supplierId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update load status');
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
+    } catch (error) {
+      console.error('Failed to update load status:', error);
+    }
+  };
+
   return (
     <div className="rounded-md border overflow-x-auto">
       <Table>
@@ -187,8 +211,8 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
                 </TableCell>
                 <TableCell>
                   {supplier ? (
-                    <SupplierQuickView 
-                      supplierName={supplier.name} 
+                    <SupplierQuickView
+                      supplierName={supplier.name}
                       contacts={supplierContacts}
                     />
                   ) : (
@@ -210,16 +234,7 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
                       onClick={async () => {
                         const newStatus = load.status === 'Completed' ? 'Pending' : 'Completed';
                         if (window.confirm(`Are you sure you want to mark this load as ${newStatus.toLowerCase()}?`)) {
-                          const response = await fetch(`/api/loads/${load.id}`, {
-                            method: 'PATCH',
-                            headers: {
-                              'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({ status: newStatus }),
-                          });
-                          if (response.ok) {
-                            queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
-                          }
+                          await handleStatusUpdate(load.id, newStatus);
                         }
                       }}
                       title={load.status === 'Completed' ? 'Mark as pending' : 'Mark as complete'}
