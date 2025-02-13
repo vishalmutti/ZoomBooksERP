@@ -1,52 +1,59 @@
+
 import { Pool, neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-serverless';
 import ws from 'ws';
 import * as schema from "@shared/schema";
 
-// Configure WebSocket for Neon serverless
 neonConfig.webSocketConstructor = ws;
 neonConfig.useSecureWebSocket = true;
+neonConfig.pipelineConnect = false; // Disable pipelining to prevent some connection issues
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
 }
 
-const MAX_RETRIES = 3;
-const RETRY_DELAY = 5000; // 5 seconds
-
-const createConnection = async (retryCount = 0) => {
-  try {
-    const pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: {
-        require: true,
-        rejectUnauthorized: false
-      }
-    });
-    // Test the connection
-    await pool.connect();
-    return pool;
-  } catch (error) {
-    if (retryCount < MAX_RETRIES) {
-      console.log(`Database connection attempt ${retryCount + 1} failed, retrying in ${RETRY_DELAY}ms...`);
-      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
-      return createConnection(retryCount + 1);
-    }
-    throw error;
-  }
+const createPool = () => {
+  return new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: true,
+    max: 1,
+    idleTimeoutMillis: 0, // Disable idle timeout
+    connectionTimeoutMillis: 10000,
+    keepAlive: true,
+    keepAliveInitialDelayMillis: 10000
+  });
 };
 
-export const pool = await createConnection();
-export const db = drizzle(pool, { schema });
+// Create initial pool
+export const pool = createPool();
 
-// Handle pool errors
-pool.on('error', async (err) => {
-  console.error('Unexpected database error:', err);
+// Create a function to reset the pool if needed
+const resetPool = async () => {
   try {
     await pool.end();
-    const newPool = await createConnection();
-    Object.assign(pool, newPool);
   } catch (error) {
-    console.error('Failed to reconnect to database:', error);
+    console.error('Error ending pool:', error);
+  }
+  Object.assign(pool, createPool());
+};
+
+// Handle pool errors and reconnection
+pool.on('error', async (err) => {
+  console.error('Pool error:', err);
+  if (err.code === '57P01') {
+    console.log('Connection terminated, reconnecting...');
+    await resetPool();
   }
 });
+
+// Keep connection alive with periodic query
+setInterval(async () => {
+  try {
+    await pool.query('SELECT 1');
+  } catch (error) {
+    console.error('Keep-alive query failed:', error);
+    await resetPool();
+  }
+}, 30000);
+
+export const db = drizzle(pool, { schema });
