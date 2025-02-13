@@ -140,13 +140,17 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
   const queryClient = useQueryClient();
 
   const updateLoadMutation = useMutation({
-    mutationFn: async ({ id, updates }: { id: number, updates: Partial<IncomingLoad> }) => {
-      const response = await fetch(`/api/loads/${id}`, {
+    mutationFn: async (loadData: IncomingLoad) => {
+      const response = await fetch(`/api/loads/${loadData.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(updates),
+        body: JSON.stringify({
+          ...loadData,
+          loadCost: loadData.loadCost?.toString(),
+          freightCost: loadData.freightCost?.toString(),
+        }),
       });
       
       if (!response.ok) {
