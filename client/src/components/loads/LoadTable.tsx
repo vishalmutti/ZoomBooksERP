@@ -1,3 +1,4 @@
+
 import {
   Table,
   TableBody,
@@ -77,12 +78,24 @@ const InvoiceStatus = ({
   const updateStatusMutation = useMutation({
     mutationFn: async (newStatus: "PAID" | "UNPAID") => {
       const field = type === "material" ? "materialInvoiceStatus" : "freightInvoiceStatus";
-      await apiRequest("PATCH", `/api/loads/${loadId}`, {
-        [field]: newStatus,
+      const response = await fetch(`/api/loads/${loadId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          [field]: newStatus
+        }),
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update status');
+      }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
+      queryClient.refetchQueries({ queryKey: ["/api/loads"] });
       toast({
         title: "Success",
         description: `${type === "material" ? "Material" : "Freight"} invoice status updated`,
@@ -109,7 +122,6 @@ const InvoiceStatus = ({
   );
 };
 
-// Create a separate component for supplier details row
 const SupplierDetailsRow = ({ supplierId }: { supplierId: string }) => {
   const { data: contacts = [] } = useQuery<SupplierContact[]>({
     queryKey: ["/api/suppliers", supplierId, "contacts"],
@@ -140,6 +152,7 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
+      queryClient.refetchQueries({ queryKey: ["/api/loads"] });
       toast({
         title: "Success",
         description: "Load updated successfully",
@@ -177,6 +190,7 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
+      queryClient.refetchQueries({ queryKey: ["/api/loads"] });
       toast({
         title: "Success",
         description: "Load status updated successfully",
@@ -341,13 +355,7 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
                       variant="ghost"
                       size="sm"
                       className="h-8 w-8 p-0"
-                      onClick={() => {
-                        if (onEdit) {
-                          onEdit(load);
-                        } else {
-                          updateLoadMutation.mutate(load);
-                        }
-                      }}
+                      onClick={() => onEdit?.(load)}
                     >
                       <LuPencil className="h-4 w-4" />
                     </Button>
