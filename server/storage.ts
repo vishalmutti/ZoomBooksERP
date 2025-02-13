@@ -411,20 +411,20 @@ export class DatabaseStorage implements IStorage {
   async updateLoad(id: number, updates: Partial<IncomingLoad>): Promise<IncomingLoad> {
     const updateData: Record<string, any> = {};
     
-    if (updates.scheduledPickup) updateData.scheduledPickup = new Date(updates.scheduledPickup).toISOString();
-    if (updates.scheduledDelivery) updateData.scheduledDelivery = new Date(updates.scheduledDelivery).toISOString();
-    if (updates.loadType) updateData.loadType = updates.loadType;
-    if (updates.supplierId) updateData.supplierId = updates.supplierId;
-    if (updates.referenceNumber) updateData.referenceNumber = updates.referenceNumber;
-    if (updates.location) updateData.location = updates.location;
-    if (updates.notes) updateData.notes = updates.notes;
-    if (typeof updates.loadCost !== 'undefined') updateData.loadCost = updates.loadCost;
-    if (typeof updates.freightCost !== 'undefined') updateData.freightCost = updates.freightCost;
-    if (typeof updates.profitRoi !== 'undefined') updateData.profitRoi = updates.profitRoi;
-    if (updates.status) updateData.status = updates.status;
-    if (updates.carrier) updateData.carrier = updates.carrier;
-    if (updates.materialInvoiceStatus) updateData.materialInvoiceStatus = updates.materialInvoiceStatus;
-    if (updates.freightInvoiceStatus) updateData.freightInvoiceStatus = updates.freightInvoiceStatus;
+    if ('scheduledPickup' in updates) updateData.scheduledPickup = updates.scheduledPickup ? new Date(updates.scheduledPickup).toISOString() : null;
+    if ('scheduledDelivery' in updates) updateData.scheduledDelivery = updates.scheduledDelivery ? new Date(updates.scheduledDelivery).toISOString() : null;
+    if ('loadType' in updates) updateData.loadType = updates.loadType;
+    if ('supplierId' in updates) updateData.supplierId = updates.supplierId;
+    if ('referenceNumber' in updates) updateData.referenceNumber = updates.referenceNumber;
+    if ('location' in updates) updateData.location = updates.location;
+    if ('notes' in updates) updateData.notes = updates.notes;
+    if ('loadCost' in updates) updateData.loadCost = updates.loadCost;
+    if ('freightCost' in updates) updateData.freightCost = updates.freightCost;
+    if ('profitRoi' in updates) updateData.profitRoi = updates.profitRoi;
+    if ('status' in updates) updateData.status = updates.status;
+    if ('carrier' in updates) updateData.carrier = updates.carrier;
+    if ('materialInvoiceStatus' in updates) updateData.materialInvoiceStatus = updates.materialInvoiceStatus;
+    if ('freightInvoiceStatus' in updates) updateData.freightInvoiceStatus = updates.freightInvoiceStatus;
 
     const [updatedLoad] = await db
       .update(incomingLoads)
