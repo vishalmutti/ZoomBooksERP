@@ -1,0 +1,122 @@
+To ensure that your LoadTable and Edit Load form reflect updates correctly, we can identify several areas in your code that may need adjustments. Let's address the potential problems step-by-step:
+
+Ensure proper webhook usage for the Edit action: The onEdit action isn't always calling the mutation; instead, it should trigger the mutation when an update operation is intended.
+
+State Management in LoadTable: The updateLoadMutation should be connected to the onEdit handler properly to ensure that the latest state of the freight cost or other parameters are pushed to the server.
+
+Data Fetching and React Query Client: Make sure to invalidate and refetch the query correctly after an update, so the UI reflects the most current data from the server.
+
+Here's how you can adjust your LoadTable.tsx and LoadDashboard.tsx components:
+
+Update LoadTable.tsx
+Modify the mutation and the button click handling to ensure that the UI receives the correct updates:
+
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+// Additional imports...
+export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }: LoadTableProps) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const updateLoadMutation = useMutation({
+    mutationFn: async (loadData: IncomingLoad) => {
+      const response = await fetch(`/api/loads/${loadData.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(loadData),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to update load');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
+      toast({
+        title: "Success",
+        description: "Load updated successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: `Failed to update load: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+  if (isLoading) {
+    return <div>Loading...</div>; // Add loading state here
+  }
+  return (
+    <div className="rounded-md border overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            {/* Table headers */}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {loads.map((load) => (
+            <TableRow key={load.id}>
+              {/* Other cells */}
+              <TableCell>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => {
+                    updateLoadMutation.mutate(load); // Directly call mutation here
+                  }}
+                >
+                  <LuPencil className="h-4 w-4" />
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+Update LoadDashboard.tsx
+Ensure that the dashboard handles editing correctly, making sure the editing state is correctly updated:
+
+import { useMutation } from '@tanstack/react-query';
+// Additional imports...
+export function LoadDashboard() {
+  const [editingLoad, setEditingLoad] = useState<IncomingLoad | null>(null);
+  const { data: loads, isLoading } = useQuery<IncomingLoad[]>({
+    queryKey: ["/api/loads"],
+    // Other query options...
+  });
+  const handleEdit = (load: IncomingLoad) => {
+    setEditingLoad(load);
+  };
+  return (
+    <div>
+      {editingLoad && (
+        <LoadForm
+          initialData={editingLoad}
+          onClose={() => setEditingLoad(null)}
+          onUpdate={(data) => {
+            updateLoadMutation.mutate(data); // invoke update on the form submission
+            setEditingLoad(null); // reset editing state
+          }}
+          show={true}
+        />
+      )}
+      <LoadTable
+        loads={loads}
+        isLoading={isLoading}
+        onEdit={handleEdit}
+        // onDelete, suppliers...
+      />
+    </div>
+  );
+}
+Summary of Changes
+The mutation is correctly used directly when the user clicks the edit button in the LoadTable.
+On load form submission, the onUpdate will trigger the update mutation on the data and return to the main view.
+Invalidation of queries is handled after a successful update allowing React Query to refetch updated data from the server.
+With these changes, your LoadTable should reflect the most current data post-update, and editing a load should work seamlessly. If you need further enhancements or debugging, please feel free to ask!
