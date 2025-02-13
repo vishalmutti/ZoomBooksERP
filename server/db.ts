@@ -6,24 +6,55 @@ import * as schema from "@shared/schema";
 
 neonConfig.webSocketConstructor = ws;
 neonConfig.useSecureWebSocket = true;
-neonConfig.pipelineConnect = false;
-neonConfig.connectionTimeoutMillis = 30000;
+neonConfig.pipelineConnect = true;
+neonConfig.connectionTimeoutMillis = 60000;
+neonConfig.wsProxy = false;
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
 }
 
+let isReconnecting = false;
+const MAX_RECONNECT_ATTEMPTS = 5;
+const RECONNECT_INTERVAL = 5000;
+
 const createPool = () => {
   return new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: true,
-    max: 1,
-    idleTimeoutMillis: 0,
-    connectionTimeoutMillis: 30000,
+    max: 5,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 60000,
     keepAlive: true,
-    maxRetries: 5,
-    retryDelay: 2000
+    maxRetries: 3,
+    retryDelay: 1000,
+    allowExitOnIdle: false
   });
+};
+
+const handleReconnect = async () => {
+  if (isReconnecting) return;
+  isReconnecting = true;
+  
+  for (let attempt = 0; attempt < MAX_RECONNECT_ATTEMPTS; attempt++) {
+    try {
+      await resetPool();
+      const client = await pool.connect();
+      await client.query('SELECT 1');
+      client.release();
+      isReconnecting = false;
+      console.log('Database reconnection successful');
+      return;
+    } catch (error) {
+      console.error(`Reconnection attempt ${attempt + 1} failed:`, error);
+      if (attempt < MAX_RECONNECT_ATTEMPTS - 1) {
+        await new Promise(resolve => setTimeout(resolve, RECONNECT_INTERVAL));
+      }
+    }
+  }
+  
+  console.error('Max reconnection attempts reached');
+  isReconnecting = false;
 };
 
 // Create initial pool
