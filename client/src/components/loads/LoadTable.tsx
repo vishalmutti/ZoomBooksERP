@@ -12,7 +12,7 @@ import type { IncomingLoad, Supplier, SupplierContact } from "@shared/schema";
 import { format } from "date-fns";
 import { LuTruck, LuPackage2, LuStore, LuBox, LuFileText, LuPencil, LuTrash, LuCheck } from "react-icons/lu";
 import { Button } from "@/components/ui/button";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient, useQueryClient } from "@/lib/queryClient";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { SupplierQuickView } from "./SupplierQuickView";
@@ -28,7 +28,7 @@ interface LoadTableProps {
 const loadTypeIcons = {
   Incoming: <LuBox className="h-5 w-5" />,
   Wholesale: <LuStore className="h-5 w-5" />,
-  Miscellaneous: <LuPackage2 className="h-5 w-5" />
+  Miscellaneous: <LuPackage2 className="h-5 w-5" />,
 };
 
 const statusColors = {
@@ -43,7 +43,7 @@ const statusColors = {
   Loading: "bg-orange-500/10 text-orange-500",
   Customs: "bg-red-500/10 text-red-500",
   "Port Arrival": "bg-teal-500/10 text-teal-500",
-  "Final Delivery": "bg-green-500/10 text-green-500"
+  "Final Delivery": "bg-green-500/10 text-green-500",
 };
 
 const FileLink = ({ file, label }: { file: string | null; label: string }) => {
@@ -65,25 +65,25 @@ const FileLink = ({ file, label }: { file: string | null; label: string }) => {
 const InvoiceStatus = ({
   loadId,
   status,
-  type
+  type,
 }: {
   loadId: number;
-  status: 'PAID' | 'UNPAID';
-  type: 'material' | 'freight';
+  status: "PAID" | "UNPAID";
+  type: "material" | "freight";
 }) => {
   const { toast } = useToast();
   const updateStatusMutation = useMutation({
-    mutationFn: async (newStatus: 'PAID' | 'UNPAID') => {
-      const field = type === 'material' ? 'materialInvoiceStatus' : 'freightInvoiceStatus';
+    mutationFn: async (newStatus: "PAID" | "UNPAID") => {
+      const field = type === "material" ? "materialInvoiceStatus" : "freightInvoiceStatus";
       await apiRequest("PATCH", `/api/loads/${loadId}`, {
-        [field]: newStatus
+        [field]: newStatus,
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
       toast({
         title: "Success",
-        description: `${type === 'material' ? 'Material' : 'Freight'} invoice status updated`,
+        description: `${type === "material" ? "Material" : "Freight"} invoice status updated`,
       });
     },
     onError: (error: Error) => {
@@ -99,7 +99,7 @@ const InvoiceStatus = ({
     <select
       className="w-24 h-8 px-2 py-1 bg-background border border-input rounded-md text-sm"
       value={status}
-      onChange={(e) => updateStatusMutation.mutate(e.target.value as 'PAID' | 'UNPAID')}
+      onChange={(e) => updateStatusMutation.mutate(e.target.value as "PAID" | "UNPAID")}
     >
       <option value="PAID">PAID</option>
       <option value="UNPAID">UNPAID</option>
@@ -108,12 +108,52 @@ const InvoiceStatus = ({
 };
 
 export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }: LoadTableProps) {
-  const supplierContactsQueries = suppliers.map(supplier => ({
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ loadId, newStatus }: { loadId: number; newStatus: string }) => {
+      const load = loads?.find(l => l.id === loadId);
+      const response = await fetch(`/api/loads/${loadId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: newStatus,
+          loadType: load?.loadType,
+          supplierId: load?.supplierId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update load status');
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
+      toast({
+        title: "Success",
+        description: "Load status updated successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: `Failed to update status: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const supplierContactsQueries = suppliers.map((supplier) => ({
     supplier,
     contactsQuery: useQuery<SupplierContact[]>({
       queryKey: ["/api/suppliers", supplier.id, "contacts"],
       enabled: !!supplier.id,
-    })
+    }),
   }));
 
   if (isLoading) {
@@ -146,25 +186,9 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
 
   const handleStatusUpdate = async (loadId: number, newStatus: string) => {
     try {
-      const response = await fetch(`/api/loads/${loadId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          status: newStatus,
-          loadType: loads?.find(l => l.id === loadId)?.loadType,
-          supplierId: loads?.find(l => l.id === loadId)?.supplierId,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update load status');
-      }
-
-      queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
+      await updateStatusMutation.mutateAsync({ loadId, newStatus });
     } catch (error) {
-      console.error('Failed to update load status:', error);
+      console.error("Failed to update load status:", error);
     }
   };
 
@@ -196,9 +220,9 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
         </TableHeader>
         <TableBody>
           {loads.map((load) => {
-            const supplier = suppliers.find(s => s.id.toString() === load.supplierId);
+            const supplier = suppliers.find((s) => s.id.toString() === load.supplierId);
             const supplierContacts = supplierContactsQueries
-              .find(q => q.supplier.id.toString() === load.supplierId)
+              .find((q) => q.supplier.id.toString() === load.supplierId)
               ?.contactsQuery.data || [];
 
             return (
@@ -216,7 +240,7 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
                       contacts={supplierContacts}
                     />
                   ) : (
-                    'Unknown Supplier'
+                    "Unknown Supplier"
                   )}
                 </TableCell>
                 <TableCell>
@@ -232,12 +256,12 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
                       size="sm"
                       className="h-8 w-8 p-0"
                       onClick={async () => {
-                        const newStatus = load.status === 'Completed' ? 'Pending' : 'Completed';
+                        const newStatus = load.status === "Completed" ? "Pending" : "Completed";
                         if (window.confirm(`Are you sure you want to mark this load as ${newStatus.toLowerCase()}?`)) {
                           await handleStatusUpdate(load.id, newStatus);
                         }
                       }}
-                      title={load.status === 'Completed' ? 'Mark as pending' : 'Mark as complete'}
+                      title={load.status === "Completed" ? "Mark as pending" : "Mark as complete"}
                     >
                       <LuCheck className="h-4 w-4" />
                     </Button>
@@ -247,12 +271,10 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
                 <TableCell>{load.location}</TableCell>
                 <TableCell>{load.carrier}</TableCell>
                 <TableCell>
-                  {load.scheduledPickup &&
-                    format(new Date(load.scheduledPickup), "MMM d, yyyy")}
+                  {load.scheduledPickup && format(new Date(load.scheduledPickup), "MMM d, yyyy")}
                 </TableCell>
                 <TableCell>
-                  {load.scheduledDelivery &&
-                    format(new Date(load.scheduledDelivery), "MMM d, yyyy")}
+                  {load.scheduledDelivery && format(new Date(load.scheduledDelivery), "MMM d, yyyy")}
                 </TableCell>
                 <TableCell>${Number(load.loadCost).toFixed(2)}</TableCell>
                 <TableCell>${Number(load.freightCost).toFixed(2)}</TableCell>
@@ -299,7 +321,7 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
                       size="sm"
                       className="h-8 w-8 p-0"
                       onClick={() => {
-                        if (window.confirm('Are you sure you want to delete this load?')) {
+                        if (window.confirm("Are you sure you want to delete this load?")) {
                           onDelete?.(load.id);
                         }
                       }}

@@ -17,6 +17,8 @@ export function LoadDashboard() {
 
   const { data: loads, isLoading, refetch } = useQuery<IncomingLoad[]>({
     queryKey: ["/api/loads"],
+    refetchInterval: 0, // Disable automatic refetching
+    staleTime: 0, // Consider data immediately stale
   });
 
   const { data: suppliers = [] } = useQuery<Supplier[]>({
@@ -34,10 +36,16 @@ export function LoadDashboard() {
   const handleDelete = async (id: number) => {
     try {
       await fetch(`/api/loads/${id}`, { method: 'DELETE' });
-      refetch();
+      refetch(); // Manually trigger a refetch after deletion
     } catch (error) {
       console.error('Failed to delete load:', error);
     }
+  };
+
+  const handleClose = () => {
+    setEditingLoad(null);
+    setShowAddLoad(false);
+    refetch(); // Ensure data is refreshed when form is closed
   };
 
   return (
@@ -68,7 +76,7 @@ export function LoadDashboard() {
         {editingLoad && (
           <LoadForm
             initialData={editingLoad}
-            onClose={() => setEditingLoad(null)}
+            onClose={handleClose}
             show={true}
           />
         )}
@@ -93,7 +101,7 @@ export function LoadDashboard() {
       {showAddLoad && (
         <LoadForm
           defaultType={activeTab}
-          onClose={() => setShowAddLoad(false)}
+          onClose={handleClose}
           show={true}
           suppliers={suppliers}
         />

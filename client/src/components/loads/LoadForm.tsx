@@ -28,12 +28,12 @@ interface LoadFormProps {
   show?: boolean;
 }
 
-const FileInputWithPreview = ({ 
-  currentFile, 
-  onChange, 
-  label, 
-  accept = ".pdf,.doc,.docx,.png,.jpg,.jpeg" 
-}: { 
+const FileInputWithPreview = ({
+  currentFile,
+  onChange,
+  label,
+  accept = ".pdf,.doc,.docx,.png,.jpg,.jpeg"
+}: {
   currentFile: string | null;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   label: string;
@@ -159,7 +159,8 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
         throw new Error(errorData?.message || 'Failed to create/update load');
       }
 
-      queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
+      await queryClient.refetchQueries({ queryKey: ["/api/loads"] });
       handleClose();
       toast({
         title: initialData ? "Load updated successfully" : "Load created successfully",
