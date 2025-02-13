@@ -410,13 +410,14 @@ export class DatabaseStorage implements IStorage {
 
   async updateLoad(id: number, updates: Partial<IncomingLoad>): Promise<IncomingLoad> {
     try {
-      // Create the update object with only the fields that are present in updates
-      const updateData: Partial<IncomingLoad> = {};
+      return await db.transaction(async (tx) => {
+        console.log('Updating load:', id, 'with data:', updates);
+        const updateData: Partial<IncomingLoad> = {};
 
-      // Only include fields that are actually present in the updates object
-      if (updates.scheduledPickup !== undefined) {
-        updateData.scheduledPickup = updates.scheduledPickup ? new Date(updates.scheduledPickup).toISOString() : null;
-      }
+        // Only include fields that are actually present in the updates object
+        if (updates.scheduledPickup !== undefined) {
+          updateData.scheduledPickup = updates.scheduledPickup ? new Date(updates.scheduledPickup).toISOString() : null;
+        }
       if (updates.scheduledDelivery !== undefined) {
         updateData.scheduledDelivery = updates.scheduledDelivery ? new Date(updates.scheduledDelivery).toISOString() : null;
       }
@@ -465,7 +466,7 @@ export class DatabaseStorage implements IStorage {
         ...updateData
       };
 
-      const [updatedLoad] = await db
+      const [updatedLoad] = await tx
         .update(incomingLoads)
         .set(mergedData)
         .where(eq(incomingLoads.id, id))
@@ -475,7 +476,9 @@ export class DatabaseStorage implements IStorage {
         throw new Error('Failed to update load');
       }
 
+      console.log('Load updated successfully:', updatedLoad);
       return updatedLoad;
+      });
     } catch (error) {
       console.error('Error updating load:', error);
       throw error;
