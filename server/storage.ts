@@ -466,6 +466,8 @@ export class DatabaseStorage implements IStorage {
         ...updateData
       };
 
+      console.log('Updating load with data:', mergedData);
+      
       const [updatedLoad] = await tx
         .update(incomingLoads)
         .set(mergedData)
@@ -476,9 +478,15 @@ export class DatabaseStorage implements IStorage {
         throw new Error('Failed to update load');
       }
 
-      console.log('Load updated successfully:', updatedLoad);
-      return updatedLoad;
-      });
+      const result = await tx
+        .select()
+        .from(incomingLoads)
+        .where(eq(incomingLoads.id, id))
+        .execute();
+
+      console.log('Load updated successfully:', result[0]);
+      return result[0];
+    });
     } catch (error) {
       console.error('Error updating load:', error);
       throw error;

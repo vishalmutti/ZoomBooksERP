@@ -152,9 +152,9 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
       }
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
-      queryClient.refetchQueries({ queryKey: ["/api/loads"] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
+      await queryClient.refetchQueries({ queryKey: ["/api/loads"] }, { force: true });
       toast({
         title: "Success",
         description: "Load updated successfully",
