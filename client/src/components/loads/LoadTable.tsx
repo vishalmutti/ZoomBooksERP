@@ -174,7 +174,7 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
         load.carrier?.toLowerCase().includes(searchTerm);
 
       const matchesStatus = !filters.status || load.status === filters.status;
-      
+
       const matchesInvoiceStatus = !filters.invoiceStatus || (
         (filters.invoiceStatus === 'material_paid' && load.materialInvoiceStatus === 'PAID') ||
         (filters.invoiceStatus === 'material_unpaid' && load.materialInvoiceStatus === 'UNPAID') ||
@@ -462,20 +462,10 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
                 <TableCell>${Number(load.freightCost).toFixed(2)}</TableCell>
                 <TableCell>{Number(load.profitRoi).toFixed(2)}%</TableCell>
                 <TableCell>
-                  <FileLink file={load.bolFile} label="BOL Document" />
+                  <FileLink file={typeof load.bolFile === 'string' ? load.bolFile : ''} label="BOL Document" />
                 </TableCell>
                 <TableCell>
-                  {load.materialInvoiceFile ? (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0"
-                      onClick={() => window.open(`/uploads/${load.materialInvoiceFile}`, "_blank")}
-                      title="Material Invoice"
-                    >
-                      <LuFileText className="h-4 w-4" />
-                    </Button>
-                  ) : null}
+                  <FileLink file={typeof load.materialInvoiceFile === 'string' ? load.materialInvoiceFile : ''} label="Material Invoice" />
                 </TableCell>
                 <TableCell>
                   <InvoiceStatus
@@ -486,7 +476,7 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
                   />
                 </TableCell>
                 <TableCell>
-                  <FileLink file={load.freightInvoiceFile} label="Freight Invoice" />
+                  <FileLink file={typeof load.freightInvoiceFile === 'string' ? load.freightInvoiceFile : ''} label="Freight Invoice" />
                 </TableCell>
                 <TableCell>
                   <InvoiceStatus
@@ -496,7 +486,7 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
                   />
                 </TableCell>
                 <TableCell>
-                  <FileLink file={load.loadPerformanceFile} label="Load Performance" />
+                  <FileLink file={typeof load.loadPerformanceFile === 'string' ? load.loadPerformanceFile : ''} label="Load Performance" />
                 </TableCell>
                 <TableCell>{load.notes}</TableCell>
                 <TableCell>

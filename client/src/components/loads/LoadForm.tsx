@@ -105,7 +105,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
       freightCost: "0",
       profitRoi: "0",
       supplierId: "",
-      carrier: "" // Added carrier field to default values
+      carrier: "" 
     }
   });
 
@@ -135,7 +135,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
   async function onSubmit(data: InsertLoad) {
     try {
       const formData = new FormData();
-      
+
       // Handle initialData for edit mode
       if (initialData) {
         formData.append('id', initialData.id.toString());
@@ -322,7 +322,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
                 <FormItem>
                   <FormLabel>Load Cost</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" {...field} />
+                    <Input type="number" step="0.01" {...field} defaultValue={field.value || "0"}/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -335,7 +335,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
                 <FormItem>
                   <FormLabel>Freight Cost</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" {...field} />
+                    <Input type="number" step="0.01" {...field} defaultValue={field.value || "0"}/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -348,7 +348,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
                 <FormItem>
                   <FormLabel>Profit ROI</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" {...field} />
+                    <Input type="number" step="0.01" {...field} defaultValue={field.value || "0"}/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -363,7 +363,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
               <FormItem>
                 <FormLabel>Reference #</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input {...field} defaultValue={field.value || ""} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -416,7 +416,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
               <FormItem>
                 <FormLabel>Carrier</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input {...field} defaultValue={field.value || ""} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -430,7 +430,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
               <FormItem>
                 <FormLabel>Notes</FormLabel>
                 <FormControl>
-                  <Textarea {...field} placeholder="Add any relevant notes here..." />
+                  <Textarea {...field} placeholder="Add any relevant notes here..." defaultValue={field.value || ""} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
