@@ -335,7 +335,17 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
                   <FileLink file={load.bolFile} label="BOL Document" />
                 </TableCell>
                 <TableCell>
-                  <FileLink file={load.materialInvoiceFile} label="Material Invoice" />
+                  {load.materialInvoiceFile ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => window.open(`/uploads/${load.materialInvoiceFile}`, "_blank")}
+                      title="Material Invoice"
+                    >
+                      <LuFileText className="h-4 w-4" />
+                    </Button>
+                  ) : null}
                 </TableCell>
                 <TableCell>
                   <InvoiceStatus
