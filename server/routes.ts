@@ -147,7 +147,7 @@ export function registerRoutes(app: Express): Server {
       : 0;
 
     res.json({
-      count: incomingLoadsCount,
+      count: incomingLoads.length,
       averageCost: averageCost
     });
   });
