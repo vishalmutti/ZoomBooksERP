@@ -137,6 +137,71 @@ const SupplierDetailsRow = ({ supplierId }: { supplierId: string }) => {
 export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }: LoadTableProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [filters, setFilters] = useState({
+    supplier: '',
+    referenceNumber: '',
+    carrier: '',
+    minLoadCost: '',
+    maxLoadCost: '',
+    deliveryDateStart: '',
+    deliveryDateEnd: '',
+  });
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: 'asc' | 'desc';
+  } | null>(null);
+
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig?.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const filteredAndSortedLoads = useMemo(() => {
+    let filtered = [...(loads || [])];
+
+    // Apply filters
+    filtered = filtered.filter(load => {
+      const supplier = suppliers.find(s => s.id.toString() === load.supplierId);
+      const matchesSupplier = !filters.supplier || 
+        supplier?.name.toLowerCase().includes(filters.supplier.toLowerCase());
+      const matchesReference = !filters.referenceNumber || 
+        load.referenceNumber.toLowerCase().includes(filters.referenceNumber.toLowerCase());
+      const matchesCarrier = !filters.carrier || 
+        load.carrier?.toLowerCase().includes(filters.carrier.toLowerCase());
+      const matchesLoadCost = (!filters.minLoadCost || Number(load.loadCost) >= Number(filters.minLoadCost)) &&
+        (!filters.maxLoadCost || Number(load.loadCost) <= Number(filters.maxLoadCost));
+      const matchesDeliveryDate = (!filters.deliveryDateStart || new Date(load.scheduledDelivery) >= new Date(filters.deliveryDateStart)) &&
+        (!filters.deliveryDateEnd || new Date(load.scheduledDelivery) <= new Date(filters.deliveryDateEnd));
+
+      return matchesSupplier && matchesReference && matchesCarrier && 
+        matchesLoadCost && matchesDeliveryDate;
+    });
+
+    // Apply sorting
+    if (sortConfig) {
+      filtered.sort((a, b) => {
+        let aValue = a[sortConfig.key as keyof typeof a];
+        let bValue = b[sortConfig.key as keyof typeof b];
+        
+        if (sortConfig.key === 'scheduledPickup' || sortConfig.key === 'scheduledDelivery') {
+          aValue = new Date(aValue as string).getTime();
+          bValue = new Date(bValue as string).getTime();
+        } else if (['loadCost', 'freightCost', 'profitRoi'].includes(sortConfig.key)) {
+          aValue = Number(aValue);
+          bValue = Number(bValue);
+        }
+
+        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return filtered;
+  }, [loads, filters, sortConfig, suppliers]);
 
   const updateLoadMutation = useMutation({
     mutationFn: async (loadData: IncomingLoad) => {
@@ -252,6 +317,51 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
 
   return (
     <div className="rounded-md border overflow-x-auto">
+      <div className="space-y-4 mb-4">
+        <div className="grid grid-cols-3 gap-4">
+          <Input
+            placeholder="Filter by supplier"
+            value={filters.supplier}
+            onChange={(e) => setFilters(prev => ({ ...prev, supplier: e.target.value }))}
+          />
+          <Input
+            placeholder="Filter by reference number"
+            value={filters.referenceNumber}
+            onChange={(e) => setFilters(prev => ({ ...prev, referenceNumber: e.target.value }))}
+          />
+          <Input
+            placeholder="Filter by carrier"
+            value={filters.carrier}
+            onChange={(e) => setFilters(prev => ({ ...prev, carrier: e.target.value }))}
+          />
+        </div>
+        <div className="grid grid-cols-4 gap-4">
+          <Input
+            type="number"
+            placeholder="Min load cost"
+            value={filters.minLoadCost}
+            onChange={(e) => setFilters(prev => ({ ...prev, minLoadCost: e.target.value }))}
+          />
+          <Input
+            type="number"
+            placeholder="Max load cost"
+            value={filters.maxLoadCost}
+            onChange={(e) => setFilters(prev => ({ ...prev, maxLoadCost: e.target.value }))}
+          />
+          <Input
+            type="date"
+            placeholder="Delivery date start"
+            value={filters.deliveryDateStart}
+            onChange={(e) => setFilters(prev => ({ ...prev, deliveryDateStart: e.target.value }))}
+          />
+          <Input
+            type="date"
+            placeholder="Delivery date end"
+            value={filters.deliveryDateEnd}
+            onChange={(e) => setFilters(prev => ({ ...prev, deliveryDateEnd: e.target.value }))}
+          />
+        </div>
+      </div>
       <Table>
         <TableHeader>
           <TableRow>
@@ -261,11 +371,21 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
             <TableHead>Reference Number</TableHead>
             <TableHead>Location</TableHead>
             <TableHead>Carrier</TableHead>
-            <TableHead>Scheduled Pickup</TableHead>
-            <TableHead>Scheduled Delivery</TableHead>
-            <TableHead>Load Cost</TableHead>
-            <TableHead>Freight Cost</TableHead>
-            <TableHead>Profit/ROI</TableHead>
+            <TableHead onClick={() => handleSort('scheduledPickup')} className="cursor-pointer hover:bg-accent">
+              Scheduled Pickup {sortConfig?.key === 'scheduledPickup' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+            </TableHead>
+            <TableHead onClick={() => handleSort('scheduledDelivery')} className="cursor-pointer hover:bg-accent">
+              Scheduled Delivery {sortConfig?.key === 'scheduledDelivery' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+            </TableHead>
+            <TableHead onClick={() => handleSort('loadCost')} className="cursor-pointer hover:bg-accent">
+              Load Cost {sortConfig?.key === 'loadCost' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+            </TableHead>
+            <TableHead onClick={() => handleSort('freightCost')} className="cursor-pointer hover:bg-accent">
+              Freight Cost {sortConfig?.key === 'freightCost' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+            </TableHead>
+            <TableHead onClick={() => handleSort('profitRoi')} className="cursor-pointer hover:bg-accent">
+              Profit/ROI {sortConfig?.key === 'profitRoi' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+            </TableHead>
             <TableHead>BOL</TableHead>
             <TableHead>Material Invoice</TableHead>
             <TableHead>Material Status</TableHead>
@@ -277,7 +397,7 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
           </TableRow>
         </TableHeader>
         <TableBody>
-          {loads.map((load) => {
+          {filteredAndSortedLoads.map((load) => {
             const supplier = suppliers.find((s) => s.id.toString() === load.supplierId);
 
             return (
