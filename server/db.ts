@@ -8,7 +8,6 @@ neonConfig.webSocketConstructor = ws;
 neonConfig.useSecureWebSocket = true;
 neonConfig.pipelineConnect = true;
 neonConfig.connectionTimeoutMillis = 60000;
-neonConfig.wsProxy = false;
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
