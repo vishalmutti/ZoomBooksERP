@@ -424,9 +424,21 @@ export class DatabaseStorage implements IStorage {
     if (updates.referenceNumber !== undefined) updateData.referenceNumber = updates.referenceNumber;
     if (updates.location !== undefined) updateData.location = updates.location;
     if (updates.notes !== undefined) updateData.notes = updates.notes;
-    if (updates.loadCost !== undefined) updateData.loadCost = updates.loadCost;
-    if (updates.freightCost !== undefined) updateData.freightCost = updates.freightCost;
-    if (updates.profitRoi !== undefined) updateData.profitRoi = updates.profitRoi;
+    if (updates.loadCost !== undefined) {
+      updateData.loadCost = typeof updates.loadCost === 'string'
+        ? updates.loadCost
+        : updates.loadCost.toString();
+    }
+    if (updates.freightCost !== undefined) {
+      updateData.freightCost = typeof updates.freightCost === 'string'
+        ? updates.freightCost
+        : updates.freightCost.toString();
+    }
+    if (updates.profitRoi !== undefined) {
+      updateData.profitRoi = typeof updates.profitRoi === 'string'
+        ? updates.profitRoi
+        : updates.profitRoi.toString();
+    }
     if (updates.status !== undefined) updateData.status = updates.status;
     if (updates.carrier !== undefined) updateData.carrier = updates.carrier;
     if (updates.materialInvoiceStatus !== undefined) updateData.materialInvoiceStatus = updates.materialInvoiceStatus;
@@ -441,17 +453,22 @@ export class DatabaseStorage implements IStorage {
       throw new Error('No valid fields to update');
     }
 
-    const [updatedLoad] = await db
-      .update(incomingLoads)
-      .set(updateData)
-      .where(eq(incomingLoads.id, id))
-      .returning();
+    try {
+      const [updatedLoad] = await db
+        .update(incomingLoads)
+        .set(updateData)
+        .where(eq(incomingLoads.id, id))
+        .returning();
 
-    if (!updatedLoad) {
-      throw new Error('Load not found');
+      if (!updatedLoad) {
+        throw new Error('Load not found');
+      }
+
+      return updatedLoad;
+    } catch (error) {
+      console.error('Error updating load:', error);
+      throw error;
     }
-
-    return updatedLoad;
   }
 
   async deleteLoad(id: number): Promise<void> {
