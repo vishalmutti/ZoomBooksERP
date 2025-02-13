@@ -197,10 +197,15 @@ export const insertPaymentSchema = createInsertSchema(payments)
     id: true,
   });
 
+// Update the insertLoadSchema definition to properly handle date fields
 export const insertLoadSchema = createInsertSchema(incomingLoads)
   .omit({
     id: true,
     createdAt: true,
+  })
+  .extend({
+    scheduledPickup: z.string().nullable(),
+    scheduledDelivery: z.string().nullable(),
   });
 
 export const insertIncomingLoadSchema = insertLoadSchema;
@@ -237,7 +242,7 @@ export type Invoice = typeof invoices.$inferSelect;
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 export type Payment = typeof payments.$inferSelect;
 
-export type InsertIncomingLoad = z.infer<typeof insertIncomingLoadSchema>;
+export type InsertIncomingLoad = z.infer<typeof insertLoadSchema>;
 export type IncomingLoad = typeof incomingLoads.$inferSelect;
 export type LoadStatusHistory = typeof loadStatusHistory.$inferSelect;
 export type LoadDocument = typeof loadDocuments.$inferSelect;

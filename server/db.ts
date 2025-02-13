@@ -1,14 +1,12 @@
-
 import { Pool, neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-serverless';
 import ws from 'ws';
 import * as schema from "@shared/schema";
 
+// Configure Neon connection
 neonConfig.webSocketConstructor = ws;
-neonConfig.useSecureWebSocket = true;
-neonConfig.pipelineConnect = true;
-neonConfig.connectionTimeoutMillis = 60000;
 
+// Configure database connection
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
 }
@@ -23,10 +21,7 @@ const createPool = () => {
     ssl: true,
     max: 5,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 60000,
     keepAlive: true,
-    maxRetries: 3,
-    retryDelay: 1000,
     allowExitOnIdle: false
   });
 };
@@ -34,7 +29,7 @@ const createPool = () => {
 const handleReconnect = async () => {
   if (isReconnecting) return;
   isReconnecting = true;
-  
+
   for (let attempt = 0; attempt < MAX_RECONNECT_ATTEMPTS; attempt++) {
     try {
       await resetPool();
@@ -51,7 +46,7 @@ const handleReconnect = async () => {
       }
     }
   }
-  
+
   console.error('Max reconnection attempts reached');
   isReconnecting = false;
 };
@@ -91,7 +86,7 @@ const testInitialConnection = async (retries = 3, delay = 2000) => {
 testInitialConnection().catch(console.error);
 
 // Handle pool errors and reconnection
-pool.on('error', async (err) => {
+pool.on('error', async (err: Error & { code?: string }) => {
   console.error('Pool error:', err);
   if (err.code === '57P01') {
     console.log('Connection terminated, reconnecting...');

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { LoadForm } from "./LoadForm";
 import { LuPlus, LuShip, LuStore, LuPackage2 } from "react-icons/lu";
 
@@ -41,9 +41,15 @@ export function LoadSelector() {
           <LuPlus className="mr-2 h-4 w-4" /> New Load
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent 
+        className="sm:max-w-[600px]"
+        aria-describedby="load-type-description"
+      >
         <DialogHeader>
           <DialogTitle>Select Load Type</DialogTitle>
+          <DialogDescription id="load-type-description">
+            Choose the type of load you want to create from the options below.
+          </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4">
           {selectedType ? (
@@ -68,8 +74,9 @@ export function LoadSelector() {
                 variant="outline"
                 className="flex items-center justify-start gap-4 h-auto p-4"
                 onClick={() => setSelectedType(type.id)}
+                aria-label={`Create new ${type.name.toLowerCase()}`}
               >
-                <div className="text-primary">{type.icon}</div>
+                <div className="text-primary" aria-hidden="true">{type.icon}</div>
                 <div className="text-left">
                   <h3 className="font-semibold">{type.name}</h3>
                   <p className="text-sm text-muted-foreground">{type.description}</p>

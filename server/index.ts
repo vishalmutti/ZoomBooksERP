@@ -7,27 +7,29 @@ import { alterSupplierContacts } from "@shared/schema";
 const app = express();
 app.use(express.json());
 
-// Test database connection and run migrations
-(async () => {
+// Test database connection and run migrations asynchronously
+const initializeDatabase = async () => {
   try {
     // Test connection
     await pool.connect();
     console.log("Database connection successful");
-    
+
     // Run migrations
     await db.execute(alterSupplierContacts);
     console.log("Supplier contacts migration completed");
+    return true;
   } catch (err) {
     console.error("Database connection/migration error:", err);
-    process.exit(1);
+    return false;
   }
-})();
+};
 
 app.use(express.urlencoded({ extended: false }));
 
 // Create the server instance at the top level
 const server = registerRoutes(app);
 
+// Add logging middleware
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -58,6 +60,7 @@ app.use((req, res, next) => {
   next();
 });
 
+// Error handling middleware
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   const status = err.status || err.statusCode || 500;
   const message = err.message || "Internal Server Error";
@@ -65,48 +68,67 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   console.error(err);
 });
 
-// Try multiple ports starting from 3000
-const startServer = async (initialPort: number) => {
-  const maxAttempts = 10;
-  let currentPort = initialPort;
-
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    try {
-      if (app.get("env") === "development") {
-        await setupVite(app, server);
-      } else {
-        serveStatic(app);
-      }
-
-      return new Promise<void>((resolve, reject) => {
-        server.listen(currentPort, "0.0.0.0", () => {
-          log(`✨ Server running at http://0.0.0.0:${currentPort}`);
-          log(`🔒 API available at http://0.0.0.0:${currentPort}/api`);
-          resolve();
-        }).on('error', (err: any) => {
-          if (err.code === 'EADDRINUSE') {
-            currentPort++;
-            if (attempt === maxAttempts - 1) {
-              log(`Error: Unable to find an available port after ${maxAttempts} attempts`);
-              reject(err);
-            }
-          } else {
-            log(`Error starting server: ${err.message}`);
-            reject(err);
-          }
-        });
-      });
-    } catch (err) {
-      if (attempt === maxAttempts - 1) {
-        throw err;
-      }
+const startServer = async (port: number) => {
+  try {
+    // Initialize database first
+    const dbInitialized = await initializeDatabase();
+    if (!dbInitialized) {
+      throw new Error("Database initialization failed");
     }
+
+    // Setup Vite or static serving based on environment
+    if (app.get("env") === "development") {
+      await setupVite(app, server);
+    } else {
+      serveStatic(app);
+    }
+
+    return new Promise<void>((resolve, reject) => {
+      server.listen(port, "0.0.0.0", () => {
+        log(`✨ Server running at http://0.0.0.0:${port}`);
+        log(`🔒 API available at http://0.0.0.0:${port}/api`);
+        resolve();
+      }).on('error', (err: Error & { code?: string }) => {
+        if (err.code === 'EADDRINUSE') {
+          reject(new Error(`Port ${port} is already in use`));
+        } else {
+          reject(err);
+        }
+      });
+    });
+  } catch (err) {
+    console.error('Server startup error:', err);
+    throw err;
   }
 };
 
-// Start the server with initial port 5000
-startServer(5000).catch((err) => {
-  console.error('Failed to start server:', err);
+// Start server with retries if needed
+const startWithRetries = async (initialPort: number, maxRetries: number = 3) => {
+  let currentPort = initialPort;
+  let lastError: Error | undefined;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      await startServer(currentPort);
+      return; // Successfully started
+    } catch (err) {
+      lastError = err as Error;
+      if (err instanceof Error && err.message.includes('EADDRINUSE')) {
+        currentPort++; // Try next port
+        console.log(`Port ${currentPort - 1} in use, trying ${currentPort}...`);
+      } else {
+        break; // Non-port related error, stop retrying
+      }
+    }
+  }
+
+  console.error(`Failed to start server after ${maxRetries} attempts:`, lastError);
+  process.exit(1);
+};
+
+// Start with port 5000 as specified in .replit
+startWithRetries(5000).catch((err) => {
+  console.error('Critical server error:', err);
   process.exit(1);
 });
 
@@ -115,7 +137,17 @@ process.on('SIGTERM', () => {
   log('SIGTERM signal received: closing HTTP server');
   server.close(() => {
     log('HTTP server closed');
-    pool.end(); // Close the database connection
+    pool.end();
     process.exit(0);
   });
+});
+
+// Handle uncaught errors
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled rejection:', err);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception:', err);
+  process.exit(1);
 });

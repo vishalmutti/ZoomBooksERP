@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertSupplierSchema } from "@shared/schema";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -75,7 +75,7 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
 
       toast({
         title: "Success",
-        description: supplier 
+        description: supplier
           ? "Supplier updated successfully"
           : "Supplier created successfully",
       });
@@ -83,7 +83,7 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
       console.error("Error saving supplier:", error);
       toast({
         title: "Error",
-        description: supplier 
+        description: supplier
           ? "Failed to update supplier"
           : "Failed to create supplier",
         variant: "destructive",
@@ -93,9 +93,17 @@ export function LoadSupplierForm({ open, onOpenChange, supplier }: LoadSupplierF
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        className="max-w-2xl max-h-[90vh] overflow-y-auto"
+        aria-describedby="supplier-form-description"
+      >
         <DialogHeader>
           <DialogTitle>{supplier ? "Edit Supplier" : "Add New Supplier"}</DialogTitle>
+          <DialogDescription id="supplier-form-description">
+            {supplier
+              ? "Update the supplier information using the form below. All fields marked with * are required."
+              : "Enter the supplier information using the form below. All fields marked with * are required."}
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

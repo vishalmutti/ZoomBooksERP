@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertLoadSchema } from "@shared/schema";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { LuPlus, LuFileText } from "react-icons/lu";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import type { InsertLoad } from "@shared/schema";
+import type { InsertIncomingLoad } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -92,7 +92,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
     }
   }, [show]);
 
-  const form = useForm<InsertLoad>({
+  const form = useForm<InsertIncomingLoad>({
     resolver: zodResolver(insertLoadSchema),
     defaultValues: initialData || {
       loadType: defaultType || "Incoming",
@@ -105,7 +105,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
       freightCost: "0",
       profitRoi: "0",
       supplierId: "",
-      carrier: "" 
+      carrier: ""
     }
   });
 
@@ -132,7 +132,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
     });
   };
 
-  async function onSubmit(data: InsertLoad) {
+  async function onSubmit(data: InsertIncomingLoad) {
     try {
       const formData = new FormData();
 
@@ -146,7 +146,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
       console.log('Files to submit:', files);
 
       // Append form fields
-      Object.entries(data).forEach(([key, value]) => {
+      for (const [key, value] of Object.entries(data)) {
         if (value !== undefined && value !== null) {
           if (key === 'scheduledPickup' || key === 'scheduledDelivery') {
             formData.append(key, value ? new Date(value).toISOString() : '');
@@ -154,18 +154,13 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
             formData.append(key, value.toString());
           }
         }
-      });
+      }
 
       // Append files only if they exist or keep existing files
       if (files.bol) formData.append('bolFile', files.bol);
       if (files.materialInvoice) formData.append('materialInvoiceFile', files.materialInvoice);
       if (files.freightInvoice) formData.append('freightInvoiceFile', files.freightInvoice);
       if (files.loadPerformance) formData.append('loadPerformanceFile', files.loadPerformance);
-
-      // Log FormData entries for verification
-      for (const [key, value] of formData.entries()) {
-        console.log(`FormData entry - ${key}:`, value);
-      }
 
       const url = initialData ? `/api/loads/${initialData.id}` : '/api/loads';
       const method = initialData ? 'PATCH' : 'POST';
@@ -186,11 +181,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
       const savedLoad = await response.json();
       console.log('Server response success:', savedLoad);
 
-      // Invalidate and refetch queries
       await queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
-      // Force a refetch to ensure latest data
-      await queryClient.refetchQueries({ queryKey: ["/api/loads"] });
-
       handleClose();
       toast({
         title: initialData ? "Load updated successfully" : "Load created successfully",
@@ -207,9 +198,14 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
   }
 
   const content = (
-    <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+    <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto" aria-describedby="load-form-description">
       <DialogHeader>
         <DialogTitle>{initialData ? "Edit Load" : "Create New Load"}</DialogTitle>
+        <DialogDescription id="load-form-description">
+          {initialData
+            ? "Update the load information using the form below. All fields marked with * are required."
+            : "Enter the load information using the form below. All fields marked with * are required."}
+        </DialogDescription>
       </DialogHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -322,7 +318,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
                 <FormItem>
                   <FormLabel>Load Cost</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" {...field} defaultValue={field.value || "0"}/>
+                    <Input type="number" step="0.01" {...field} defaultValue={field.value || "0"} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -335,7 +331,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
                 <FormItem>
                   <FormLabel>Freight Cost</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" {...field} defaultValue={field.value || "0"}/>
+                    <Input type="number" step="0.01" {...field} defaultValue={field.value || "0"} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -348,7 +344,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
                 <FormItem>
                   <FormLabel>Profit ROI</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" {...field} defaultValue={field.value || "0"}/>
+                    <Input type="number" step="0.01" {...field} defaultValue={field.value || "0"} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

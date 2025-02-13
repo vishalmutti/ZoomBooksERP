@@ -28,6 +28,19 @@ interface LoadTableProps {
   onDelete?: (id: number) => void;
 }
 
+interface FilterState {
+  supplier: string;
+  referenceNumber: string;
+  carrier: string;
+  minLoadCost: string;
+  maxLoadCost: string;
+  deliveryDateStart: string;
+  deliveryDateEnd: string;
+  searchTerm?: string;
+  status?: string;
+  invoiceStatus?: string;
+}
+
 const loadTypeIcons = {
   Incoming: <LuBox className="h-5 w-5" />,
   Wholesale: <LuStore className="h-5 w-5" />,
@@ -100,7 +113,6 @@ const InvoiceStatus = ({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
-      queryClient.refetchQueries({ queryKey: ["/api/loads"] }, { force: true });
       toast({
         title: "Success",
         description: `${type === "material" ? "Material" : "Freight"} invoice status updated`,
@@ -139,7 +151,7 @@ const SupplierDetailsRow = ({ supplierId }: { supplierId: string }) => {
 export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }: LoadTableProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<FilterState>({
     supplier: '',
     referenceNumber: '',
     carrier: '',
@@ -147,6 +159,9 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
     maxLoadCost: '',
     deliveryDateStart: '',
     deliveryDateEnd: '',
+    searchTerm: '',
+    status: '',
+    invoiceStatus: '',
   });
   const [sortConfig, setSortConfig] = useState<{
     key: string;
@@ -162,13 +177,15 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
   };
 
   const filteredAndSortedLoads = useMemo(() => {
-    let filtered = [...(loads || [])];
+    if (!loads) return [];
+
+    let filtered = [...loads];
 
     // Apply filters
     filtered = filtered.filter(load => {
       const supplier = suppliers.find(s => s.id.toString() === load.supplierId);
       const searchTerm = filters.searchTerm?.toLowerCase() || '';
-      const matchesSearch = !searchTerm || 
+      const matchesSearch = !searchTerm ||
         supplier?.name.toLowerCase().includes(searchTerm) ||
         load.referenceNumber.toLowerCase().includes(searchTerm) ||
         load.carrier?.toLowerCase().includes(searchTerm);
@@ -182,8 +199,11 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
         (filters.invoiceStatus === 'freight_unpaid' && load.freightInvoiceStatus === 'UNPAID')
       );
 
-      const matchesDeliveryDate = (!filters.deliveryDateStart || new Date(load.scheduledDelivery) >= new Date(filters.deliveryDateStart)) &&
-        (!filters.deliveryDateEnd || new Date(load.scheduledDelivery) <= new Date(filters.deliveryDateEnd));
+      const startDate = filters.deliveryDateStart ? new Date(filters.deliveryDateStart) : null;
+      const endDate = filters.deliveryDateEnd ? new Date(filters.deliveryDateEnd) : null;
+
+      const matchesDeliveryDate = (!filters.deliveryDateStart || !load.scheduledDelivery || new Date(load.scheduledDelivery) >= new Date(filters.deliveryDateStart)) &&
+        (!filters.deliveryDateEnd || !load.scheduledDelivery || new Date(load.scheduledDelivery) <= new Date(filters.deliveryDateEnd));
 
       return matchesSearch && matchesStatus && matchesInvoiceStatus && matchesDeliveryDate;
     });
@@ -191,15 +211,17 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
     // Apply sorting
     if (sortConfig) {
       filtered.sort((a, b) => {
-        let aValue = a[sortConfig.key as keyof typeof a];
-        let bValue = b[sortConfig.key as keyof typeof b];
+        let aValue: any = a[sortConfig.key as keyof typeof a];
+        let bValue: any = b[sortConfig.key as keyof typeof b];
 
         if (sortConfig.key === 'scheduledPickup' || sortConfig.key === 'scheduledDelivery') {
-          aValue = new Date(aValue as string).getTime();
-          bValue = new Date(bValue as string).getTime();
+          const dateA = a[sortConfig.key as keyof typeof a];
+          const dateB = b[sortConfig.key as keyof typeof b];
+          aValue = dateA ? new Date(dateA).getTime() : 0;
+          bValue = dateB ? new Date(dateB).getTime() : 0;
         } else if (['loadCost', 'freightCost', 'profitRoi'].includes(sortConfig.key)) {
-          aValue = Number(aValue);
-          bValue = Number(bValue);
+          aValue = Number(aValue) || 0;
+          bValue = Number(bValue) || 0;
         }
 
         if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
@@ -232,9 +254,8 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
       }
       return response.json();
     },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
-      await queryClient.refetchQueries({ queryKey: ["/api/loads"] }, { force: true });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
       toast({
         title: "Success",
         description: "Load updated successfully",
@@ -272,7 +293,6 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
-      queryClient.refetchQueries({ queryKey: ["/api/loads"] });
       toast({
         title: "Success",
         description: "Load status updated successfully",
@@ -483,6 +503,7 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
                     loadId={load.id}
                     status={load.freightInvoiceStatus}
                     type="freight"
+                    loadType={load.loadType}
                   />
                 </TableCell>
                 <TableCell>
