@@ -124,6 +124,19 @@ export function registerRoutes(app: Express): Server {
     res.json(contacts.filter(contact => contact.supplierId === id));
   });
 
+  app.get("/api/suppliers/:id/loads/count", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    const id = parseInt(req.params.id);
+    const loads = await storage.getLoads();
+    const incomingLoadsCount = loads.filter(load => 
+      load.supplierId === id.toString() && 
+      load.loadType === 'Incoming'
+    ).length;
+
+    res.json(incomingLoadsCount);
+  });
+
   // Invoice routes
   app.get("/api/invoices", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
