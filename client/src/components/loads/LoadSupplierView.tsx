@@ -14,8 +14,12 @@ interface LoadSupplierViewProps {
 
 function SupplierMetrics({ supplierId }: { supplierId: number }) {
   const { data: loadCount, isLoading } = useQuery<number>({
-    queryKey: ["/api/suppliers", supplierId, "load-count"],
-    enabled: !!supplierId,
+    queryKey: ["loads", supplierId, "count"],
+    queryFn: async () => {
+      const response = await fetch(`/api/suppliers/${supplierId}/loads/count`);
+      if (!response.ok) throw new Error('Failed to fetch load count');
+      return response.json();
+    },
   });
 
   if (isLoading) {
