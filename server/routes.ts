@@ -35,6 +35,30 @@ const upload = multer({
   { name: 'loadPerformanceFile', maxCount: 1 }
 ]);
 
+// ... (previous imports and setup code remains unchanged)
+
+async function generatePDFForInvoice(invoice: any, supplierId: number) {
+  if (!supplierId) return null;
+
+  const supplier = await storage.getSupplier(supplierId);
+  if (!supplier) return null;
+
+  return await generateInvoicePDF({
+    invoice: {
+      ...invoice,
+      items: invoice.items?.map((item: any) => ({
+        id: item.id || 0,
+        invoiceId: invoice.id,
+        description: item.description,
+        quantity: item.quantity || "0",
+        unitPrice: item.unitPrice || "0",
+        totalPrice: ((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0)).toString(),
+      })),
+    },
+    supplier,
+  });
+}
+
 export function registerRoutes(app: Express): Server {
   app.use('/uploads', express.static(uploadDir));
 
@@ -207,12 +231,8 @@ export function registerRoutes(app: Express): Server {
 
       // Generate PDF if it's a manual entry
       if (!uploadedFile && parsed.data.items?.length) {
-        const supplier = await storage.getSupplier(parsed.data.supplierId);
-        if (supplier) {
-          const pdfFileName = await generateInvoicePDF({
-            invoice: { ...invoice, items: parsed.data.items },
-            supplier
-          });
+        const pdfFileName = await generatePDFForInvoice(parsed.data, parsed.data.supplierId);
+        if (pdfFileName) {
           await storage.updateInvoice(invoice.id, {
             uploadedFile: pdfFileName,
             bolFile: invoice.bolFile
@@ -220,7 +240,8 @@ export function registerRoutes(app: Express): Server {
           invoice.uploadedFile = pdfFileName;
 
           // Send email if supplier has an email address
-          if (supplier.email) {
+          const supplier = await storage.getSupplier(parsed.data.supplierId);
+          if (supplier?.email) {
             const { sendInvoiceEmail } = await import('./email-service');
             const pdfPath = path.join(process.cwd(), 'uploads', pdfFileName);
             await sendInvoiceEmail(
@@ -272,16 +293,8 @@ export function registerRoutes(app: Express): Server {
 
       // If this is a manual entry and we have items, generate a new PDF
       if (!files?.file?.[0] && (parsed.data.items?.length || existingInvoice.items?.length)) {
-        const supplier = await storage.getSupplier(parsed.data.supplierId || existingInvoice.supplierId);
-        if (supplier) {
-          const pdfFileName = await generateInvoicePDF({
-            invoice: {
-              ...updatedInvoice,
-              items: parsed.data.items || existingInvoice.items,
-            },
-            supplier
-          });
-
+        const pdfFileName = await generatePDFForInvoice(updateData, updateData.supplierId);
+        if (pdfFileName) {
           // Update the invoice with the new PDF file name but preserve the BOL file
           await storage.updateInvoice(id, {
             uploadedFile: pdfFileName,
@@ -486,13 +499,14 @@ export function registerRoutes(app: Express): Server {
         loadPerformanceFile: files?.loadPerformanceFile?.[0]?.filename || existingLoad.loadPerformanceFile,
       };
 
-      // Combine form data with file data
+      // Ensure location is valid
+      const location = req.body.location as "British Columbia" | "Ontario" | undefined;
+
       const updateData = {
         ...req.body,
         ...fileData,
+        location: location || existingLoad.location,
       };
-
-      console.log('Final update data:', updateData);
 
       const parsed = insertIncomingLoadSchema.partial().safeParse(updateData);
 
@@ -537,11 +551,12 @@ export function registerRoutes(app: Express): Server {
     try {
       const loadId = parseInt(req.params.loadId);
       const freightInvoiceData = JSON.parse(req.body.freightInvoiceData);
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
       const parsed = insertFreightInvoiceSchema.safeParse({
         ...freightInvoiceData,
         loadId,
-        attachmentFile: req.files?.file?.[0]?.filename, // Assuming single file upload
+        attachmentFile: files?.file?.[0]?.filename,
       });
 
       if (!parsed.success) {
@@ -562,11 +577,11 @@ export function registerRoutes(app: Express): Server {
     try {
       const id = parseInt(req.params.id);
       const freightInvoiceData = JSON.parse(req.body.freightInvoiceData);
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
       const parsed = insertFreightInvoiceSchema.partial().safeParse({
         ...freightInvoiceData,
-        attachmentFile: req.files?.file?.[0]?.filename, // Assuming single file upload
-
+        attachmentFile: files?.file?.[0]?.filename,
       });
 
       if (!parsed.success) {

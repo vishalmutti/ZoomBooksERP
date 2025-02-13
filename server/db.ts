@@ -90,7 +90,7 @@ pool.on('error', async (err: Error & { code?: string }) => {
   console.error('Pool error:', err);
   if (err.code === '57P01') {
     console.log('Connection terminated, reconnecting...');
-    await resetPool();
+    await handleReconnect();
   }
 });
 
@@ -100,7 +100,7 @@ setInterval(async () => {
     await pool.query('SELECT 1');
   } catch (error) {
     console.error('Keep-alive query failed:', error);
-    await resetPool();
+    await handleReconnect();
   }
 }, 30000);
 
