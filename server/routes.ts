@@ -137,11 +137,13 @@ export function registerRoutes(app: Express): Server {
     // Calculate average cost only for loads with both costs present
     const loadsWithBothCosts = incomingLoads.filter(load =>
       load.loadCost && load.freightCost &&
+      Number(load.loadCost) > 0 && Number(load.freightCost) > 0 &&
       !isNaN(Number(load.loadCost)) && !isNaN(Number(load.freightCost))
     );
 
     const loadsWithRoi = incomingLoads.filter(load =>
-      load.profitRoi && Number(load.profitRoi) !== 0 &&
+      load.profitRoi &&
+      Number(load.profitRoi) > 0 &&
       !isNaN(Number(load.profitRoi))
     );
 
