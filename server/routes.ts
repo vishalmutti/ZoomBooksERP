@@ -429,14 +429,29 @@ export function registerRoutes(app: Express): Server {
   app.patch("/api/loads/:id", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
-    const id = parseInt(req.params.id);
-    const parsed = insertIncomingLoadSchema.partial().safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json(parsed.error);
-    }
+    try {
+      const id = parseInt(req.params.id);
+      const existingLoad = await storage.getLoad(id);
+      
+      if (!existingLoad) {
+        return res.status(404).json({ message: "Load not found" });
+      }
 
-    const load = await storage.updateLoad(id, parsed.data);
-    res.json(load);
+      const parsed = insertIncomingLoadSchema.partial().safeParse({
+        ...req.body,
+        loadType: req.body.loadType || existingLoad.loadType,
+      });
+
+      if (!parsed.success) {
+        return res.status(400).json({ message: "Invalid data", errors: parsed.error });
+      }
+
+      const updatedLoad = await storage.updateLoad(id, parsed.data);
+      res.json(updatedLoad);
+    } catch (error) {
+      console.error('Error updating load:', error);
+      res.status(500).json({ message: "Failed to update load" });
+    }
   });
 
   app.delete("/api/loads/:id", async (req, res) => {

@@ -84,12 +84,14 @@ const InvoiceStatus = ({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          [field]: newStatus
+          [field]: newStatus,
+          loadType: loads?.find(l => l.id === loadId)?.loadType,
         }),
       });
       
       if (!response.ok) {
-        throw new Error('Failed to update status');
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update status');
       }
       return response.json();
     },
