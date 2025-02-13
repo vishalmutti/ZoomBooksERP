@@ -224,7 +224,6 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
         <TableBody>
           {loads.map((load) => {
             const supplier = suppliers.find((s) => s.id.toString() === load.supplierId);
-            const { contacts: supplierContacts = [] } = SupplierDetailsRow({ supplierId: load.supplierId });
 
             return (
               <TableRow key={load.id}>
@@ -236,10 +235,7 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
                 </TableCell>
                 <TableCell>
                   {supplier ? (
-                    <SupplierQuickView
-                      supplierName={supplier.name}
-                      contacts={supplierContacts}
-                    />
+                    <SupplierContactsQuery supplier={supplier} />
                   ) : (
                     "Unknown Supplier"
                   )}
