@@ -418,9 +418,9 @@ export class DatabaseStorage implements IStorage {
     if (updates.referenceNumber) updateData.referenceNumber = updates.referenceNumber;
     if (updates.location) updateData.location = updates.location;
     if (updates.notes) updateData.notes = updates.notes;
-    if (updates.loadCost) updateData.loadCost = updates.loadCost;
-    if (updates.freightCost) updateData.freightCost = updates.freightCost;
-    if (updates.profitRoi) updateData.profitRoi = updates.profitRoi;
+    if (typeof updates.loadCost !== 'undefined') updateData.loadCost = updates.loadCost;
+    if (typeof updates.freightCost !== 'undefined') updateData.freightCost = updates.freightCost;
+    if (typeof updates.profitRoi !== 'undefined') updateData.profitRoi = updates.profitRoi;
     if (updates.status) updateData.status = updates.status;
     if (updates.carrier) updateData.carrier = updates.carrier;
     if (updates.materialInvoiceStatus) updateData.materialInvoiceStatus = updates.materialInvoiceStatus;
