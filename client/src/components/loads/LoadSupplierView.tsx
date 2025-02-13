@@ -13,30 +13,47 @@ interface LoadSupplierViewProps {
 }
 
 function SupplierMetrics({ supplierId }: { supplierId: number }) {
-  const { data: loadCount, isLoading } = useQuery<number>({
-    queryKey: ["suppliers", supplierId, "loads", "count"],
+  const { data, isLoading } = useQuery<{ count: number, averageCost: number }>({
+    queryKey: ["suppliers", supplierId, "loads", "metrics"],
     queryFn: async () => {
       const response = await fetch(`/api/suppliers/${supplierId}/loads/count`);
-      if (!response.ok) throw new Error('Failed to fetch load count');
+      if (!response.ok) throw new Error('Failed to fetch load metrics');
       return response.json();
     },
     enabled: !!supplierId,
   });
 
   if (isLoading) {
-    return <Skeleton className="h-[120px] w-full" />;
+    return <div className="grid grid-cols-2 gap-4">
+      <Skeleton className="h-[120px] w-full" />
+      <Skeleton className="h-[120px] w-full" />
+    </div>;
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">Total Incoming Loads</CardTitle>
-        <LuPackage className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{loadCount || 0}</div>
-      </CardContent>
-    </Card>
+    <div className="grid grid-cols-2 gap-4">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Total Incoming Loads</CardTitle>
+          <LuPackage className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{data?.count || 0}</div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Average Cost Per Load</CardTitle>
+          <LuPackage className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">
+            ${data?.averageCost ? data.averageCost.toFixed(2) : '0.00'}
+          </div>
+          <p className="text-xs text-muted-foreground">Load Cost + Freight Cost</p>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 

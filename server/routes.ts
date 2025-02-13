@@ -129,12 +129,27 @@ export function registerRoutes(app: Express): Server {
 
     const id = parseInt(req.params.id);
     const loads = await storage.getLoads();
-    const incomingLoadsCount = loads.filter(load => 
+    const incomingLoads = loads.filter(load => 
       load.supplierId === id.toString() && 
       load.loadType === 'Incoming'
-    ).length;
+    );
+    
+    // Calculate average cost only for loads with both costs present
+    const loadsWithBothCosts = incomingLoads.filter(load => 
+      load.loadCost && load.freightCost && 
+      !isNaN(Number(load.loadCost)) && !isNaN(Number(load.freightCost))
+    );
+    
+    const averageCost = loadsWithBothCosts.length > 0 
+      ? loadsWithBothCosts.reduce((acc, load) => 
+          acc + Number(load.loadCost) + Number(load.freightCost), 0
+        ) / loadsWithBothCosts.length
+      : 0;
 
-    res.json(incomingLoadsCount);
+    res.json({
+      count: incomingLoadsCount,
+      averageCost: averageCost
+    });
   });
 
   // Invoice routes
