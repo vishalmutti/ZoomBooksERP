@@ -59,29 +59,50 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   console.error(err);
 });
 
+// Try multiple ports starting from 3000
+const startServer = async (initialPort: number) => {
+  const maxAttempts = 10;
+  let currentPort = initialPort;
 
-(async () => {
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      if (app.get("env") === "development") {
+        await setupVite(app, server);
+      } else {
+        serveStatic(app);
+      }
 
-  // Try a single port (5000)
-  const PORT = 5000;
-
-  server.listen(PORT, "0.0.0.0", () => {
-    log(`✨ Server running at http://0.0.0.0:${PORT}`);
-    log(`🔒 API available at http://0.0.0.0:${PORT}/api`);
-  }).on('error', (err: any) => {
-    if (err.code === 'EADDRINUSE') {
-      log(`Error: Port ${PORT} is already in use`);
-    } else {
-      log(`Error starting server: ${err.message}`);
+      return new Promise<void>((resolve, reject) => {
+        server.listen(currentPort, "0.0.0.0", () => {
+          log(`✨ Server running at http://0.0.0.0:${currentPort}`);
+          log(`🔒 API available at http://0.0.0.0:${currentPort}/api`);
+          resolve();
+        }).on('error', (err: any) => {
+          if (err.code === 'EADDRINUSE') {
+            currentPort++;
+            if (attempt === maxAttempts - 1) {
+              log(`Error: Unable to find an available port after ${maxAttempts} attempts`);
+              reject(err);
+            }
+          } else {
+            log(`Error starting server: ${err.message}`);
+            reject(err);
+          }
+        });
+      });
+    } catch (err) {
+      if (attempt === maxAttempts - 1) {
+        throw err;
+      }
     }
-    process.exit(1);
-  });
-})();
+  }
+};
+
+// Start the server with initial port 3000
+startServer(3000).catch((err) => {
+  console.error('Failed to start server:', err);
+  process.exit(1);
+});
 
 // Handle graceful shutdown
 process.on('SIGTERM', () => {

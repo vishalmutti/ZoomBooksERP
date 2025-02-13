@@ -32,11 +32,13 @@ const FileInputWithPreview = ({
   currentFile,
   onChange,
   label,
+  name,
   accept = ".pdf,.doc,.docx,.png,.jpg,.jpeg"
 }: {
   currentFile: string | null;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   label: string;
+  name: string;
   accept?: string;
 }) => {
   return (
@@ -61,6 +63,7 @@ const FileInputWithPreview = ({
           type="file"
           onChange={onChange}
           accept={accept}
+          name={name}
         />
       </div>
     </div>
@@ -129,7 +132,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
   async function onSubmit(data: InsertLoad) {
     try {
       const formData = new FormData();
-      
+
       // Ensure all necessary fields are included
       const dataToSend = {
         ...data,
@@ -139,6 +142,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
         profitRoi: data.profitRoi?.toString() || initialData?.profitRoi,
       };
 
+      // Append each field from the form data
       Object.entries(dataToSend).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
           if (key === 'scheduledPickup' || key === 'scheduledDelivery') {
@@ -149,6 +153,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
         }
       });
 
+      // Append files with correct field names
       if (files.bol) formData.append('bolFile', files.bol);
       if (files.materialInvoice) formData.append('materialInvoiceFile', files.materialInvoice);
       if (files.freightInvoice) formData.append('freightInvoiceFile', files.freightInvoice);
@@ -421,21 +426,25 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
               currentFile={initialData?.bolFile || null}
               onChange={(e) => handleFileChange('bol', e)}
               label="BOL"
+              name="bolFile"
             />
             <FileInputWithPreview
               currentFile={initialData?.materialInvoiceFile || null}
               onChange={(e) => handleFileChange('materialInvoice', e)}
               label="Material Invoice"
+              name="materialInvoiceFile"
             />
             <FileInputWithPreview
               currentFile={initialData?.freightInvoiceFile || null}
               onChange={(e) => handleFileChange('freightInvoice', e)}
               label="Freight Invoice"
+              name="freightInvoiceFile"
             />
             <FileInputWithPreview
               currentFile={initialData?.loadPerformanceFile || null}
               onChange={(e) => handleFileChange('loadPerformance', e)}
               label="Load Performance"
+              name="loadPerformanceFile"
             />
           </div>
 

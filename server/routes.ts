@@ -129,19 +129,19 @@ export function registerRoutes(app: Express): Server {
 
     const id = parseInt(req.params.id);
     const loads = await storage.getLoads();
-    const incomingLoads = loads.filter(load => 
-      load.supplierId === id.toString() && 
+    const incomingLoads = loads.filter(load =>
+      load.supplierId === id.toString() &&
       load.loadType === 'Incoming'
     );
-    
+
     // Calculate average cost only for loads with both costs present
-    const loadsWithBothCosts = incomingLoads.filter(load => 
-      load.loadCost && load.freightCost && 
+    const loadsWithBothCosts = incomingLoads.filter(load =>
+      load.loadCost && load.freightCost &&
       !isNaN(Number(load.loadCost)) && !isNaN(Number(load.freightCost))
     );
-    
-    const averageCost = loadsWithBothCosts.length > 0 
-      ? loadsWithBothCosts.reduce((acc, load) => 
+
+    const averageCost = loadsWithBothCosts.length > 0
+      ? loadsWithBothCosts.reduce((acc, load) =>
           acc + Number(load.loadCost) + Number(load.freightCost), 0
         ) / loadsWithBothCosts.length
       : 0;
@@ -402,29 +402,43 @@ export function registerRoutes(app: Express): Server {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     try {
-      const loadData = req.body;
-      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+        const loadData = JSON.parse(req.body.loadData);
+        const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
-      const parsed = insertIncomingLoadSchema.safeParse({
-        ...loadData,
-        bolFile: files?.bolFile?.[0]?.filename,
-        materialInvoiceFile: files?.materialInvoiceFile?.[0]?.filename,
-        freightInvoiceFile: files?.freightInvoiceFile?.[0]?.filename,
-        loadPerformanceFile: files?.loadPerformanceFile?.[0]?.filename,
-      });
+        console.log('Received files:', JSON.stringify(files, null, 2));
+        console.log('Received load data:', JSON.stringify(loadData, null, 2));
 
-      if (!parsed.success) {
-        console.error('Validation error:', parsed.error);
-        return res.status(400).json({ message: 'Invalid load data', error: parsed.error });
-      }
+        // Extract file names from the uploaded files
+        const fileData = {
+            bolFile: files?.bolFile?.[0]?.filename,
+            materialInvoiceFile: files?.materialInvoiceFile?.[0]?.filename,
+            freightInvoiceFile: files?.freightInvoiceFile?.[0]?.filename,
+            loadPerformanceFile: files?.loadPerformanceFile?.[0]?.filename,
+        };
 
-      const load = await storage.createLoad(parsed.data);
-      res.status(201).json(load);
+        console.log('Extracted file data:', JSON.stringify(fileData, null, 2));
+
+        const parsed = insertIncomingLoadSchema.safeParse({
+            ...loadData,
+            ...fileData
+        });
+
+        if (!parsed.success) {
+            console.error('Validation error:', parsed.error);
+            return res.status(400).json({ message: 'Invalid load data', error: parsed.error });
+        }
+
+        console.log('Parsed data before storage:', JSON.stringify(parsed.data, null, 2));
+
+        const load = await storage.createLoad(parsed.data);
+        console.log('Created load:', JSON.stringify(load, null, 2));
+
+        res.status(201).json(load);
     } catch (error) {
-      console.error('Error creating load:', error);
-      res.status(500).json({ message: 'Failed to create load' });
+        console.error('Error creating load:', error);
+        res.status(500).json({ message: 'Failed to create load' });
     }
-  });
+});
 
   app.patch("/api/loads/:id", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
@@ -432,7 +446,7 @@ export function registerRoutes(app: Express): Server {
     try {
       const id = parseInt(req.params.id);
       const existingLoad = await storage.getLoad(id);
-      
+
       if (!existingLoad) {
         return res.status(404).json({ message: "Load not found" });
       }
