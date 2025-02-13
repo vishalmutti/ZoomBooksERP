@@ -467,7 +467,23 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteFreightInvoice(id: number): Promise<void> {
-    await db.delete(freightInvoices).where(eq(freightInvoices.id, id));
+    try {
+      await db.transaction(async (tx) => {
+        const [freightInvoice] = await tx
+          .select()
+          .from(freightInvoices)
+          .where(eq(freightInvoices.id, id));
+
+        if (!freightInvoice) {
+          throw new Error('Freight invoice not found');
+        }
+
+        await tx.delete(freightInvoices).where(eq(freightInvoices.id, id));
+      });
+    } catch (error) {
+      console.error('Error deleting freight invoice:', error);
+      throw error;
+    }
   }
 
   async getSupplierContacts(supplierId: number): Promise<SupplierContact[]> {
