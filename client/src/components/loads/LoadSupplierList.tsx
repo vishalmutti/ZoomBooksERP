@@ -28,7 +28,7 @@ export function LoadSupplierList({ suppliers }: LoadSupplierListProps) {
 
       if (!response.ok) throw new Error('Failed to delete supplier');
 
-      queryClient.invalidateQueries({ queryKey: ["/api/suppliers"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/suppliers"] });
       toast({
         title: "Success",
         description: "Supplier deleted successfully",
@@ -40,6 +40,7 @@ export function LoadSupplierList({ suppliers }: LoadSupplierListProps) {
         variant: "destructive",
       });
     }
+    setSelectedSupplier(null);
   };
 
   const columns: ColumnDef<Supplier>[] = [
