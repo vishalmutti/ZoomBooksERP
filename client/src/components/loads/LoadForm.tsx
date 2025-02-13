@@ -134,6 +134,8 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
         if (value !== undefined && value !== null) {
           if (key === 'scheduledPickup' || key === 'scheduledDelivery') {
             formData.append(key, value ? new Date(value).toISOString() : '');
+          } else if (key === 'loadCost' || key === 'freightCost' || key === 'profitRoi') {
+            formData.append(key, value.toString());
           } else {
             formData.append(key, value.toString());
           }
