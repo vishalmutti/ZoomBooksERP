@@ -70,25 +70,21 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
 
 const startServer = async (port: number) => {
   try {
-    // Force close any existing connections and kill any process using the port
-    server.close();
+    // Force close any existing connections
+    if (server.listening) {
+      await new Promise((resolve) => server.close(resolve));
+    }
+    
+    // Kill any process using the port
     try {
-      await new Promise((resolve) => {
-        const kill = require('tree-kill');
-        const { execSync } = require('child_process');
-        const cmd = process.platform === 'win32' 
-          ? `netstat -ano | findstr :${port}`
-          : `lsof -i:${port} -t`;
-        const pid = execSync(cmd).toString().trim();
-        if (pid) {
-          kill(pid, 'SIGKILL', resolve);
-        } else {
-          resolve(null);
-        }
-      });
+      const { execSync } = require('child_process');
+      execSync(`fuser -k ${port}/tcp`, { stdio: 'ignore' });
     } catch (e) {
       // Ignore errors from port killing
     }
+    
+    // Small delay to ensure port is released
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
     // Initialize database first
     const dbInitialized = await initializeDatabase();
