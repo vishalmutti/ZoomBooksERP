@@ -141,16 +141,17 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
 
   const updateLoadMutation = useMutation({
     mutationFn: async (loadData: IncomingLoad) => {
-      console.log('Updating load with:', loadData);
       const response = await fetch(`/api/loads/${loadData.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...loadData,
+          id: loadData.id,
+          loadType: loadData.loadType,
           loadCost: loadData.loadCost?.toString(),
           freightCost: loadData.freightCost?.toString(),
+          status: loadData.status
         }),
       });
       
