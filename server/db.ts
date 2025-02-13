@@ -7,8 +7,7 @@ import * as schema from "@shared/schema";
 neonConfig.webSocketConstructor = ws;
 neonConfig.useSecureWebSocket = true;
 neonConfig.pipelineConnect = false;
-neonConfig.connectionTimeoutMillis = 15000;
-neonConfig.wsProxy = true;
+neonConfig.connectionTimeoutMillis = 30000;
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
@@ -20,11 +19,10 @@ const createPool = () => {
     ssl: true,
     max: 1,
     idleTimeoutMillis: 0,
-    connectionTimeoutMillis: 15000,
+    connectionTimeoutMillis: 30000,
     keepAlive: true,
-    keepAliveInitialDelayMillis: 5000,
-    maxRetries: 3,
-    retryDelay: 1000
+    maxRetries: 5,
+    retryDelay: 2000
   });
 };
 
