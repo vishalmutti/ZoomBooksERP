@@ -7,13 +7,19 @@ import { alterSupplierContacts } from "@shared/schema";
 const app = express();
 app.use(express.json());
 
-// Run migrations
+// Test database connection and run migrations
 (async () => {
   try {
+    // Test connection
+    await pool.connect();
+    console.log("Database connection successful");
+    
+    // Run migrations
     await db.execute(alterSupplierContacts);
     console.log("Supplier contacts migration completed");
   } catch (err) {
-    console.error("Migration error:", err);
+    console.error("Database connection/migration error:", err);
+    process.exit(1);
   }
 })();
 
