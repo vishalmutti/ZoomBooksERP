@@ -135,6 +135,11 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
   async function onSubmit(data: InsertLoad) {
     try {
       const formData = new FormData();
+      
+      // Handle initialData for edit mode
+      if (initialData) {
+        formData.append('id', initialData.id.toString());
+      }
 
       // Log form data and files for debugging
       console.log('Form data to submit:', data);
@@ -151,7 +156,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
         }
       });
 
-      // Append files only if they exist
+      // Append files only if they exist or keep existing files
       if (files.bol) formData.append('bolFile', files.bol);
       if (files.materialInvoice) formData.append('materialInvoiceFile', files.materialInvoice);
       if (files.freightInvoice) formData.append('freightInvoiceFile', files.freightInvoice);
@@ -183,6 +188,8 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
 
       // Invalidate and refetch queries
       await queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
+      // Force a refetch to ensure latest data
+      await queryClient.refetchQueries({ queryKey: ["/api/loads"] });
 
       handleClose();
       toast({
