@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { IncomingLoad, Supplier, SupplierContact } from "@shared/schema";
 import { format } from "date-fns";
-import { LuTruck, LuPackage2, LuStore, LuBox, LuFileText, LuPencil, LuTrash } from "react-icons/lu";
+import { LuTruck, LuPackage2, LuStore, LuBox, LuFileText, LuPencil, LuTrash, LuCheck } from "react-icons/lu";
 import { Button } from "@/components/ui/button";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -196,12 +196,37 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
                   )}
                 </TableCell>
                 <TableCell>
-                  <Badge
-                    variant="outline"
-                    className={statusColors[load.status as keyof typeof statusColors]}
-                  >
-                    {load.status}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant="outline"
+                      className={statusColors[load.status as keyof typeof statusColors]}
+                    >
+                      {load.status}
+                    </Badge>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={async () => {
+                        if (window.confirm('Are you sure you want to mark this load as complete?')) {
+                          const response = await fetch(`/api/loads/${load.id}`, {
+                            method: 'PATCH',
+                            headers: {
+                              'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ status: 'Completed' }),
+                          });
+                          if (response.ok) {
+                            queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
+                          }
+                        }
+                      }}
+                      disabled={load.status === 'Completed'}
+                      title={load.status === 'Completed' ? 'Load is already completed' : 'Mark as complete'}
+                    >
+                      <LuCheck className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </TableCell>
                 <TableCell>{load.referenceNumber}</TableCell>
                 <TableCell>{load.location}</TableCell>
