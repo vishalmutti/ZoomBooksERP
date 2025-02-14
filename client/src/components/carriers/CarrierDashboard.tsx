@@ -29,13 +29,7 @@ export function CarrierDashboard() {
 
   const addCarrierMutation = useMutation({
     mutationFn: (data: any) => {
-      return apiRequest("/api/carriers", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      return apiRequest("POST", "/api/carriers", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/carriers"] });
