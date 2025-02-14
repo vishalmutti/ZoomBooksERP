@@ -46,6 +46,12 @@ function Router() {
         </AppLayout>
       </Route>
 
+      <Route path="/carriers">
+        <AppLayout>
+          <ProtectedRoute path="/carriers" component={CarrierPage} />
+        </AppLayout>
+      </Route>
+
       <Route path="/">
         <AppLayout>
           <ProtectedRoute path="/" component={HomePage} />
