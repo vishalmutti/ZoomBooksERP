@@ -21,6 +21,7 @@ export function CarrierDashboard() {
     queryKey: ["/api/carriers"],
     queryFn: async () => {
       const response = await apiRequest("GET", "/api/carriers");
+      console.log('Carriers response:', response); // Debug log
       return Array.isArray(response) ? response : [];
     }
   });
@@ -35,9 +36,10 @@ export function CarrierDashboard() {
 
   const addCarrierMutation = useMutation({
     mutationFn: async (data: InsertCarrier) => {
+      console.log('Submitting carrier data:', data); // Debug log
       const response = await apiRequest("POST", "/api/carriers", data);
       if (!response) throw new Error("Failed to create carrier");
-      return response;
+      return response as Carrier;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/carriers"] });
@@ -51,14 +53,18 @@ export function CarrierDashboard() {
       console.error("Carrier creation error:", error);
       toast({
         title: "Error",
-        description: "Failed to add carrier",
+        description: error instanceof Error ? error.message : "Failed to add carrier",
         variant: "destructive",
       });
     },
   });
 
   const handleAddCarrier = async (data: InsertCarrier) => {
-    await addCarrierMutation.mutate(data);
+    try {
+      await addCarrierMutation.mutateAsync(data);
+    } catch (error) {
+      console.error("Error in handleAddCarrier:", error);
+    }
   };
 
   const handleEditCarrier = async (carrier: Carrier) => {

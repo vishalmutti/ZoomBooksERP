@@ -641,18 +641,29 @@ export function registerRoutes(app: Express): Server {
   // Carrier routes
   app.get("/api/carriers", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    const carriers = await storage.getCarriers();
-    res.json(carriers);
+    try {
+      const carriers = await storage.getCarriers();
+      res.json(carriers);
+    } catch (error) {
+      console.error('Error fetching carriers:', error);
+      res.status(500).json({ message: 'Failed to fetch carriers' });
+    }
   });
 
   app.post("/api/carriers", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
+
     try {
+      console.log('Received carrier data:', req.body);
       const carrier = await storage.createCarrier(req.body);
+      console.log('Created carrier:', carrier);
       res.status(201).json(carrier);
     } catch (error) {
       console.error('Error creating carrier:', error);
-      res.status(500).json({ message: 'Failed to create carrier' });
+      res.status(500).json({ 
+        message: 'Failed to create carrier',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 

@@ -1,4 +1,4 @@
-import { invoices, suppliers, invoiceItems, users, payments, incomingLoads, freightInvoices, supplierContacts, type User, type InsertUser, type Invoice, type InsertInvoice, type Supplier, type InsertSupplier, type Payment, type InsertPayment, type InvoiceItem, type IncomingLoad, type InsertIncomingLoad, type FreightInvoice, type InsertFreightInvoice, type SupplierContact, carriers, carrierContacts, type Carrier, type InsertCarrier } from "@shared/schema";
+import { invoices, suppliers, invoiceItems, users, payments, incomingLoads, freightInvoices, supplierContacts, type User, type InsertUser, type Invoice, type InsertInvoice, type Supplier, type InsertSupplier, type Payment, type InsertPayment, type InvoiceItem, type IncomingLoad, type InsertIncomingLoad, type FreightInvoice, type InsertFreightInvoice, type SupplierContact, carriers, carrierContacts, type Carrier, type InsertCarrier, type CarrierContact } from "@shared/schema";
 import { db } from "./db";
 import { eq, ilike, and, gte, lte, sql, desc } from "drizzle-orm";
 import session from "express-session";
@@ -555,13 +555,38 @@ export class DatabaseStorage implements IStorage {
 
   async getCarriers(): Promise<Carrier[]> {
     try {
-      const result = await db.query.carriers.findMany({
-        with: {
-          contacts: true,
-        },
-        orderBy: carriers.name,
-      });
-      return result;
+      // Get all carriers first
+      const allCarriers = await db
+        .select()
+        .from(carriers)
+        .orderBy(carriers.name);
+
+      if (allCarriers.length === 0) {
+        return [];
+      }
+
+      // Get all contacts in a single query
+      const allContacts = await db
+        .select()
+        .from(carrierContacts)
+        .where(
+          sql`carrier_id = ANY(${sql.array(allCarriers.map(c => c.id), 'int4')})`
+        );
+
+      // Group contacts by carrier ID
+      const contactsByCarrier = allContacts.reduce((acc, contact) => {
+        if (!acc[contact.carrierId]) {
+          acc[contact.carrierId] = [];
+        }
+        acc[contact.carrierId].push(contact);
+        return acc;
+      }, {} as Record<number, CarrierContact[]>);
+
+      // Return carriers with their contacts
+      return allCarriers.map(carrier => ({
+        ...carrier,
+        contacts: contactsByCarrier[carrier.id] || []
+      }));
     } catch (error) {
       console.error('Error fetching carriers:', error);
       throw error;
@@ -569,11 +594,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createCarrier(data: InsertCarrier): Promise<Carrier> {
-    console.log('Creating carrier with data:', data);
     try {
       return await db.transaction(async (tx) => {
-        // Insert the carrier
-        const [carrier] = await tx
+        // First insert the carrier
+        const [newCarrier] = await tx
           .insert(carriers)
           .values({
             name: data.name,
@@ -581,30 +605,28 @@ export class DatabaseStorage implements IStorage {
           })
           .returning();
 
-        if (!carrier) {
+        if (!newCarrier) {
           throw new Error('Failed to create carrier');
         }
 
-        let contacts = [];
-        // Insert contacts if provided
-        if (data.contacts?.length) {
-          contacts = await tx
-            .insert(carrierContacts)
-            .values(
-              data.contacts.map(contact => ({
-                carrierId: carrier.id,
-                name: contact.name,
-                email: contact.email || null,
-                phone: contact.phone || null,
-              }))
-            )
-            .returning();
-        }
+        // Then insert contacts if provided
+        const carrierContactsList = data.contacts?.length 
+          ? await tx
+              .insert(carrierContacts)
+              .values(
+                data.contacts.map(contact => ({
+                  carrierId: newCarrier.id,
+                  name: contact.name,
+                  email: contact.email || null,
+                  phone: contact.phone || null,
+                }))
+              )
+              .returning()
+          : [];
 
-        // Return the carrier with its contacts
         return {
-          ...carrier,
-          contacts: contacts,
+          ...newCarrier,
+          contacts: carrierContactsList
         };
       });
     } catch (error) {
