@@ -6,7 +6,7 @@ import type { IncomingLoad, Supplier } from "@shared/schema";
 import { LoadSupplierList } from "./LoadSupplierList";
 import { LoadSupplierForm } from "./LoadSupplierForm";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { LuPlus } from "react-icons/lu";
 
 export function LoadDashboard() {
@@ -64,6 +64,9 @@ export function LoadDashboard() {
         </div>
         <Dialog open={showAddLoad} onOpenChange={setShowAddLoad}>
           <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Create New Load</DialogTitle>
+            </DialogHeader>
             <LoadForm 
               onClose={() => setShowAddLoad(false)} 
               defaultType="Incoming"
