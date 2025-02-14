@@ -2,22 +2,20 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { pool, db } from "./db";
-import { supplierContacts } from "@shared/schema";
-import * as sql from "drizzle-orm";
+import { alterSupplierContacts } from "@shared/schema";
 
 const app = express();
 app.use(express.json());
 
+// Test database connection and run migrations asynchronously
 const initializeDatabase = async () => {
   try {
+    // Test connection
     await pool.connect();
     console.log("Database connection successful");
 
-    // Add notes column to supplier_contacts if it doesn't exist
-    await db.execute(sql.sql`
-      ALTER TABLE supplier_contacts 
-      ADD COLUMN IF NOT EXISTS notes text;
-    `);
+    // Run migrations
+    await db.execute(alterSupplierContacts);
     console.log("Supplier contacts migration completed");
     return true;
   } catch (err) {
@@ -50,9 +48,11 @@ app.use((req, res, next) => {
       if (capturedJsonResponse) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
+
       if (logLine.length > 80) {
         logLine = logLine.slice(0, 79) + "…";
       }
+
       log(logLine);
     }
   });
@@ -68,17 +68,28 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   console.error(err);
 });
 
-const startServer = async (port: number): Promise<boolean> => {
+const startServer = async (port: number) => {
   try {
+    // Force close any existing connections
+    if (server.listening) {
+      await new Promise((resolve) => server.close(resolve));
+    }
+    
+    // Kill any process using the port
+    try {
+      const { execSync } = require('child_process');
+      execSync(`fuser -k ${port}/tcp`, { stdio: 'ignore' });
+    } catch (e) {
+      // Ignore errors from port killing
+    }
+    
+    // Small delay to ensure port is released
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
     // Initialize database first
     const dbInitialized = await initializeDatabase();
     if (!dbInitialized) {
       throw new Error("Database initialization failed");
-    }
-
-    // Close any existing server
-    if (server.listening) {
-      await new Promise<void>((resolve) => server.close(() => resolve()));
     }
 
     // Setup Vite or static serving based on environment
@@ -88,7 +99,7 @@ const startServer = async (port: number): Promise<boolean> => {
       serveStatic(app);
     }
 
-    await new Promise<void>((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       server.listen(port, "0.0.0.0", () => {
         log(`✨ Server running at http://0.0.0.0:${port}`);
         log(`🔒 API available at http://0.0.0.0:${port}/api`);
@@ -101,47 +112,38 @@ const startServer = async (port: number): Promise<boolean> => {
         }
       });
     });
-
-    return true;
   } catch (err) {
-    if (err instanceof Error && err.message.includes('EADDRINUSE')) {
-      return false;
-    }
     console.error('Server startup error:', err);
     throw err;
   }
 };
 
-// Start server with auto port increment
-const startWithPortIncrement = async (initialPort: number = 5000, maxPort: number = 5010) => {
+// Start server with retries if needed
+const startWithRetries = async (initialPort: number, maxRetries: number = 3) => {
   let currentPort = initialPort;
+  let lastError: Error | undefined;
 
-  while (currentPort <= maxPort) {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
-      // Force close any existing connections
-      if (server.listening) {
-        await new Promise((resolve) => server.close(resolve));
-      }
-
-      const success = await startServer(currentPort);
-      if (success) {
-        return;
-      }
-
-      currentPort++;
-      console.log(`Port ${currentPort - 1} in use, trying ${currentPort}...`);
+      await startServer(currentPort);
+      return; // Successfully started
     } catch (err) {
-      console.error(`Error starting server on port ${currentPort}:`, err);
-      process.exit(1);
+      lastError = err as Error;
+      if (err instanceof Error && err.message.includes('EADDRINUSE')) {
+        currentPort++; // Try next port
+        console.log(`Port ${currentPort - 1} in use, trying ${currentPort}...`);
+      } else {
+        break; // Non-port related error, stop retrying
+      }
     }
   }
 
-  console.error(`Failed to find available port between ${initialPort} and ${maxPort}`);
+  console.error(`Failed to start server after ${maxRetries} attempts:`, lastError);
   process.exit(1);
 };
 
 // Start with port 5000 as specified in .replit
-startWithPortIncrement().catch((err) => {
+startWithRetries(5000).catch((err) => {
   console.error('Critical server error:', err);
   process.exit(1);
 });

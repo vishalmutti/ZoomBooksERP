@@ -23,7 +23,7 @@ interface Supplier {
 
 interface LoadFormProps {
   onClose: () => void;
-  initialData?: Partial<InsertIncomingLoad> & { id?: number };
+  initialData?: any;
   defaultType?: 'Incoming' | 'Wholesale' | 'Miscellaneous';
   show?: boolean;
 }
@@ -94,24 +94,25 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
 
   const form = useForm<InsertIncomingLoad>({
     resolver: zodResolver(insertLoadSchema),
-    defaultValues: {
+    defaultValues: initialData || {
       loadType: defaultType || "Incoming",
-      notes: initialData?.notes ?? "",
-      location: initialData?.location ?? "",
-      referenceNumber: initialData?.referenceNumber ?? "",
-      scheduledPickup: initialData?.scheduledPickup,
-      scheduledDelivery: initialData?.scheduledDelivery,
-      loadCost: initialData?.loadCost ?? "0",
-      freightCost: initialData?.freightCost ?? "0",
-      profitRoi: initialData?.profitRoi ?? "0",
-      supplierId: initialData?.supplierId ?? "",
-      carrier: initialData?.carrier ?? ""
+      notes: "",
+      location: "",
+      referenceNumber: "",
+      scheduledPickup: undefined,
+      scheduledDelivery: undefined,
+      loadCost: "0",
+      freightCost: "0",
+      profitRoi: "0",
+      supplierId: "",
+      carrier: ""
     }
   });
 
   const handleFileChange = (type: keyof typeof files, e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
       const file = e.target.files[0];
+      console.log(`Setting ${type} file:`, file);
       setFiles(prev => ({
         ...prev,
         [type]: file
@@ -135,12 +136,17 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
     try {
       const formData = new FormData();
 
-      if (initialData?.id) {
+      // Handle initialData for edit mode
+      if (initialData) {
         formData.append('id', initialData.id.toString());
       }
 
+      // Log form data and files for debugging
+      console.log('Form data to submit:', data);
+      console.log('Files to submit:', files);
+
       // Append form fields
-      Object.entries(data).forEach(([key, value]) => {
+      for (const [key, value] of Object.entries(data)) {
         if (value !== undefined && value !== null) {
           if (key === 'scheduledPickup' || key === 'scheduledDelivery') {
             formData.append(key, value ? new Date(value).toISOString() : '');
@@ -148,16 +154,18 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
             formData.append(key, value.toString());
           }
         }
-      });
+      }
 
-      // Append files only if they exist
+      // Append files only if they exist or keep existing files
       if (files.bol) formData.append('bolFile', files.bol);
       if (files.materialInvoice) formData.append('materialInvoiceFile', files.materialInvoice);
       if (files.freightInvoice) formData.append('freightInvoiceFile', files.freightInvoice);
       if (files.loadPerformance) formData.append('loadPerformanceFile', files.loadPerformance);
 
-      const url = initialData?.id ? `/api/loads/${initialData.id}` : '/api/loads';
-      const method = initialData?.id ? 'PATCH' : 'POST';
+      const url = initialData ? `/api/loads/${initialData.id}` : '/api/loads';
+      const method = initialData ? 'PATCH' : 'POST';
+
+      console.log(`Making ${method} request to ${url}`);
 
       const response = await fetch(url, {
         method,
@@ -166,8 +174,12 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('Server response error:', errorData);
         throw new Error(errorData?.message || `Failed to ${initialData ? 'update' : 'create'} load`);
       }
+
+      const savedLoad = await response.json();
+      console.log('Server response success:', savedLoad);
 
       await queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
       handleClose();
@@ -179,11 +191,259 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
       console.error('Error saving load:', error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        description: `Failed to ${initialData ? 'update' : 'create'} load. Please try again.`,
         variant: "destructive",
       });
     }
   }
+
+  const content = (
+    <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto" aria-describedby="load-form-description">
+      <DialogHeader>
+        <DialogTitle>{initialData ? "Edit Load" : "Create New Load"}</DialogTitle>
+        <DialogDescription id="load-form-description">
+          {initialData
+            ? "Update the load information using the form below. All fields marked with * are required."
+            : "Enter the load information using the form below. All fields marked with * are required."}
+        </DialogDescription>
+      </DialogHeader>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <input type="hidden" {...form.register("loadType")} value="Incoming" />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="supplierId"
+            render={({ field }) => {
+              const { data: suppliers = [], isLoading, isError } = useQuery<Supplier[]>({
+                queryKey: ["/api/suppliers"],
+              });
+
+              if (isLoading) return <FormItem><FormLabel>Supplier</FormLabel><p>Loading...</p></FormItem>;
+              if (isError) return <FormItem><FormLabel>Supplier</FormLabel><p>Error loading suppliers</p></FormItem>;
+
+              return (
+                <FormItem>
+                  <FormLabel>Supplier</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-between">
+                        {field.value
+                          ? suppliers.find(s => s.id.toString() === field.value)?.name
+                          : "Select supplier..."}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[300px] p-0">
+                      <Command>
+                        <CommandInput placeholder="Search suppliers..." />
+                        <CommandList>
+                          <CommandEmpty>No suppliers found.</CommandEmpty>
+                          <CommandGroup>
+                            {suppliers.map((supplier) => (
+                              <CommandItem
+                                key={supplier.id}
+                                value={supplier.name}
+                                onSelect={() => {
+                                  field.onChange(supplier.id.toString());
+                                  const popoverElement = document.querySelector('[data-radix-popper-content-id]');
+                                  if (popoverElement) {
+                                    (popoverElement as HTMLElement).style.display = 'none';
+                                  }
+                                }}
+                              >
+                                {supplier.name}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
+          />
+
+          <FormField
+            control={form.control}
+            name="location"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Location</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select location" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="British Columbia">British Columbia</SelectItem>
+                    <SelectItem value="Ontario">Ontario</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="grid grid-cols-3 gap-4">
+            <FormField
+              control={form.control}
+              name="loadCost"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Load Cost</FormLabel>
+                  <FormControl>
+                    <Input type="number" step="0.01" {...field} defaultValue={field.value || "0"} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="freightCost"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Freight Cost</FormLabel>
+                  <FormControl>
+                    <Input type="number" step="0.01" {...field} defaultValue={field.value || "0"} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="profitRoi"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Profit ROI</FormLabel>
+                  <FormControl>
+                    <Input type="number" step="0.01" {...field} defaultValue={field.value || "0"} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="referenceNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Reference #</FormLabel>
+                <FormControl>
+                  <Input {...field} defaultValue={field.value || ""} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="scheduledPickup"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Scheduled Pickup</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="date"
+                      {...field}
+                      value={field.value || ''}
+                      onChange={(e) => field.onChange(e.target.value || null)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="scheduledDelivery"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Scheduled Delivery</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="date"
+                      {...field}
+                      value={field.value || ''}
+                      onChange={(e) => field.onChange(e.target.value || null)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="carrier"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Carrier</FormLabel>
+                <FormControl>
+                  <Input {...field} defaultValue={field.value || ""} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="notes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Notes</FormLabel>
+                <FormControl>
+                  <Textarea {...field} placeholder="Add any relevant notes here..." defaultValue={field.value || ""} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="space-y-4">
+            <FileInputWithPreview
+              currentFile={initialData?.bolFile || null}
+              onChange={(e) => handleFileChange('bol', e)}
+              label="BOL"
+              name="bolFile"
+            />
+            <FileInputWithPreview
+              currentFile={initialData?.materialInvoiceFile || null}
+              onChange={(e) => handleFileChange('materialInvoice', e)}
+              label="Material Invoice"
+              name="materialInvoiceFile"
+            />
+            <FileInputWithPreview
+              currentFile={initialData?.freightInvoiceFile || null}
+              onChange={(e) => handleFileChange('freightInvoice', e)}
+              label="Freight Invoice"
+              name="freightInvoiceFile"
+            />
+            <FileInputWithPreview
+              currentFile={initialData?.loadPerformanceFile || null}
+              onChange={(e) => handleFileChange('loadPerformance', e)}
+              label="Load Performance"
+              name="loadPerformanceFile"
+            />
+          </div>
+
+          <Button type="submit">{initialData ? "Update Load" : "Create Load"}</Button>
+        </form>
+      </Form>
+    </DialogContent>
+  );
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -194,244 +454,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
           </Button>
         </DialogTrigger>
       )}
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{initialData ? "Edit Load" : "Create New Load"}</DialogTitle>
-          <DialogDescription>
-            {initialData
-              ? "Update the load information using the form below. All fields marked with * are required."
-              : "Enter the load information using the form below. All fields marked with * are required."}
-          </DialogDescription>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <input type="hidden" {...form.register("loadType")} />
-
-            <FormField
-              control={form.control}
-              name="supplierId"
-              render={({ field }) => {
-                const { data: suppliers = [], isLoading, isError } = useQuery<Supplier[]>({
-                  queryKey: ["/api/suppliers"],
-                });
-
-                if (isLoading) return <FormItem><FormLabel>Supplier</FormLabel><p>Loading...</p></FormItem>;
-                if (isError) return <FormItem><FormLabel>Supplier</FormLabel><p>Error loading suppliers</p></FormItem>;
-
-                return (
-                  <FormItem>
-                    <FormLabel>Supplier</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-between">
-                          {field.value
-                            ? suppliers.find(s => s.id.toString() === field.value)?.name
-                            : "Select supplier..."}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[300px] p-0">
-                        <Command>
-                          <CommandInput placeholder="Search suppliers..." />
-                          <CommandList>
-                            <CommandEmpty>No suppliers found.</CommandEmpty>
-                            <CommandGroup>
-                              {suppliers.map((supplier) => (
-                                <CommandItem
-                                  key={supplier.id}
-                                  value={supplier.name}
-                                  onSelect={() => {
-                                    field.onChange(supplier.id.toString());
-                                  }}
-                                >
-                                  {supplier.name}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                );
-              }}
-            />
-            <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Location</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select location" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="British Columbia">British Columbia</SelectItem>
-                      <SelectItem value="Ontario">Ontario</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="grid grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="loadCost"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Load Cost</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.01" {...field} defaultValue={field.value || "0"} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="freightCost"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Freight Cost</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.01" {...field} defaultValue={field.value || "0"} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="profitRoi"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Profit ROI</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.01" {...field} defaultValue={field.value || "0"} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <FormField
-              control={form.control}
-              name="referenceNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Reference #</FormLabel>
-                  <FormControl>
-                    <Input {...field} defaultValue={field.value || ""} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="scheduledPickup"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Scheduled Pickup</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="date"
-                        {...field}
-                        value={field.value || ''}
-                        onChange={(e) => field.onChange(e.target.value || null)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="scheduledDelivery"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Scheduled Delivery</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="date"
-                        {...field}
-                        value={field.value || ''}
-                        onChange={(e) => field.onChange(e.target.value || null)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <FormField
-              control={form.control}
-              name="carrier"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Carrier</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      value={field.value ?? ""}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      {...field}
-                      value={field.value ?? ""}
-                      placeholder="Add any relevant notes here..."
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="space-y-4">
-              <FileInputWithPreview
-                currentFile={initialData?.bolFile || null}
-                onChange={(e) => handleFileChange('bol', e)}
-                label="BOL"
-                name="bolFile"
-              />
-              <FileInputWithPreview
-                currentFile={initialData?.materialInvoiceFile || null}
-                onChange={(e) => handleFileChange('materialInvoice', e)}
-                label="Material Invoice"
-                name="materialInvoiceFile"
-              />
-              <FileInputWithPreview
-                currentFile={initialData?.freightInvoiceFile || null}
-                onChange={(e) => handleFileChange('freightInvoice', e)}
-                label="Freight Invoice"
-                name="freightInvoiceFile"
-              />
-              <FileInputWithPreview
-                currentFile={initialData?.loadPerformanceFile || null}
-                onChange={(e) => handleFileChange('loadPerformance', e)}
-                label="Load Performance"
-                name="loadPerformanceFile"
-              />
-            </div>
-            <Button type="submit">{initialData ? "Update Load" : "Create Load"}</Button>
-          </form>
-        </Form>
-      </DialogContent>
+      {content}
     </Dialog>
   );
 }

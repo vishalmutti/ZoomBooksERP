@@ -35,6 +35,7 @@ export const alterSupplierContacts = sql`
   ADD COLUMN IF NOT EXISTS notes text;
 `;
 
+// Update the insert schema to include notes
 export const insertSupplierContactSchema = createInsertSchema(supplierContacts).omit({
   id: true,
   createdAt: true,
@@ -199,6 +200,7 @@ export const insertPaymentSchema = createInsertSchema(payments)
     id: true,
   });
 
+// Update the insertLoadSchema definition to properly handle date fields
 export const insertLoadSchema = createInsertSchema(incomingLoads)
   .omit({
     id: true,
@@ -228,62 +230,6 @@ export const insertFreightInvoiceSchema = createInsertSchema(freightInvoices)
     createdAt: true,
   });
 
-export const carriers = pgTable("carriers", {
-  id: serial("id").primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
-  email: varchar("email", { length: 255 }),
-  phone: varchar("phone", { length: 50 }),
-  address: text("address"),
-  status: varchar("status", { length: 20 }).default('Active').notNull().$type<'Active' | 'Inactive'>(),
-  mc_number: varchar("mc_number", { length: 50 }),
-  dot_number: varchar("dot_number", { length: 50 }),
-  insurance_expiry: date("insurance_expiry"),
-  notes: text("notes"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
-export const freightLoads = pgTable("freight_loads", {
-  id: serial("id").primaryKey(),
-  carrierId: integer("carrier_id").references(() => carriers.id).notNull(),
-  loadNumber: varchar("load_number", { length: 50 }).notNull(),
-  origin: varchar("origin", { length: 255 }).notNull(),
-  destination: varchar("destination", { length: 255 }).notNull(),
-  pickupDate: date("pickup_date").notNull(),
-  deliveryDate: date("delivery_date").notNull(),
-  status: varchar("status", { length: 30 }).default('Pending').notNull().$type<'Pending' | 'In Transit' | 'Delivered' | 'Cancelled'>(),
-  rate: decimal("rate", { precision: 10, scale: 2 }).notNull(),
-  weight: decimal("weight", { precision: 10, scale: 2 }),
-  commodity: varchar("commodity", { length: 255 }),
-  notes: text("notes"),
-  bolFile: text("bol_file"),
-  rateConfirmationFile: text("rate_confirmation_file"),
-  invoiceFile: text("invoice_file"),
-  proofOfDeliveryFile: text("proof_of_delivery_file"),
-  paymentStatus: varchar("payment_status", { length: 20 }).default('Unpaid').notNull().$type<'Unpaid' | 'Paid' | 'Partial'>(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
-export const carriersRelations = relations(carriers, ({ many }) => ({
-  freightLoads: many(freightLoads),
-}));
-
-export const freightLoadsRelations = relations(freightLoads, ({ one }) => ({
-  carrier: one(carriers, {
-    fields: [freightLoads.carrierId],
-    references: [carriers.id],
-  }),
-}));
-
-export const insertCarrierSchema = createInsertSchema(carriers).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertFreightLoadSchema = createInsertSchema(freightLoads).omit({
-  id: true,
-  createdAt: true,
-});
-
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
@@ -309,11 +255,3 @@ export type InsertFreightInvoice = z.infer<typeof insertFreightInvoiceSchema>;
 export type FreightInvoice = typeof freightInvoices.$inferSelect;
 export type InsertSupplierContact = z.infer<typeof insertSupplierContactSchema>;
 export type SupplierContact = typeof supplierContacts.$inferSelect;
-
-export type InsertCarrier = z.infer<typeof insertCarrierSchema>;
-export type Carrier = typeof carriers.$inferSelect;
-export type InsertFreightLoad = z.infer<typeof insertFreightLoadSchema>;
-export type FreightLoad = typeof freightLoads.$inferSelect;
-
-export const freightLoadsTable = freightLoads;
-export const carriersTable = carriers;

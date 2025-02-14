@@ -10,7 +10,7 @@ import fs from "fs";
 import express from "express";
 import { eq } from "drizzle-orm";
 import { db } from "./db";
-import { insertIncomingLoadSchema, insertFreightInvoiceSchema, insertCarrierSchema, insertFreightLoadSchema } from "@shared/schema";
+import { insertIncomingLoadSchema, insertFreightInvoiceSchema } from "@shared/schema";
 
 // Type definitions for file uploads
 interface UploadedFiles {
@@ -206,91 +206,6 @@ export function registerRoutes(app: Express): Server {
       averageRoi: averageRoi
     });
   });
-
-
-  // Add carrier routes
-  app.get("/api/carriers", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    const carriers = await storage.getCarriers();
-    res.json(carriers);
-  });
-
-  app.post("/api/carriers", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    try {
-      const parsed = insertCarrierSchema.safeParse(req.body);
-      if (!parsed.success) {
-        return res.status(400).json(parsed.error);
-      }
-
-      const carrier = await storage.createCarrier(parsed.data);
-      res.status(201).json(carrier);
-    } catch (error) {
-      console.error('Error creating carrier:', error);
-      res.status(500).json({ message: 'Failed to create carrier' });
-    }
-  });
-
-  // Add freight load routes
-  app.get("/api/freight-loads", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    const carrierId = req.query.carrierId ? parseInt(req.query.carrierId as string) : undefined;
-    const freightLoads = await storage.getFreightLoads(carrierId);
-    res.json(freightLoads);
-  });
-
-  app.post("/api/freight-loads", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    try {
-      const parsed = insertFreightLoadSchema.safeParse(req.body);
-      if (!parsed.success) {
-        return res.status(400).json(parsed.error);
-      }
-
-      const freightLoad = await storage.createFreightLoad(parsed.data);
-      res.status(201).json(freightLoad);
-    } catch (error) {
-      console.error('Error creating freight load:', error);
-      res.status(500).json({ message: 'Failed to create freight load' });
-    }
-  });
-
-  // Add other carrier routes
-  app.patch("/api/carriers/:id", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    try {
-      const id = parseInt(req.params.id);
-      const parsed = insertCarrierSchema.partial().safeParse(req.body);
-      if (!parsed.success) {
-        return res.status(400).json(parsed.error);
-      }
-
-      const carrier = await storage.updateCarrier(id, parsed.data);
-      res.json(carrier);
-    } catch (error) {
-      console.error('Error updating carrier:', error);
-      res.status(500).json({ message: 'Failed to update carrier' });
-    }
-  });
-
-  app.delete("/api/carriers/:id", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    try {
-      const id = parseInt(req.params.id);
-      await storage.deleteCarrier(id);
-      res.sendStatus(200);
-    } catch (error) {
-      console.error('Error deleting carrier:', error);
-      res.status(500).json({ message: 'Failed to delete carrier' });
-    }
-  });
-
 
   // Invoice routes
   app.get("/api/invoices", async (req, res) => {
