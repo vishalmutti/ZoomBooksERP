@@ -263,6 +263,7 @@ export const carriers = pgTable("carriers", {
   contactName: varchar("contact_name", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }).notNull(),
   phone: varchar("phone", { length: 50 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const carrierLoads = pgTable("carrier_loads", {
