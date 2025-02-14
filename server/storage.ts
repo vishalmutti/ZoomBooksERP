@@ -1,4 +1,4 @@
-import { invoices, suppliers, invoiceItems, users, payments, incomingLoads, freightInvoices, supplierContacts, type User, type InsertUser, type Invoice, type InsertInvoice, type Supplier, type InsertSupplier, type Payment, type InsertPayment, type InvoiceItem, type IncomingLoad, type InsertIncomingLoad, type FreightInvoice, type InsertFreightInvoice, type SupplierContact, carriers, carrierContacts } from "@shared/schema";
+import { invoices, suppliers, invoiceItems, users, payments, incomingLoads, freightInvoices, supplierContacts, type User, type InsertUser, type Invoice, type InsertInvoice, type Supplier, type InsertSupplier, type Payment, type InsertPayment, type InvoiceItem, type IncomingLoad, type InsertIncomingLoad, type FreightInvoice, type InsertFreightInvoice, type SupplierContact, carriers, carrierContacts, type Carrier, type InsertCarrier } from "@shared/schema";
 import { db } from "./db";
 import { eq, ilike, and, gte, lte, sql, desc } from "drizzle-orm";
 import session from "express-session";
@@ -50,8 +50,8 @@ export interface IStorage {
   updateFreightInvoice(id: number, updates: Partial<FreightInvoice>): Promise<FreightInvoice>;
   deleteFreightInvoice(id: number): Promise<void>;
   getSupplierContacts(supplierId: number): Promise<SupplierContact[]>;
-  getCarriers(): Promise<(typeof carriers)[]>;
-  createCarrier(data: any): Promise<typeof carriers>;
+  getCarriers(): Promise<Carrier[]>;
+  createCarrier(data: InsertCarrier): Promise<Carrier>;
 
 }
 
@@ -563,33 +563,51 @@ export class DatabaseStorage implements IStorage {
       .orderBy(supplierContacts.createdAt);
   }
 
-  async getCarriers(): Promise<(typeof carriers)[]> {
-    return await db.query.carriers.findMany({
-      with: {
-        contacts: true
-      }
-    });
+  async getCarriers(): Promise<Carrier[]> {
+    try {
+      const result = await db.query.carriers.findMany({
+        with: {
+          contacts: true,
+        },
+        orderBy: carriers.name,
+      });
+      return result;
+    } catch (error) {
+      console.error('Error fetching carriers:', error);
+      throw error;
+    }
   }
 
-  async createCarrier(data: any): Promise<typeof carriers> {
+  async createCarrier(data: InsertCarrier): Promise<Carrier> {
     return await db.transaction(async (tx) => {
       const [carrier] = await tx.insert(carriers).values({
         name: data.name,
-        address: data.address
+        address: data.address,
       }).returning();
 
-      if (data.contacts) {
+      if (data.contacts?.length) {
         await tx.insert(carrierContacts).values(
-          data.contacts.map((contact: any) => ({
+          data.contacts.map(contact => ({
             carrierId: carrier.id,
             name: contact.name,
             email: contact.email,
-            phone: contact.phone
+            phone: contact.phone,
           }))
         );
       }
 
-      return carrier;
+      const result = await db.query.carriers.findFirst({
+        where: eq(carriers.id, carrier.id),
+        with: {
+          contacts: true,
+        },
+      });
+
+      if (!result) {
+        throw new Error('Failed to create carrier');
+      }
+
+      return result;
     });
   }
 }

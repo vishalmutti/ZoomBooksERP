@@ -62,7 +62,6 @@ export const alterSupplierContacts = sql`
   ADD COLUMN IF NOT EXISTS notes text;
 `;
 
-// Update the insert schema to include notes
 export const insertSupplierContactSchema = createInsertSchema(supplierContacts).omit({
   id: true,
   createdAt: true,
@@ -237,7 +236,6 @@ export const insertPaymentSchema = createInsertSchema(payments)
     id: true,
   });
 
-// Update the insertLoadSchema definition to properly handle date fields
 export const insertLoadSchema = createInsertSchema(incomingLoads)
   .omit({
     id: true,
@@ -296,19 +294,43 @@ export const insertFreightSchema = createInsertSchema(freight).omit({
   id: true,
   createdAt: true,
 });
+
 export type InsertSupplierContact = z.infer<typeof insertSupplierContactSchema>;
 export type SupplierContact = typeof supplierContacts.$inferSelect;
 
-export const insertCarrierSchema = createInsertSchema(carriers).omit({
-  id: true,
-  createdAt: true,
-});
+// Define carrier contact schema before carrier schema
+export const insertCarrierContactSchema = createInsertSchema(carrierContacts)
+  .omit({
+    id: true,
+    carrierId: true,
+    createdAt: true,
+  });
 
-export const insertCarrierTransactionSchema = createInsertSchema(carrierTransactions).omit({
-  id: true,
-  createdAt: true,
-});
+export const insertCarrierSchema = createInsertSchema(carriers)
+  .omit({
+    id: true,
+    createdAt: true,
+  })
+  .extend({
+    contacts: z.array(insertCarrierContactSchema),
+  });
 
+// Add relations for carriers and carrier contacts
+export const carriersRelations = relations(carriers, ({ many }) => ({
+  contacts: many(carrierContacts),
+}));
+
+export const carrierContactsRelations = relations(carrierContacts, ({ one }) => ({
+  carrier: one(carriers, {
+    fields: [carrierContacts.carrierId],
+    references: [carriers.id],
+  }),
+}));
+
+// Define types
+export type InsertCarrierContact = z.infer<typeof insertCarrierContactSchema>;
+export type CarrierContact = typeof carrierContacts.$inferSelect;
 export type InsertCarrier = z.infer<typeof insertCarrierSchema>;
-export type Carrier = typeof carriers.$inferSelect;
-export type CarrierTransaction = typeof carrierTransactions.$inferSelect;
+export type Carrier = typeof carriers.$inferSelect & {
+  contacts?: CarrierContact[];
+};
