@@ -1,4 +1,3 @@
-
 import { DataTable } from "@/components/ui/data-table";
 import { useQuery } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
@@ -99,7 +98,9 @@ export function CarrierTable() {
       accessorKey: "freightCost",
       header: "Freight Cost",
       cell: ({ row }) => {
-        return `$${row.getValue<number>("freightCost").toFixed(2)}`;
+        const value = row.getValue<string | number>("freightCost");
+        const numericValue = typeof value === 'string' ? parseFloat(value) : value;
+        return `$${numericValue.toFixed(2)}`;
       },
     },
     {
