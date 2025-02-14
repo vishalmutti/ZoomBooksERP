@@ -18,7 +18,7 @@ export function CarrierDashboard() {
   const { toast } = useToast();
 
   const { data: carriers, isLoading: isLoadingCarriers } = useQuery<Carrier[]>({
-    queryKey: ["carriers"],
+    queryKey: ["/api/carriers"],
     queryFn: async () => {
       const response = await apiRequest("GET", "/api/carriers");
       if (!response || !Array.isArray(response)) {
@@ -34,7 +34,7 @@ export function CarrierDashboard() {
       return await apiRequest("POST", "/api/carriers", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["carriers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/carriers"] });
       setShowAddCarrier(false);
       toast({
         title: "Success",
