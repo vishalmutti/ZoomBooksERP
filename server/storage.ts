@@ -647,7 +647,7 @@ export class DatabaseStorage implements IStorage {
           })
           .from(carriers)
           .leftJoin(carrierContacts, eq(carriers.id, carrierContacts.carrierId))
-          .where(eq(carriers.id, newCarrier.id))
+          .where(eq(carriers.id, carrier.id))
           .groupBy(carriers.id)
           .execute();
 
