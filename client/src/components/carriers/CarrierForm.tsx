@@ -1,51 +1,53 @@
-
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { Carrier } from "@shared/schema";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { LuPlus, LuTrash2 } from "react-icons/lu";
 
-const formSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  mcNumber: z.string().min(1, "MC Number is required"),
-  contact: z.string().min(1, "Contact name is required"),
+const contactSchema = z.object({
+  name: z.string().min(1, "Contact name is required"),
   email: z.string().email("Invalid email address"),
   phone: z.string().min(10, "Phone number must be at least 10 digits"),
-  freightCost: z.string().optional(),
-  referenceNumber: z.string().optional(),
-  freightInvoice: z.instanceof(File).optional(),
-  file: z.instanceof(File).optional(),
+});
+
+const formSchema = z.object({
+  name: z.string().min(1, "Company name is required"),
+  address: z.string().optional(),
+  contacts: z.array(contactSchema).min(1, "At least one contact is required"),
 });
 
 interface CarrierFormProps {
-  carrier?: Carrier;
+  carrier?: Carrier & { contacts?: Array<{ name: string; email: string; phone: string }> };
   onComplete: (data: FormData) => Promise<void>;
 }
 
 export function CarrierForm({ carrier, onComplete }: CarrierFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: carrier || {
+    defaultValues: carrier ? {
+      name: carrier.name,
+      address: carrier.address || "",
+      contacts: carrier.contacts || [{ name: "", email: "", phone: "" }],
+    } : {
       name: "",
-      mcNumber: "",
-      contact: "",
-      email: "",
-      phone: "",
+      address: "",
+      contacts: [{ name: "", email: "", phone: "" }],
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "contacts",
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const formData = new FormData();
-    Object.entries(values).forEach(([key, value]) => {
-      if (value instanceof File) {
-        formData.append(key, value);
-      } else if (value) {
-        formData.append(key, value.toString());
-      }
-    });
-
+    formData.append("name", values.name);
+    if (values.address) formData.append("address", values.address);
+    formData.append("contacts", JSON.stringify(values.contacts));
     await onComplete(formData);
   };
 
@@ -68,10 +70,10 @@ export function CarrierForm({ carrier, onComplete }: CarrierFormProps) {
 
         <FormField
           control={form.control}
-          name="mcNumber"
+          name="address"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>MC Number</FormLabel>
+              <FormLabel>Address</FormLabel>
               <FormControl>
                 <Input {...field} />
               </FormControl>
@@ -80,123 +82,77 @@ export function CarrierForm({ carrier, onComplete }: CarrierFormProps) {
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="contact"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Contact Name</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <FormLabel>Contacts</FormLabel>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => append({ name: "", email: "", phone: "" })}
+            >
+              <LuPlus className="mr-2 h-4 w-4" /> Add Contact
+            </Button>
+          </div>
 
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input {...field} type="email" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          {fields.map((field, index) => (
+            <div key={field.id} className="space-y-4 p-4 border rounded-lg relative">
+              <FormField
+                control={form.control}
+                name={`contacts.${index}.name`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Contact Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-        <FormField
-          control={form.control}
-          name="phone"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Phone</FormLabel>
-              <FormControl>
-                <Input {...field} type="tel" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+              <FormField
+                control={form.control}
+                name={`contacts.${index}.email`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="email" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-        <FormField
-          control={form.control}
-          name="referenceNumber"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Reference Number</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+              <FormField
+                control={form.control}
+                name={`contacts.${index}.phone`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="tel" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-        <FormField
-          control={form.control}
-          name="freightCost"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Freight Cost</FormLabel>
-              <FormControl>
-                <Input {...field} type="number" step="0.01" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="file"
-          render={({ field: { value, ...field } }) => (
-            <FormItem>
-              <FormLabel>File (BOL/Invoice)</FormLabel>
-              <FormControl>
-                <Input 
-                  {...field} 
-                  type="file" 
-                  accept=".pdf,.doc,.docx"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      field.onChange(file);
-                    }
-                  }}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="freightInvoice"
-          render={({ field: { value, ...field } }) => (
-            <FormItem>
-              <FormLabel>Freight Invoice</FormLabel>
-              <FormControl>
-                <Input 
-                  {...field} 
-                  type="file" 
-                  accept=".pdf,.doc,.docx"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      field.onChange(file);
-                    }
-                  }}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+              {fields.length > 1 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-2 right-2"
+                  onClick={() => remove(index)}
+                >
+                  <LuTrash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
 
         <Button type="submit" className="w-full">
           {carrier ? "Update" : "Add"} Carrier

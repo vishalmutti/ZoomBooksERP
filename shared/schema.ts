@@ -13,9 +13,16 @@ export const users = pgTable("users", {
 export const carriers = pgTable("carriers", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
+  address: text("address"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const carrierContacts = pgTable("carrier_contacts", {
+  id: serial("id").primaryKey(),
+  carrierId: integer("carrier_id").references(() => carriers.id, { onDelete: 'cascade' }).notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }),
   phone: varchar("phone", { length: 50 }),
-  address: text("address"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
