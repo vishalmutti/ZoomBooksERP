@@ -14,6 +14,13 @@ export const carriers = pgTable("carriers", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Create the insert schema for carriers
+export const insertCarrierSchema = createInsertSchema(carriers)
+  .omit({
+    id: true,
+    createdAt: true,
+  });
+
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
@@ -293,38 +300,6 @@ export type InsertSupplierContact = z.infer<typeof insertSupplierContactSchema>;
 export type SupplierContact = typeof supplierContacts.$inferSelect;
 
 // Define carrier contact schema before carrier schema
-export const insertCarrierContactSchema = createInsertSchema(carrierContacts)
-  .omit({
-    id: true,
-    carrierId: true,
-    createdAt: true,
-  });
-
-export const insertCarrierSchema = createInsertSchema(carriers)
-  .omit({
-    id: true,
-    createdAt: true,
-  })
-  .extend({
-    contacts: z.array(insertCarrierContactSchema).optional(),
-  });
-
-// Add relations for carriers and carrier contacts
-export const carriersRelations = relations(carriers, ({ many }) => ({
-  contacts: many(carrierContacts),
-}));
-
-export const carrierContactsRelations = relations(carrierContacts, ({ one }) => ({
-  carrier: one(carriers, {
-    fields: [carrierContacts.carrierId],
-    references: [carriers.id],
-  }),
-}));
-
 // Define types
-export type InsertCarrierContact = z.infer<typeof insertCarrierContactSchema>;
-export type CarrierContact = typeof carrierContacts.$inferSelect;
 export type InsertCarrier = z.infer<typeof insertCarrierSchema>;
-export type Carrier = typeof carriers.$inferSelect & {
-  contacts?: CarrierContact[];
-};
+export type Carrier = typeof carriers.$inferSelect;
