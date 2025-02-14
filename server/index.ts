@@ -76,6 +76,11 @@ const startServer = async (port: number): Promise<boolean> => {
       throw new Error("Database initialization failed");
     }
 
+    // Close any existing server
+    if (server.listening) {
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+    }
+
     // Setup Vite or static serving based on environment
     if (app.get("env") === "development") {
       await setupVite(app, server);
