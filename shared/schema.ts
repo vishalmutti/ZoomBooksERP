@@ -10,6 +10,26 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
 });
 
+export const carriers = pgTable("carriers", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }),
+  phone: varchar("phone", { length: 50 }),
+  address: text("address"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const carrierTransactions = pgTable("carrier_transactions", {
+  id: serial("id").primaryKey(),
+  carrierId: integer("carrier_id").references(() => carriers.id).notNull(),
+  referenceNumber: varchar("reference_number", { length: 100 }).notNull(),
+  sourceType: varchar("source_type", { length: 20 }).notNull().$type<'AR' | 'LOAD'>(),
+  freightCost: decimal("freight_cost", { precision: 10, scale: 2 }),
+  freightInvoiceFile: text("freight_invoice_file"),
+  sourceDocument: text("source_document"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const suppliers = pgTable("suppliers", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
@@ -255,3 +275,17 @@ export type InsertFreightInvoice = z.infer<typeof insertFreightInvoiceSchema>;
 export type FreightInvoice = typeof freightInvoices.$inferSelect;
 export type InsertSupplierContact = z.infer<typeof insertSupplierContactSchema>;
 export type SupplierContact = typeof supplierContacts.$inferSelect;
+
+export const insertCarrierSchema = createInsertSchema(carriers).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertCarrierTransactionSchema = createInsertSchema(carrierTransactions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertCarrier = z.infer<typeof insertCarrierSchema>;
+export type Carrier = typeof carriers.$inferSelect;
+export type CarrierTransaction = typeof carrierTransactions.$inferSelect;

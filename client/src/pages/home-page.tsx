@@ -11,10 +11,10 @@ const widgets = [
     icon: "💰"
   },
   {
-    title: "Accounts Payable",
-    description: "Coming soon - Manage vendor payments and expenses",
-    path: "/ap",
-    icon: "📊"
+    title: "Carrier Portal",
+    description: "Track carriers, invoices and freight details",
+    path: "/carriers",
+    icon: "🚛"
   },
   {
     title: "Payroll",
