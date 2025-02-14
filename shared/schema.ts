@@ -255,9 +255,28 @@ export type InsertFreightInvoice = z.infer<typeof insertFreightInvoiceSchema>;
 export type FreightInvoice = typeof freightInvoices.$inferSelect;
 export type InsertSupplierContact = z.infer<typeof insertSupplierContactSchema>;
 export type SupplierContact = typeof supplierContacts.$inferSelect;
-import { z } from "zod";
 
-// ... (keep existing schemas)
+// Carrier and CarrierLoad tables
+export const carriers = pgTable("carriers", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  contactName: varchar("contact_name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 50 }).notNull(),
+});
+
+export const carrierLoads = pgTable("carrier_loads", {
+  id: serial("id").primaryKey(),
+  date: date("date").notNull(),
+  referenceNumber: varchar("reference_number", { length: 255 }).notNull(),
+  carrier: varchar("carrier", { length: 255 }).notNull(),
+  freightCost: decimal("freight_cost", { precision: 10, scale: 2 }).notNull(),
+  freightInvoice: text("freight_invoice"),
+  pod: text("pod"),
+  status: varchar("status", { length: 10 }).notNull().$type<"PAID" | "UNPAID">(),
+});
+
+// Zod schemas
 
 export const CarrierSchema = z.object({
   id: z.number(),
