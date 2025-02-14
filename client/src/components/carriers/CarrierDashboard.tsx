@@ -81,7 +81,15 @@ export function CarrierDashboard() {
   };
 
   if (isLoadingCarriers) {
-    return <div>Loading carriers...</div>;
+    return <div className="flex justify-center items-center h-48">
+      <div className="text-lg">Loading carriers...</div>
+    </div>;
+  }
+
+  if (!carriers) {
+    return <div className="flex justify-center items-center h-48">
+      <div className="text-lg text-red-500">Error loading carriers. Please try refreshing the page.</div>
+    </div>;
   }
 
   const filteredFreightLoads = selectedCarrier 
