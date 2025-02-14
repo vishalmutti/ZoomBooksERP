@@ -31,6 +31,8 @@ const FileLink = ({ file }: { file?: string }) => {
   );
 };
 
+import { CarrierForm } from "./CarrierForm";
+
 export function CarrierTable() {
   // Sample data - will be replaced with real data later
   const { toast } = useToast();
@@ -142,7 +144,10 @@ export function CarrierTable() {
 
   return (
     <div className="container mx-auto py-8">
-      <h2 className="text-2xl font-bold mb-6">Carrier Loads</h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Carrier Loads</h2>
+        <CarrierForm />
+      </div>
       <DataTable
         columns={columns}
         data={data}
