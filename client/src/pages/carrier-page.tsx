@@ -7,8 +7,8 @@ export default function CarrierPage() {
     <div className="container mx-auto p-8">
       <h1 className="text-3xl font-bold mb-6">Carrier Portal</h1>
       <div className="space-y-8">
-        <CarrierList />
         <CarrierTable />
+        <CarrierList />
       </div>
     </div>
   );
