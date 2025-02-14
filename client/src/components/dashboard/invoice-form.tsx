@@ -65,9 +65,11 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     defaultValues: {
       supplierId: currentInvoiceData?.supplierId || editInvoice?.supplierId || 0,
       invoiceNumber: currentInvoiceData?.invoiceNumber || editInvoice?.invoiceNumber || "",
+      carrier: currentInvoiceData?.carrier || editInvoice?.carrier || "",
       dueDate: currentInvoiceData?.dueDate ? new Date(currentInvoiceData.dueDate).toISOString().split('T')[0] :
                editInvoice?.dueDate ? new Date(editInvoice.dueDate).toISOString().split('T')[0] : "",
       totalAmount: currentInvoiceData?.totalAmount?.toString() || editInvoice?.totalAmount?.toString() || "0",
+      freightCost: currentInvoiceData?.freightCost?.toString() || editInvoice?.freightCost?.toString() || "0",
       notes: currentInvoiceData?.notes || editInvoice?.notes || "",
       isPaid: currentInvoiceData?.isPaid || editInvoice?.isPaid || false,
       items: currentInvoiceData?.items?.length
@@ -112,7 +114,9 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
           unitPrice: item.unitPrice?.toString() || "0",
           totalPrice: item.totalPrice?.toString() || "0",
           invoiceId: invoiceData.id
-        })) || [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }]
+        })) || [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }],
+        carrier: invoiceData.carrier || "",
+        freightCost: invoiceData.freightCost?.toString() || "0"
       });
     }
   }, [currentInvoiceData, editInvoice, form]);
@@ -169,11 +173,11 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     },
     onSuccess: async (updatedInvoice) => {
       await Promise.all([
-        queryClient.invalidateQueries({ 
+        queryClient.invalidateQueries({
           queryKey: ["/api/invoices"],
           refetchType: "all"
         }),
-        queryClient.invalidateQueries({ 
+        queryClient.invalidateQueries({
           queryKey: [`/api/invoices/${updatedInvoice.id}`],
           refetchType: "all"
         })
@@ -434,10 +438,9 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                 <Label htmlFor="invoiceNumber">Invoice Number</Label>
                 <Input {...form.register("invoiceNumber")} />
               </div>
-
               <div>
-                <Label htmlFor="dueDate">Due Date</Label>
-                <Input type="date" {...form.register("dueDate")} />
+                <Label htmlFor="carrier">Carrier</Label>
+                <Input {...form.register("carrier")} />
               </div>
 
               <TabsContent value="manual">
@@ -544,6 +547,15 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                         step="0.01"
                         placeholder="Enter total amount"
                         {...form.register("totalAmount")}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <Label>Freight Cost</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="Enter freight cost"
+                        {...form.register("freightCost")}
                       />
                     </div>
                     <div className="w-24">
