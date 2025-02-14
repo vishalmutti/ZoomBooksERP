@@ -364,7 +364,27 @@ export class DatabaseStorage implements IStorage {
 
   async getLoads() {
     return await db
-      .select()
+      .select({
+        id: incomingLoads.id,
+        loadType: incomingLoads.loadType,
+        supplierId: incomingLoads.supplierId,
+        referenceNumber: incomingLoads.referenceNumber,
+        location: incomingLoads.location,
+        invoiceNumber: incomingLoads.invoiceNumber,
+        scheduledDate: incomingLoads.scheduledDate,
+        status: incomingLoads.status,
+        carrier: incomingLoads.carrier,
+        notes: incomingLoads.notes,
+        amount: incomingLoads.amount,
+        freightCost: incomingLoads.freightCost,
+        bolFile: incomingLoads.bolFile,
+        materialInvoiceFile: incomingLoads.materialInvoiceFile,
+        freightInvoiceFile: incomingLoads.freightInvoiceFile,
+        loadPerformanceFile: incomingLoads.loadPerformanceFile,
+        materialInvoiceStatus: incomingLoads.materialInvoiceStatus,
+        freightInvoiceStatus: incomingLoads.freightInvoiceStatus,
+        createdAt: incomingLoads.createdAt
+      })
       .from(incomingLoads)
       .orderBy(desc(incomingLoads.createdAt));
   }
