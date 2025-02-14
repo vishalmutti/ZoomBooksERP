@@ -549,7 +549,18 @@ export class DatabaseStorage implements IStorage {
   // Implement carrier methods
   async getCarriers(): Promise<Carrier[]> {
     return await db
-      .select()
+      .select({
+        id: carriers.id,
+        name: carriers.name,
+        phone: carriers.phone,
+        address: carriers.address,
+        status: carriers.status,
+        mc_number: carriers.mc_number,
+        dot_number: carriers.dot_number,
+        insurance_expiry: carriers.insurance_expiry,
+        notes: carriers.notes,
+        createdAt: carriers.createdAt
+      })
       .from(carriers)
       .orderBy(carriers.name);
   }
