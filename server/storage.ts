@@ -572,9 +572,9 @@ export class DatabaseStorage implements IStorage {
         .values({
           name: data.name,
           address: data.address,
-          contactName: data.contactName,
-          contactEmail: data.contactEmail,
-          contactPhone: data.contactPhone,
+          contact_name: data.contact_name,
+          contact_email: data.contact_email,
+          contact_phone: data.contact_phone,
         })
         .returning();
 

@@ -17,9 +17,9 @@ export function CarrierForm({ carrier, onComplete }: CarrierFormProps) {
     defaultValues: carrier || {
       name: "",
       address: "",
-      contactName: "",
-      contactEmail: "",
-      contactPhone: "",
+      contact_name: "",
+      contact_email: "",
+      contact_phone: "",
     },
   });
 
@@ -47,7 +47,7 @@ export function CarrierForm({ carrier, onComplete }: CarrierFormProps) {
             <FormItem>
               <FormLabel>Address</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} value={field.value || ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -56,12 +56,12 @@ export function CarrierForm({ carrier, onComplete }: CarrierFormProps) {
 
         <FormField
           control={form.control}
-          name="contactName"
+          name="contact_name"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Contact Name</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} value={field.value || ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -70,12 +70,12 @@ export function CarrierForm({ carrier, onComplete }: CarrierFormProps) {
 
         <FormField
           control={form.control}
-          name="contactEmail"
+          name="contact_email"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input {...field} type="email" />
+                <Input {...field} type="email" value={field.value || ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -84,12 +84,12 @@ export function CarrierForm({ carrier, onComplete }: CarrierFormProps) {
 
         <FormField
           control={form.control}
-          name="contactPhone"
+          name="contact_phone"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Phone</FormLabel>
               <FormControl>
-                <Input {...field} type="tel" />
+                <Input {...field} type="tel" value={field.value || ''} />
               </FormControl>
               <FormMessage />
             </FormItem>

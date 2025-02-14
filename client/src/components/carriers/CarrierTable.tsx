@@ -75,9 +75,9 @@ export function CarrierTable({ carriers, onEdit, onDelete, isLoading }: CarrierT
               <TableRow key={carrier.id}>
                 <TableCell>{carrier.name}</TableCell>
                 <TableCell>{carrier.address || "-"}</TableCell>
-                <TableCell>{carrier.contactName || "-"}</TableCell>
-                <TableCell>{carrier.contactEmail || "-"}</TableCell>
-                <TableCell>{carrier.contactPhone || "-"}</TableCell>
+                <TableCell>{carrier.contact_name || "-"}</TableCell>
+                <TableCell>{carrier.contact_email || "-"}</TableCell>
+                <TableCell>{carrier.contact_phone || "-"}</TableCell>
                 <TableCell className="space-x-2">
                   <Button
                     variant="ghost"

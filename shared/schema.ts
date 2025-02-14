@@ -1,16 +1,14 @@
 import { integer, pgEnum, pgTable, serial, text, timestamp, varchar, decimal, boolean, date } from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
-import { relations } from "drizzle-orm";
-import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const carriers = pgTable("carriers", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   address: text("address"),
-  contactName: varchar("contact_name", { length: 255 }),
-  contactEmail: varchar("contact_email", { length: 255 }),
-  contactPhone: varchar("contact_phone", { length: 50 }),
+  contact_name: varchar("contact_name", { length: 255 }),
+  contact_email: varchar("contact_email", { length: 255 }),
+  contact_phone: varchar("contact_phone", { length: 50 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -300,6 +298,3 @@ export const insertFreightSchema = createInsertSchema(freight).omit({
 
 export type InsertSupplierContact = z.infer<typeof insertSupplierContactSchema>;
 export type SupplierContact = typeof supplierContacts.$inferSelect;
-
-// Define carrier contact schema before carrier schema
-// Define types
