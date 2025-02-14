@@ -16,6 +16,7 @@ export function CarrierDashboard() {
 
   const { data: carriers = [], isLoading: isLoadingCarriers } = useQuery<(Carrier & { id: number })[]>({
     queryKey: ["/api/carriers"],
+    refetchInterval: 30000, // Refetch every 30 seconds instead of continuously
   });
 
   const { data: freightLoads = [], isLoading: isLoadingFreightLoads } = useQuery<FreightLoad[]>({
