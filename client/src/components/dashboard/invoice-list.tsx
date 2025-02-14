@@ -109,6 +109,11 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
       },
     },
     {
+      accessorKey: "carrier",
+      header: "Carrier",
+      cell: ({ row }) => row.original.carrier || "N/A",
+    },
+    {
       header: "Amount",
       accessorFn: (row: Invoice) => Number(row.totalAmount),
       id: "totalAmount",
@@ -119,6 +124,16 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
       },
       sortingFn: (rowA, rowB, columnId) => {
         return Number(rowB.getValue(columnId)) - Number(rowA.getValue(columnId));
+      },
+    },
+    {
+      accessorKey: "freightCost",
+      header: "Freight Cost",
+      cell: ({ row }) => {
+        const invoice = row.original;
+        if (!invoice.freightCost) return "N/A";
+        const symbol = '$';
+        return `${symbol}${Number(invoice.freightCost).toFixed(2)} ${invoice.currency}`;
       },
     },
     {
