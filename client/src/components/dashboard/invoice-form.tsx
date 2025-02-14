@@ -507,9 +507,9 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                         </div>
                       </div>
                     ))}
-                    <div className="flex gap-2 my-4">
-                      <div className="w-24">
-                        <Label>Currency</Label>
+                    <div className="grid grid-cols-2 gap-4 my-4">
+                      <div className="space-y-2">
+                        <Label>Total Amount Currency</Label>
                         <select
                           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
                           {...form.register("currency")}
@@ -517,6 +517,24 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                           <option value="USD">USD</option>
                           <option value="CAD">CAD</option>
                         </select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Freight Cost</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            type="number"
+                            step="0.01"
+                            placeholder="Enter freight cost"
+                            {...form.register("freightCost")}
+                          />
+                          <select
+                            className="flex h-10 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                            {...form.register("freightCostCurrency")}
+                          >
+                            <option value="USD">USD</option>
+                            <option value="CAD">CAD</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
                     <Button

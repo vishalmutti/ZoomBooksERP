@@ -59,6 +59,7 @@ export const invoices = pgTable("invoices", {
   totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
   freightCost: decimal("freight_cost", { precision: 10, scale: 2 }),
   currency: varchar("currency", { length: 3 }).default('USD').notNull(),
+  freightCostCurrency: varchar("freight_cost_currency", { length: 3 }).default('USD').notNull(),
   dueDate: date("due_date").notNull(),
   isPaid: boolean("is_paid").default(false).notNull(),
   paymentDate: date("payment_date"),
