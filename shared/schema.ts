@@ -1,42 +1,13 @@
-import { integer, pgEnum, pgTable, serial, text, timestamp, varchar, decimal, boolean, date } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { pgTable, text, serial, integer, boolean, date, decimal, timestamp, varchar } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-
-export const carriers = pgTable("carriers", {
-  id: serial("id").primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
-  address: text("address"),
-  contact_name: varchar("contact_name", { length: 255 }),
-  contact_email: varchar("contact_email", { length: 255 }),
-  contact_phone: varchar("contact_phone", { length: 50 }),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
-export const insertCarrierSchema = createInsertSchema(carriers).omit({
-  id: true,
-  createdAt: true,
-});
-
-// Export types
-export type InsertCarrier = z.infer<typeof insertCarrierSchema>;
-export type Carrier = typeof carriers.$inferSelect;
+import { relations } from "drizzle-orm";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
-});
-
-export const carrierTransactions = pgTable("carrier_transactions", {
-  id: serial("id").primaryKey(),
-  carrierId: integer("carrier_id").references(() => carriers.id).notNull(),
-  referenceNumber: varchar("reference_number", { length: 100 }).notNull(),
-  sourceType: varchar("source_type", { length: 20 }).notNull().$type<'AR' | 'LOAD'>(),
-  freightCost: decimal("freight_cost", { precision: 10, scale: 2 }),
-  freightInvoiceFile: text("freight_invoice_file"),
-  sourceDocument: text("source_document"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const suppliers = pgTable("suppliers", {
@@ -59,7 +30,12 @@ export const supplierContacts = pgTable("supplier_contacts", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const alterSupplierContacts = sql`
+  ALTER TABLE supplier_contacts 
+  ADD COLUMN IF NOT EXISTS notes text;
+`;
 
+// Update the insert schema to include notes
 export const insertSupplierContactSchema = createInsertSchema(supplierContacts).omit({
   id: true,
   createdAt: true,
@@ -156,16 +132,6 @@ export const loadDocuments = pgTable("load_documents", {
   notes: text("notes"),
 });
 
-export const freight = pgTable("freight", {
-  id: serial("id").primaryKey(),
-  referenceNumber: varchar("reference_number", { length: 100 }).notNull(),
-  carrier: varchar("carrier", { length: 255 }),
-  freightCost: decimal("freight_cost", { precision: 10, scale: 2 }),
-  file: text("file"),
-  freightInvoice: text("freight_invoice"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
 export const freightInvoices = pgTable("freight_invoices", {
   id: serial("id").primaryKey(),
   loadId: integer("load_id").references(() => incomingLoads.id).notNull(),
@@ -234,6 +200,7 @@ export const insertPaymentSchema = createInsertSchema(payments)
     id: true,
   });
 
+// Update the insertLoadSchema definition to properly handle date fields
 export const insertLoadSchema = createInsertSchema(incomingLoads)
   .omit({
     id: true,
@@ -286,12 +253,5 @@ export type InsertLoadStatusHistory = z.infer<typeof insertLoadStatusHistorySche
 export type InsertLoadDocument = z.infer<typeof insertLoadDocumentSchema>;
 export type InsertFreightInvoice = z.infer<typeof insertFreightInvoiceSchema>;
 export type FreightInvoice = typeof freightInvoices.$inferSelect;
-export type Freight = typeof freight.$inferSelect;
-
-export const insertFreightSchema = createInsertSchema(freight).omit({
-  id: true,
-  createdAt: true,
-});
-
 export type InsertSupplierContact = z.infer<typeof insertSupplierContactSchema>;
 export type SupplierContact = typeof supplierContacts.$inferSelect;

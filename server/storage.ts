@@ -1,4 +1,4 @@
-import { invoices, suppliers, invoiceItems, users, payments, incomingLoads, freightInvoices, supplierContacts, carriers, type User, type InsertUser, type Invoice, type InsertInvoice, type Supplier, type InsertSupplier, type Payment, type InsertPayment, type InvoiceItem, type IncomingLoad, type InsertIncomingLoad, type FreightInvoice, type InsertFreightInvoice, type SupplierContact, type Carrier, type InsertCarrier } from "@shared/schema";
+import { invoices, suppliers, invoiceItems, users, payments, incomingLoads, freightInvoices, supplierContacts, type User, type InsertUser, type Invoice, type InsertInvoice, type Supplier, type InsertSupplier, type Payment, type InsertPayment, type InvoiceItem, type IncomingLoad, type InsertIncomingLoad, type FreightInvoice, type InsertFreightInvoice, type SupplierContact } from "@shared/schema";
 import { db } from "./db";
 import { eq, ilike, and, gte, lte, sql, desc } from "drizzle-orm";
 import session from "express-session";
@@ -50,9 +50,6 @@ export interface IStorage {
   updateFreightInvoice(id: number, updates: Partial<FreightInvoice>): Promise<FreightInvoice>;
   deleteFreightInvoice(id: number): Promise<void>;
   getSupplierContacts(supplierId: number): Promise<SupplierContact[]>;
-  getCarriers(): Promise<Carrier[]>;
-  createCarrier(data: InsertCarrier): Promise<Carrier>;
-
 }
 
 export class DatabaseStorage implements IStorage {
@@ -62,7 +59,13 @@ export class DatabaseStorage implements IStorage {
     this.sessionStore = new PostgresSessionStore({
       pool,
       createTableIfMissing: true,
-      ttl: 86400
+      ttl: 86400,
+      retry: {
+        retries: 3,
+        factor: 2,
+        minTimeout: 1000,
+        maxTimeout: 5000
+      }
     });
   }
 
@@ -415,78 +418,82 @@ export class DatabaseStorage implements IStorage {
   async updateLoad(id: number, updates: Partial<IncomingLoad>): Promise<IncomingLoad> {
     try {
       return await db.transaction(async (tx) => {
+        console.log('Updating load:', id, 'with data:', updates);
         const updateData: Partial<IncomingLoad> = {};
 
+        // Only include fields that are actually present in the updates object
         if (updates.scheduledPickup !== undefined) {
           updateData.scheduledPickup = updates.scheduledPickup ? new Date(updates.scheduledPickup).toISOString() : null;
         }
-        if (updates.scheduledDelivery !== undefined) {
-          updateData.scheduledDelivery = updates.scheduledDelivery ? new Date(updates.scheduledDelivery).toISOString() : null;
-        }
-        if (updates.loadType !== undefined) updateData.loadType = updates.loadType;
-        if (updates.supplierId !== undefined) updateData.supplierId = updates.supplierId;
-        if (updates.referenceNumber !== undefined) updateData.referenceNumber = updates.referenceNumber;
-        if (updates.location !== undefined) updateData.location = updates.location;
-        if (updates.notes !== undefined) updateData.notes = updates.notes;
-        if (updates.loadCost !== undefined) {
-          updateData.loadCost = typeof updates.loadCost === 'string'
-            ? updates.loadCost
-            : updates.loadCost.toString();
-        }
-        if (updates.freightCost !== undefined) {
-          updateData.freightCost = typeof updates.freightCost === 'string'
-            ? updates.freightCost
-            : updates.freightCost.toString();
-        }
-        if (updates.profitRoi !== undefined) {
-          updateData.profitRoi = typeof updates.profitRoi === 'string'
-            ? updates.profitRoi
-            : updates.profitRoi.toString();
-        }
-        if (updates.status !== undefined) updateData.status = updates.status;
-        if (updates.carrier !== undefined) updateData.carrier = updates.carrier;
-        if (updates.materialInvoiceStatus !== undefined) updateData.materialInvoiceStatus = updates.materialInvoiceStatus;
-        if (updates.freightInvoiceStatus !== undefined) updateData.freightInvoiceStatus = updates.freightInvoiceStatus;
-        if (updates.bolFile !== undefined) updateData.bolFile = updates.bolFile;
-        if (updates.materialInvoiceFile !== undefined) updateData.materialInvoiceFile = updates.materialInvoiceFile;
-        if (updates.freightInvoiceFile !== undefined) updateData.freightInvoiceFile = updates.freightInvoiceFile;
-        if (updates.loadPerformanceFile !== undefined) updateData.loadPerformanceFile = updates.loadPerformanceFile;
+      if (updates.scheduledDelivery !== undefined) {
+        updateData.scheduledDelivery = updates.scheduledDelivery ? new Date(updates.scheduledDelivery).toISOString() : null;
+      }
+      if (updates.loadType !== undefined) updateData.loadType = updates.loadType;
+      if (updates.supplierId !== undefined) updateData.supplierId = updates.supplierId;
+      if (updates.referenceNumber !== undefined) updateData.referenceNumber = updates.referenceNumber;
+      if (updates.location !== undefined) updateData.location = updates.location;
+      if (updates.notes !== undefined) updateData.notes = updates.notes;
+      if (updates.loadCost !== undefined) {
+        updateData.loadCost = typeof updates.loadCost === 'string'
+          ? updates.loadCost
+          : updates.loadCost.toString();
+      }
+      if (updates.freightCost !== undefined) {
+        updateData.freightCost = typeof updates.freightCost === 'string'
+          ? updates.freightCost
+          : updates.freightCost.toString();
+      }
+      if (updates.profitRoi !== undefined) {
+        updateData.profitRoi = typeof updates.profitRoi === 'string'
+          ? updates.profitRoi
+          : updates.profitRoi.toString();
+      }
+      if (updates.status !== undefined) updateData.status = updates.status;
+      if (updates.carrier !== undefined) updateData.carrier = updates.carrier;
+      if (updates.materialInvoiceStatus !== undefined) updateData.materialInvoiceStatus = updates.materialInvoiceStatus;
+      if (updates.freightInvoiceStatus !== undefined) updateData.freightInvoiceStatus = updates.freightInvoiceStatus;
+      if (updates.bolFile !== undefined) updateData.bolFile = updates.bolFile;
+      if (updates.materialInvoiceFile !== undefined) updateData.materialInvoiceFile = updates.materialInvoiceFile;
+      if (updates.freightInvoiceFile !== undefined) updateData.freightInvoiceFile = updates.freightInvoiceFile;
+      if (updates.loadPerformanceFile !== undefined) updateData.loadPerformanceFile = updates.loadPerformanceFile;
 
-        // Get the current load data
-        const [currentLoad] = await db
-          .select()
-          .from(incomingLoads)
-          .where(eq(incomingLoads.id, id));
+      // Get the current load data
+      const [currentLoad] = await db
+        .select()
+        .from(incomingLoads)
+        .where(eq(incomingLoads.id, id));
 
-        if (!currentLoad) {
-          throw new Error('Load not found');
-        }
+      if (!currentLoad) {
+        throw new Error('Load not found');
+      }
 
-        // Merge current data with updates to ensure we have all required fields
-        const mergedData = {
-          ...currentLoad,
-          ...updateData
-        };
+      // Merge current data with updates to ensure we have all required fields
+      const mergedData = {
+        ...currentLoad,
+        ...updateData
+      };
 
+      console.log('Updating load with data:', mergedData);
+      
+      const [updatedLoad] = await tx
+        .update(incomingLoads)
+        .set(mergedData)
+        .where(eq(incomingLoads.id, id))
+        .returning();
 
-        const [updatedLoad] = await tx
-          .update(incomingLoads)
-          .set(mergedData)
-          .where(eq(incomingLoads.id, id))
-          .returning();
+      if (!updatedLoad) {
+        throw new Error('Failed to update load');
+      }
 
-        if (!updatedLoad) {
-          throw new Error('Failed to update load');
-        }
+      const result = await tx
+        .select()
+        .from(incomingLoads)
+        .where(eq(incomingLoads.id, id))
+        .execute();
 
-        const result = await tx
-          .select()
-          .from(incomingLoads)
-          .where(eq(incomingLoads.id, id))
-          .execute();
-
-        return result[0];
-      });
+      console.log('Load updated successfully:', result[0]);
+      return result[0];
+    });
     } catch (error) {
       console.error('Error updating load:', error);
       throw error;
@@ -551,42 +558,6 @@ export class DatabaseStorage implements IStorage {
       .from(supplierContacts)
       .where(eq(supplierContacts.supplierId, supplierId))
       .orderBy(supplierContacts.createdAt);
-  }
-
-  async getCarriers(): Promise<Carrier[]> {
-    try {
-      return await db
-        .select()
-        .from(carriers)
-        .orderBy(carriers.name);
-    } catch (error) {
-      console.error('Error fetching carriers:', error);
-      throw error;
-    }
-  }
-
-  async createCarrier(data: InsertCarrier): Promise<Carrier> {
-    try {
-      const [newCarrier] = await db
-        .insert(carriers)
-        .values({
-          name: data.name,
-          address: data.address ?? null,
-          contact_name: data.contact_name ?? null,
-          contact_email: data.contact_email ?? null,
-          contact_phone: data.contact_phone ?? null,
-        })
-        .returning();
-
-      if (!newCarrier) {
-        throw new Error('Failed to create carrier');
-      }
-
-      return newCarrier;
-    } catch (error) {
-      console.error('Error creating carrier:', error);
-      throw error;
-    }
   }
 }
 

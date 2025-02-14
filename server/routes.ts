@@ -11,8 +11,6 @@ import express from "express";
 import { eq } from "drizzle-orm";
 import { db } from "./db";
 import { insertIncomingLoadSchema, insertFreightInvoiceSchema } from "@shared/schema";
-import { freight } from "@shared/schema"; // Import the freight table schema
-
 
 // Type definitions for file uploads
 interface UploadedFiles {
@@ -637,42 +635,6 @@ export function registerRoutes(app: Express): Server {
       });
     }
   });
-
-  // Carrier routes
-  app.get("/api/carriers", async (_req, res) => {
-    try {
-      const carriers = await storage.getCarriers();
-      res.json(carriers || []);
-    } catch (error) {
-      console.error("Error fetching carriers:", error);
-      res.status(500).json({ message: "Error fetching carriers" });
-    }
-  });
-
-  app.post("/api/carriers", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    try {
-      console.log('Received carrier data:', req.body);
-      const carrier = await storage.createCarrier(req.body);
-      console.log('Created carrier:', carrier);
-      res.status(201).json(carrier);
-    } catch (error) {
-      console.error('Error creating carrier:', error);
-      res.status(500).json({ 
-        message: 'Failed to create carrier',
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
-    }
-  });
-
-  // Freight routes
-  app.get("/api/freight", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    const freightEntries = await db.select().from(freight);
-    res.json(freightEntries);
-  });
-
 
   const httpServer = createServer(app);
   return httpServer;

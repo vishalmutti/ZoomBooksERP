@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { pool, db } from "./db";
+import { alterSupplierContacts } from "@shared/schema";
 
 const app = express();
 app.use(express.json());
@@ -12,6 +13,10 @@ const initializeDatabase = async () => {
     // Test connection
     await pool.connect();
     console.log("Database connection successful");
+
+    // Run migrations
+    await db.execute(alterSupplierContacts);
+    console.log("Supplier contacts migration completed");
     return true;
   } catch (err) {
     console.error("Database connection/migration error:", err);
