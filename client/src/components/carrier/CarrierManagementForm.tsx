@@ -50,7 +50,12 @@ export function CarrierManagementForm({ initialData, onOpenChange, open }: Carri
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          name: data.name,
+          contactName: data.contactName,
+          email: data.email,
+          phone: data.phone
+        }),
       });
       
       if (!response.ok) {
@@ -77,8 +82,12 @@ export function CarrierManagementForm({ initialData, onOpenChange, open }: Carri
     },
   });
 
-  const onSubmit = (data: CarrierManagementFormData) => {
-    mutation.mutate(data);
+  const onSubmit = async (data: CarrierManagementFormData) => {
+    try {
+      await mutation.mutateAsync(data);
+    } catch (error) {
+      console.error('Form submission error:', error);
+    }
   };
 
   return (
