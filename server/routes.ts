@@ -636,16 +636,21 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.use(router);
   const httpServer = createServer(app);
   return httpServer;
 }
-// ... (keep existing imports)
+import { Router } from "express";
 
-// Add these routes in the router configuration
-router.get("/api/carriers", async (req, res) => {
-  const carriers = await db.query.carriers.findMany();
-  return res.json(carriers);
-});
+export function registerRoutes(app: Express): Server {
+  const router = Router();
+
+  // Carrier routes
+  router.get("/api/carriers", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const carriers = await db.query.carriers.findMany();
+    return res.json(carriers);
+  });
 
 router.post("/api/carriers", async (req, res) => {
   const result = await db.insert(carriers).values(req.body);
