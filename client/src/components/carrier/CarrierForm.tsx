@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
@@ -35,21 +34,29 @@ export function CarrierForm({ initialData, onOpenChange, open }: CarrierFormProp
   });
 
   useEffect(() => {
-    // This will be replaced with actual API call when backend is ready
-    const mockCarriers = [
-      { id: 1, name: "ABC Trucking" },
-      { id: 2, name: "XYZ Transport" }
-    ];
-    setCarriers(mockCarriers);
+    const fetchCarriers = async () => {
+      try {
+        const response = await fetch('/api/carriers', {
+          credentials: 'include'
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setCarriers(data);
+        }
+      } catch (error) {
+        console.error('Error fetching carriers:', error);
+      }
+    };
+    fetchCarriers();
   }, []);
 
   const queryClient = useQueryClient();
-  
+
   const onSubmit = async (data: CarrierFormData) => {
     try {
       const url = initialData ? `/api/carrier-loads/${initialData.id}` : '/api/carrier-loads';
       const method = initialData ? 'PATCH' : 'POST';
-      
+
       const formData = new FormData();
       formData.append('carrierData', JSON.stringify({
         date: data.date,
@@ -58,7 +65,7 @@ export function CarrierForm({ initialData, onOpenChange, open }: CarrierFormProp
         freightCost: parseFloat(data.freightCost.toString()),
         status: "UNPAID"
       }));
-      
+
       if (data.freightInvoice) {
         formData.append('freightInvoice', data.freightInvoice);
       }
@@ -78,10 +85,10 @@ export function CarrierForm({ initialData, onOpenChange, open }: CarrierFormProp
 
       const result = await response.json();
       console.log('Carrier load created:', result);
-      
+
       // Invalidate and refetch carrier loads data
       await queryClient.invalidateQueries({ queryKey: ['carrier-loads'] });
-      
+
       if (onOpenChange) {
         onOpenChange(false);
       }
@@ -115,7 +122,7 @@ export function CarrierForm({ initialData, onOpenChange, open }: CarrierFormProp
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="referenceNumber"
