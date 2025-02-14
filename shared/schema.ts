@@ -1,14 +1,7 @@
-import { pgTable, text, serial, integer, boolean, date, decimal, timestamp, varchar } from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
-import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod";
+import { integer, pgEnum, pgTable, serial, text, timestamp, varchar, decimal, boolean } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-
-export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
-});
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { z } from "zod";
 
 export const carriers = pgTable("carriers", {
   id: serial("id").primaryKey(),
@@ -24,6 +17,12 @@ export const carrierContacts = pgTable("carrier_contacts", {
   email: varchar("email", { length: 255 }),
   phone: varchar("phone", { length: 50 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(),
 });
 
 export const carrierTransactions = pgTable("carrier_transactions", {
