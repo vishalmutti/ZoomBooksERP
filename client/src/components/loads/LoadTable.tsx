@@ -417,7 +417,6 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
             <TableHead>Material Invoice</TableHead>
             <TableHead>Material Status</TableHead>
             <TableHead>Freight Invoice</TableHead>
-            <TableHead>Freight Status</TableHead>
             <TableHead>Load Performance</TableHead>
             <TableHead>Notes</TableHead>
             <TableHead>Actions</TableHead>
@@ -497,14 +496,6 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
                 </TableCell>
                 <TableCell>
                   <FileLink file={typeof load.freightInvoiceFile === 'string' ? load.freightInvoiceFile : ''} label="Freight Invoice" />
-                </TableCell>
-                <TableCell>
-                  <InvoiceStatus
-                    loadId={load.id}
-                    status={load.freightInvoiceStatus}
-                    type="freight"
-                    loadType={load.loadType}
-                  />
                 </TableCell>
                 <TableCell>
                   <FileLink file={typeof load.loadPerformanceFile === 'string' ? load.loadPerformanceFile : ''} label="Load Performance" />
