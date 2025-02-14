@@ -81,10 +81,6 @@ export function CarrierManagementForm({ initialData, onOpenChange, open }: Carri
     mutation.mutate(data);
   };
 
-  const onSubmit = (data: CarrierManagementFormData) => {
-    mutation.mutate(data);
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {!initialData && (
