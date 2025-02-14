@@ -47,8 +47,11 @@ export function CarrierForm({ initialData, onOpenChange, open }: CarrierFormProp
   
   const onSubmit = async (data: CarrierFormData) => {
     try {
-      const response = await fetch('/api/carrier-loads', {
-        method: 'POST',
+      const url = initialData ? `/api/carrier-loads/${initialData.id}` : '/api/carrier-loads';
+      const method = initialData ? 'PATCH' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
         },

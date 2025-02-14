@@ -50,6 +50,34 @@ export function CarrierTable() {
     }
   });
 
+  const editMutation = useMutation({
+    mutationFn: async (data: Partial<CarrierLoad>) => {
+      const response = await fetch(`/api/carrier-loads/${data.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error('Failed to update carrier load');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['carrier-loads'] });
+      toast({
+        title: "Success",
+        description: "Carrier load updated successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
   const updateStatusMutation = useMutation({
     mutationFn: async ({ loadId, newStatus }: { loadId: number; newStatus: "PAID" | "UNPAID" }) => {
       const response = await fetch(`/api/carrier-loads/${loadId}/status`, {

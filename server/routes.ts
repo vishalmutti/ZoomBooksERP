@@ -678,12 +678,14 @@ export function registerRoutes(app: Express): Server {
     return res.json(result);
   });
 
-  router.put("/api/carrier-loads/:id", async (req, res) => {
+  router.patch("/api/carrier-loads/:id", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
+    const id = parseInt(req.params.id);
     const result = await db.update(carrierLoads)
       .set(req.body)
-      .where(eq(carrierLoads.id, parseInt(req.params.id)));
-    return res.json(result);
+      .where(eq(carrierLoads.id, id))
+      .returning();
+    return res.json(result[0]);
   });
 
   router.delete("/api/carrier-loads/:id", async (req, res) => {
