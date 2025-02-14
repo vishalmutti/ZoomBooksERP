@@ -9,6 +9,7 @@ import DashboardPage from "@/pages/dashboard-page";
 import SuppliersPage from "@/pages/suppliers-page";
 import HomePage from "@/pages/home-page";
 import { LoadsPage } from "@/pages/LoadsPage";
+import CarrierPage from "@/pages/carrier-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import { Navbar } from "@/components/dashboard/navbar";
 
@@ -43,6 +44,12 @@ function Router() {
       <Route path="/loads">
         <AppLayout>
           <ProtectedRoute path="/loads" component={LoadsPage} />
+        </AppLayout>
+      </Route>
+
+      <Route path="/carrier">
+        <AppLayout>
+          <ProtectedRoute path="/carrier" component={CarrierPage} />
         </AppLayout>
       </Route>
 
