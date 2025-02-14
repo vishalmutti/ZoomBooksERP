@@ -14,26 +14,33 @@ export function CarrierDashboard() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const { data: carriers = [], isLoading } = useQuery<Carrier[]>({
+  const { data: carriers = [], isLoading: isLoadingCarriers, refetch } = useQuery<Carrier[]>({
     queryKey: ["/api/carriers"],
     queryFn: async () => {
       const response = await apiRequest("GET", "/api/carriers");
-      if (!Array.isArray(response)) {
+      console.log("Fetched carriers:", response);
+      if (!response || !Array.isArray(response)) {
         console.error('Invalid carriers response:', response);
         return [];
       }
       return response;
-    }
+    },
+    refetchOnWindowFocus: true,
+    staleTime: 0
   });
 
   const handleAddCarrier = async (data: InsertCarrier) => {
     try {
-      await apiRequest("POST", "/api/carriers", data);
-      queryClient.invalidateQueries({ queryKey: ["/api/carriers"] });
-      setShowAddCarrier(false);
-      toast({
-        title: "Success",
-        description: "Carrier added successfully",
+      await apiRequest("POST", "/api/carriers", data, {
+        onSuccess: (data) => {
+          console.log("Carrier created:", data);
+          queryClient.invalidateQueries({ queryKey: ["/api/carriers"] });
+          setShowAddCarrier(false);
+          toast({
+            title: "Success",
+            description: "Carrier added successfully",
+          });
+        }
       });
     } catch (error) {
       console.error("Error in handleAddCarrier:", error);
@@ -74,7 +81,7 @@ export function CarrierDashboard() {
 
         <CarrierTable 
           carriers={carriers} 
-          isLoading={isLoading}
+          isLoading={isLoadingCarriers}
           onEdit={handleEditCarrier}
           onDelete={handleDeleteCarrier}
         />

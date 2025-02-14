@@ -61,6 +61,11 @@ export function CarrierTable({ carriers, onEdit, onDelete, isLoading }: CarrierT
             <TableHead>Email</TableHead>
             <TableHead>Phone</TableHead>
             <TableHead className="w-[100px]">Actions</TableHead>
+            <TableHead className="w-[100px]">
+              <Button variant="ghost" size="sm" onClick={() => refetch()}>
+                Refresh
+              </Button>
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
