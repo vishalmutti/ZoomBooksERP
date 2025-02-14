@@ -569,6 +569,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createCarrier(data: InsertCarrier): Promise<Carrier> {
+    console.log('Creating carrier with data:', data);
     try {
       return await db.transaction(async (tx) => {
         // Insert the carrier
