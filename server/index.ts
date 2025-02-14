@@ -12,10 +12,6 @@ const initializeDatabase = async () => {
     // Test connection
     await pool.connect();
     console.log("Database connection successful");
-
-    // Run migrations
-    await db.execute(alterSupplierContacts);
-    console.log("Supplier contacts migration completed");
     return true;
   } catch (err) {
     console.error("Database connection/migration error:", err);
