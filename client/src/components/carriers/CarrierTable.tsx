@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Eye } from "lucide-react";
 import { useState } from "react";
 import type { Carrier } from "@shared/schema";
 
@@ -24,9 +24,10 @@ interface CarrierTableProps {
   data: Carrier[];
   onEdit: (carrier: Carrier) => void;
   onDelete: (carrierId: number) => void;
+  onSelect?: (carrier: Carrier) => void;
 }
 
-export function CarrierTable({ data, onEdit, onDelete }: CarrierTableProps) {
+export function CarrierTable({ data, onEdit, onDelete, onSelect }: CarrierTableProps) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
   const columns: ColumnDef<Carrier>[] = [
@@ -60,6 +61,16 @@ export function CarrierTable({ data, onEdit, onDelete }: CarrierTableProps) {
         const carrier = row.original;
         return (
           <div className="flex items-center gap-2">
+            {onSelect && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onSelect(carrier)}
+                title="View loads"
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"
@@ -129,6 +140,8 @@ export function CarrierTable({ data, onEdit, onDelete }: CarrierTableProps) {
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className="cursor-pointer"
+                  onClick={() => onSelect?.(row.original)}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

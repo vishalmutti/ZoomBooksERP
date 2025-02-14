@@ -14,13 +14,12 @@ export function CarrierDashboard() {
   const [selectedFreightLoad, setSelectedFreightLoad] = useState<(FreightLoad & { id: number }) | null>(null);
   const { toast } = useToast();
 
-  const { data: carriers = [], isLoading: isLoadingCarriers } = useQuery<Carrier[]>({
+  const { data: carriers = [], isLoading: isLoadingCarriers } = useQuery<(Carrier & { id: number })[]>({
     queryKey: ["/api/carriers"],
   });
 
   const { data: freightLoads = [], isLoading: isLoadingFreightLoads } = useQuery<FreightLoad[]>({
-    queryKey: ["/api/freight-loads", selectedCarrier?.id],
-    enabled: !!selectedCarrier,
+    queryKey: ["/api/freight-loads"],
   });
 
   const deleteCarrier = async (id: number) => {
@@ -64,7 +63,7 @@ export function CarrierDashboard() {
         throw new Error(error.message || 'Failed to delete freight load');
       }
 
-      await queryClient.invalidateQueries({ queryKey: ["/api/freight-loads", selectedCarrier?.id] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/freight-loads"] });
 
       toast({
         title: "Freight load deleted",
@@ -84,14 +83,15 @@ export function CarrierDashboard() {
     return <div>Loading carriers...</div>;
   }
 
+  const filteredFreightLoads = selectedCarrier 
+    ? freightLoads.filter(load => load.carrierId === selectedCarrier.id)
+    : freightLoads;
+
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Carrier Portal</h1>
-        <CarrierForm
-          onComplete={() => setSelectedCarrier(null)}
-          editCarrier={selectedCarrier}
-        />
+        <CarrierForm onClose={() => setSelectedCarrier(null)} />
       </div>
 
       <Card>
@@ -104,36 +104,44 @@ export function CarrierDashboard() {
             data={carriers}
             onEdit={setSelectedCarrier}
             onDelete={deleteCarrier}
+            onSelect={setSelectedCarrier}
           />
         </CardContent>
       </Card>
 
-      {selectedCarrier && (
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>{selectedCarrier.name}'s Freight Loads</CardTitle>
-              <CardDescription>View and manage freight loads for this carrier</CardDescription>
-            </div>
-            <FreightLoadForm
-              onComplete={() => setSelectedFreightLoad(null)}
-              carrierId={selectedCarrier.id}
-              editFreightLoad={selectedFreightLoad}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>
+              {selectedCarrier 
+                ? `${selectedCarrier.name}'s Freight Loads` 
+                : 'All Freight Loads'}
+            </CardTitle>
+            <CardDescription>
+              {selectedCarrier 
+                ? 'View and manage freight loads for this carrier'
+                : 'View and manage all freight loads'}
+            </CardDescription>
+          </div>
+          <FreightLoadForm
+            onClose={() => setSelectedFreightLoad(null)}
+            initialData={selectedFreightLoad}
+            show={!!selectedFreightLoad}
+            carrierId={selectedCarrier?.id}
+          />
+        </CardHeader>
+        <CardContent>
+          {isLoadingFreightLoads ? (
+            <div>Loading freight loads...</div>
+          ) : (
+            <FreightLoadTable 
+              data={filteredFreightLoads}
+              onEdit={setSelectedFreightLoad}
+              onDelete={deleteFreightLoad}
             />
-          </CardHeader>
-          <CardContent>
-            {isLoadingFreightLoads ? (
-              <div>Loading freight loads...</div>
-            ) : (
-              <FreightLoadTable 
-                data={freightLoads}
-                onEdit={setSelectedFreightLoad}
-                onDelete={deleteFreightLoad}
-              />
-            )}
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -12,6 +12,7 @@ import { LuPlus, LuFileText } from "react-icons/lu";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import type { InsertFreightLoad, Carrier } from "@shared/schema";
+import { useQuery } from "@tanstack/react-query";
 
 interface FreightLoadFormProps {
   onClose: () => void;
@@ -76,6 +77,10 @@ export function FreightLoadForm({ onClose, initialData, show, carrierId }: Freig
     rateConfirmation: null,
     invoice: null,
     proofOfDelivery: null
+  });
+
+  const { data: carriers = [] } = useQuery<Carrier[]>({
+    queryKey: ["/api/carriers"],
   });
 
   const form = useForm<InsertFreightLoad>({
@@ -192,6 +197,32 @@ export function FreightLoadForm({ onClose, initialData, show, carrierId }: Freig
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {!carrierId && (
+              <FormField
+                control={form.control}
+                name="carrierId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Carrier *</FormLabel>
+                    <Select onValueChange={(value) => field.onChange(Number(value))} defaultValue={field.value?.toString()}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a carrier" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {carriers.map((carrier) => (
+                          <SelectItem key={carrier.id} value={carrier.id.toString()}>
+                            {carrier.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             <FormField
               control={form.control}
               name="loadNumber"

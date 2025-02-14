@@ -1,41 +1,27 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { LuTruck } from "react-icons/lu";
 import { Link } from "wouter";
-import type { Carrier } from "@shared/schema";
 
 export function CarrierWidget() {
-  const { data: carriers = [], isLoading } = useQuery<Carrier[]>({
-    queryKey: ["/api/carriers"],
-  });
-
-  const activeCarriers = carriers.filter(c => c.status === 'Active');
-
-  if (isLoading) {
-    return <div>Loading carrier data...</div>;
-  }
-
   return (
-    <Link href="/carriers">
-      <Card className="hover:border-primary cursor-pointer">
-        <CardHeader>
-          <CardTitle>Carrier Portal</CardTitle>
-          <CardDescription>Manage carriers and freight loads</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-2xl font-bold">{activeCarriers.length}</p>
-                <p className="text-sm text-muted-foreground">Active Carriers</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{carriers.length - activeCarriers.length}</p>
-                <p className="text-sm text-muted-foreground">Inactive Carriers</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </Link>
+    <Card className="p-6 hover:shadow-lg transition-shadow">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold mb-2">Carrier Portal</h2>
+          <p className="text-muted-foreground">
+            Track and manage your carriers and freight loads
+          </p>
+        </div>
+        <LuTruck className="w-12 h-12 text-primary" />
+      </div>
+      <div className="mt-6">
+        <Link href="/carriers">
+          <Button className="w-full">
+            Manage Carriers
+          </Button>
+        </Link>
+      </div>
+    </Card>
   );
 }
