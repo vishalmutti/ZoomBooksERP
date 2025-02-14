@@ -595,7 +595,7 @@ export class DatabaseStorage implements IStorage {
     try {
       return await db.transaction(async (tx) => {
         // Insert the carrier
-        const [carrier] = await tx
+        const [newCarrier] = await tx
           .insert(carriers)
           .values({
             name: data.name,
@@ -603,7 +603,7 @@ export class DatabaseStorage implements IStorage {
           })
           .returning();
 
-        if (!carrier) {
+        if (!newCarrier) {
           throw new Error('Failed to create carrier');
         }
 
@@ -613,7 +613,7 @@ export class DatabaseStorage implements IStorage {
             .insert(carrierContacts)
             .values(
               data.contacts.map(contact => ({
-                carrierId: carrier.id,
+                carrierId: newCarrier.id,
                 name: contact.name,
                 email: contact.email || null,
                 phone: contact.phone || null,
@@ -621,14 +621,41 @@ export class DatabaseStorage implements IStorage {
             );
         }
 
-        // Fetch all carriers and find the newly created one with contacts
-        const carriers = await this.getCarriers();
-        const completeCarrier = carriers.find(c => c.id === carrier.id);
-        if (!completeCarrier) {
+        // Get the complete carrier with contacts
+        const result = await tx
+          .select({
+            id: carriers.id,
+            name: carriers.name,
+            address: carriers.address,
+            createdAt: carriers.createdAt,
+            contacts: sql<CarrierContact[]>`
+              COALESCE(
+                jsonb_agg(
+                  CASE WHEN ${carrierContacts.id} IS NOT NULL THEN
+                    jsonb_build_object(
+                      'id', ${carrierContacts.id},
+                      'carrierId', ${carrierContacts.carrierId},
+                      'name', ${carrierContacts.name},
+                      'email', ${carrierContacts.email},
+                      'phone', ${carrierContacts.phone},
+                      'createdAt', ${carrierContacts.createdAt}
+                    )
+                  ELSE NULL END
+                ) FILTER (WHERE ${carrierContacts.id} IS NOT NULL),
+                '[]'::jsonb
+              )`
+          })
+          .from(carriers)
+          .leftJoin(carrierContacts, eq(carriers.id, carrierContacts.carrierId))
+          .where(eq(carriers.id, newCarrier.id))
+          .groupBy(carriers.id)
+          .execute();
+
+        if (!result[0]) {
           throw new Error('Failed to fetch created carrier');
         }
 
-        return completeCarrier;
+        return result[0];
       });
     } catch (error) {
       console.error('Error creating carrier:', error);
