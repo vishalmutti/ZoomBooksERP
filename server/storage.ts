@@ -555,35 +555,13 @@ export class DatabaseStorage implements IStorage {
 
   async getCarriers(): Promise<Carrier[]> {
     try {
-      const result = await db
-        .select({
-          id: carriers.id,
-          name: carriers.name,
-          address: carriers.address,
-          createdAt: carriers.createdAt,
-          contacts: sql<CarrierContact[]>`
-            COALESCE(
-              jsonb_agg(
-                CASE WHEN ${carrierContacts.id} IS NOT NULL THEN
-                  jsonb_build_object(
-                    'id', ${carrierContacts.id},
-                    'carrierId', ${carrierContacts.carrierId},
-                    'name', ${carrierContacts.name},
-                    'email', ${carrierContacts.email},
-                    'phone', ${carrierContacts.phone},
-                    'createdAt', ${carrierContacts.createdAt}
-                  )
-                ELSE NULL END
-              ) FILTER (WHERE ${carrierContacts.id} IS NOT NULL),
-              '[]'::jsonb
-            )`
-        })
-        .from(carriers)
-        .leftJoin(carrierContacts, eq(carriers.id, carrierContacts.carrierId))
-        .groupBy(carriers.id)
-        .execute();
-
-      return result;
+      const carriers = await db.query.carriers.findMany({
+        with: {
+          contacts: true
+        }
+      });
+      
+      return carriers;
     } catch (error) {
       console.error('Error fetching carriers:', error);
       throw error;
