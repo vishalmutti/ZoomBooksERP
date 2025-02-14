@@ -2,14 +2,15 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertInvoiceSchema, insertPaymentSchema, insertSupplierSchema, invoiceItems, type InvoiceItem } from "@shared/schema";
 import { generateAccountStatementPDF, generateInvoicePDF } from "./pdf-service";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import express from "express";
+import express, { Router } from "express";
 import { eq } from "drizzle-orm";
 import { db } from "./db";
+import { carriers, carrierLoads } from "@shared/schema";
+import { insertInvoiceSchema, insertPaymentSchema, insertSupplierSchema, invoiceItems } from "@shared/schema";
 import { insertIncomingLoadSchema, insertFreightInvoiceSchema } from "@shared/schema";
 
 // Type definitions for file uploads
@@ -70,15 +71,16 @@ async function generatePDFForInvoice(invoice: InvoiceData) {
         quantity: item.quantity,
         unitPrice: item.unitPrice,
         totalPrice: ((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0)).toString(),
-      })) as InvoiceItem[],
+      })),
     },
     supplier,
   });
 }
 
 export function registerRoutes(app: Express): Server {
-  app.use('/uploads', express.static(uploadDir));
+  const router = Router();
 
+  app.use('/uploads', express.static(uploadDir));
   setupAuth(app);
 
   // Supplier routes
@@ -636,14 +638,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.use(router);
-  const httpServer = createServer(app);
-  return httpServer;
-}
-import { Router } from "express";
-
-export function registerRoutes(app: Express): Server {
-  const router = Router();
 
   // Carrier routes
   router.get("/api/carriers", async (req, res) => {
@@ -652,41 +646,53 @@ export function registerRoutes(app: Express): Server {
     return res.json(carriers);
   });
 
-router.post("/api/carriers", async (req, res) => {
-  const result = await db.insert(carriers).values(req.body);
-  return res.json(result);
-});
+  router.post("/api/carriers", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const result = await db.insert(carriers).values(req.body);
+    return res.json(result);
+  });
 
-router.put("/api/carriers/:id", async (req, res) => {
-  const result = await db.update(carriers)
-    .set(req.body)
-    .where(eq(carriers.id, parseInt(req.params.id)));
-  return res.json(result);
-});
+  router.put("/api/carriers/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const result = await db.update(carriers)
+      .set(req.body)
+      .where(eq(carriers.id, parseInt(req.params.id)));
+    return res.json(result);
+  });
 
-router.delete("/api/carriers/:id", async (req, res) => {
-  await db.delete(carriers).where(eq(carriers.id, parseInt(req.params.id)));
-  return res.json({ success: true });
-});
+  router.delete("/api/carriers/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    await db.delete(carriers).where(eq(carriers.id, parseInt(req.params.id)));
+    return res.json({ success: true });
+  });
 
-router.get("/api/carrier-loads", async (req, res) => {
-  const loads = await db.query.carrierLoads.findMany();
-  return res.json(loads);
-});
+  router.get("/api/carrier-loads", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const loads = await db.query.carrierLoads.findMany();
+    return res.json(loads);
+  });
 
-router.post("/api/carrier-loads", async (req, res) => {
-  const result = await db.insert(carrierLoads).values(req.body);
-  return res.json(result);
-});
+  router.post("/api/carrier-loads", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const result = await db.insert(carrierLoads).values(req.body);
+    return res.json(result);
+  });
 
-router.put("/api/carrier-loads/:id", async (req, res) => {
-  const result = await db.update(carrierLoads)
-    .set(req.body)
-    .where(eq(carrierLoads.id, parseInt(req.params.id)));
-  return res.json(result);
-});
+  router.put("/api/carrier-loads/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const result = await db.update(carrierLoads)
+      .set(req.body)
+      .where(eq(carrierLoads.id, parseInt(req.params.id)));
+    return res.json(result);
+  });
 
-router.delete("/api/carrier-loads/:id", async (req, res) => {
-  await db.delete(carrierLoads).where(eq(carrierLoads.id, parseInt(req.params.id)));
-  return res.json({ success: true });
-});
+  router.delete("/api/carrier-loads/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    await db.delete(carrierLoads).where(eq(carrierLoads.id, parseInt(req.params.id)));
+    return res.json({ success: true });
+  });
+
+  app.use(router);
+  const httpServer = createServer(app);
+  return httpServer;
+}
