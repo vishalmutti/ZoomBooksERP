@@ -159,6 +159,16 @@ export const loadDocuments = pgTable("load_documents", {
   notes: text("notes"),
 });
 
+export const freight = pgTable("freight", {
+  id: serial("id").primaryKey(),
+  referenceNumber: varchar("reference_number", { length: 100 }).notNull(),
+  carrier: varchar("carrier", { length: 255 }),
+  freightCost: decimal("freight_cost", { precision: 10, scale: 2 }),
+  file: text("file"),
+  freightInvoice: text("freight_invoice"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const freightInvoices = pgTable("freight_invoices", {
   id: serial("id").primaryKey(),
   loadId: integer("load_id").references(() => incomingLoads.id).notNull(),
@@ -280,6 +290,12 @@ export type InsertLoadStatusHistory = z.infer<typeof insertLoadStatusHistorySche
 export type InsertLoadDocument = z.infer<typeof insertLoadDocumentSchema>;
 export type InsertFreightInvoice = z.infer<typeof insertFreightInvoiceSchema>;
 export type FreightInvoice = typeof freightInvoices.$inferSelect;
+export type Freight = typeof freight.$inferSelect;
+
+export const insertFreightSchema = createInsertSchema(freight).omit({
+  id: true,
+  createdAt: true,
+});
 export type InsertSupplierContact = z.infer<typeof insertSupplierContactSchema>;
 export type SupplierContact = typeof supplierContacts.$inferSelect;
 

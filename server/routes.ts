@@ -11,6 +11,8 @@ import express from "express";
 import { eq } from "drizzle-orm";
 import { db } from "./db";
 import { insertIncomingLoadSchema, insertFreightInvoiceSchema } from "@shared/schema";
+import { freight } from "@shared/schema"; // Import the freight table schema
+
 
 // Type definitions for file uploads
 interface UploadedFiles {
@@ -653,6 +655,13 @@ export function registerRoutes(app: Express): Server {
       console.error('Error creating carrier:', error);
       res.status(500).json({ message: 'Failed to create carrier' });
     }
+  });
+
+  // Freight routes
+  app.get("/api/freight", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const freightEntries = await db.select().from(freight);
+    res.json(freightEntries);
   });
 
 
