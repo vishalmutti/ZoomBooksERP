@@ -53,22 +53,6 @@ export function CarrierList() {
       });
     },
   });
-    const data: CarrierCompany[] = [
-    {
-      id: 1,
-      name: "ABC Trucking",
-      contactName: "John Doe",
-      email: "john@abctrucking.com",
-      phone: "(555) 123-4567"
-    },
-    {
-      id: 2,
-      name: "XYZ Transport",
-      contactName: "Jane Smith",
-      email: "jane@xyztransport.com",
-      phone: "(555) 987-6543"
-    }
-  ];
 
   const columns: ColumnDef<CarrierCompany>[] = [
     {
