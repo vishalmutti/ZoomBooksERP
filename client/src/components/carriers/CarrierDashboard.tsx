@@ -18,7 +18,11 @@ export function CarrierDashboard() {
     queryKey: ["/api/carriers"],
     queryFn: async () => {
       const response = await apiRequest("GET", "/api/carriers");
-      return response || [];
+      if (!Array.isArray(response)) {
+        console.error('Invalid carriers response:', response);
+        return [];
+      }
+      return response;
     }
   });
 
