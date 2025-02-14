@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from "@/components/ui/select";
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Carrier {
   id: number;
@@ -42,6 +43,8 @@ export function CarrierForm({ initialData, onOpenChange, open }: CarrierFormProp
     setCarriers(mockCarriers);
   }, []);
 
+  const queryClient = useQueryClient();
+  
   const onSubmit = async (data: CarrierFormData) => {
     try {
       const response = await fetch('/api/carrier-loads', {
@@ -64,6 +67,10 @@ export function CarrierForm({ initialData, onOpenChange, open }: CarrierFormProp
 
       const result = await response.json();
       console.log('Carrier load created:', result);
+      
+      // Invalidate and refetch carrier loads data
+      await queryClient.invalidateQueries({ queryKey: ['carrier-loads'] });
+      
       if (onOpenChange) {
         onOpenChange(false);
       }

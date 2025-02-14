@@ -69,26 +69,20 @@ export function CarrierTable() {
     },
   });
 
-  const data: CarrierLoad[] = [
-    {
-      id: 1,
-      date: "2024-02-14",
-      referenceNumber: "REF001",
-      carrier: "ABC Trucking",
-      freightCost: 1500.00,
-      freightInvoice: "invoice1.pdf",
-      pod: "pod1.pdf",
-      status: "PAID"
-    },
-    {
-      id: 2,
-      date: "2024-02-13",
-      referenceNumber: "REF002",
-      carrier: "XYZ Transport",
-      freightCost: 2000.00,
-      status: "UNPAID"
+  const { data = [], isLoading } = useQuery({
+    queryKey: ['carrier-loads'],
+    queryFn: async () => {
+      const response = await fetch('/api/carrier-loads');
+      if (!response.ok) {
+        throw new Error('Failed to fetch carrier loads');
+      }
+      return response.json();
     }
-  ];
+  });
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   const [editingCarrier, setEditingCarrier] = useState<CarrierLoad | null>(null);
 
