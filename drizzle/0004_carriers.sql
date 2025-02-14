@@ -3,14 +3,8 @@ CREATE TABLE IF NOT EXISTS carriers (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   address TEXT,
-  created_at TIMESTAMP DEFAULT NOW() NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS carrier_contacts (
-  id SERIAL PRIMARY KEY,
-  carrier_id INTEGER REFERENCES carriers(id) ON DELETE CASCADE NOT NULL,
-  name VARCHAR(255) NOT NULL,
-  email VARCHAR(255),
-  phone VARCHAR(50),
+  contact_name VARCHAR(255),
+  contact_email VARCHAR(255),
+  contact_phone VARCHAR(50),
   created_at TIMESTAMP DEFAULT NOW() NOT NULL
 );

@@ -555,13 +555,7 @@ export class DatabaseStorage implements IStorage {
 
   async getCarriers(): Promise<Carrier[]> {
     try {
-      const carriers = await db.query.carriers.findMany({
-        with: {
-          contacts: true
-        }
-      });
-      
-      return carriers;
+      return await db.select().from(carriers);
     } catch (error) {
       console.error('Error fetching carriers:', error);
       throw error;
@@ -570,42 +564,22 @@ export class DatabaseStorage implements IStorage {
 
   async createCarrier(data: InsertCarrier): Promise<Carrier> {
     try {
-      return await db.transaction(async (tx) => {
-        // Insert the carrier first
-        const [newCarrier] = await tx
-          .insert(carriers)
-          .values({
-            name: data.name,
-            address: data.address || null,
-          })
-          .returning();
+      const [newCarrier] = await db
+        .insert(carriers)
+        .values({
+          name: data.name,
+          address: data.address || null,
+          contactName: data.contactName,
+          contactEmail: data.contactEmail,
+          contactPhone: data.contactPhone,
+        })
+        .returning();
 
-        if (!newCarrier) {
-          throw new Error('Failed to create carrier');
-        }
+      if (!newCarrier) {
+        throw new Error('Failed to create carrier');
+      }
 
-        // Insert contacts if provided
-        let carrierContactsList: CarrierContact[] = [];
-        if (data.contacts && data.contacts.length > 0) {
-          const contactsToInsert = data.contacts.map(contact => ({
-            carrierId: newCarrier.id,
-            name: contact.name,
-            email: contact.email || null,
-            phone: contact.phone || null,
-          }));
-
-          carrierContactsList = await tx
-            .insert(carrierContacts)
-            .values(contactsToInsert)
-            .returning();
-        }
-
-        // Return the complete carrier with contacts
-        return {
-          ...newCarrier,
-          contacts: carrierContactsList
-        };
-      });
+      return newCarrier;
     } catch (error) {
       console.error('Error creating carrier:', error);
       throw error;

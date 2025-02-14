@@ -8,15 +8,9 @@ export const carriers = pgTable("carriers", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   address: text("address"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
-export const carrierContacts = pgTable("carrier_contacts", {
-  id: serial("id").primaryKey(),
-  carrierId: integer("carrier_id").references(() => carriers.id, { onDelete: 'cascade' }).notNull(),
-  name: varchar("name", { length: 255 }).notNull(),
-  email: varchar("email", { length: 255 }),
-  phone: varchar("phone", { length: 50 }),
+  contactName: varchar("contact_name", { length: 255 }),
+  contactEmail: varchar("contact_email", { length: 255 }),
+  contactPhone: varchar("contact_phone", { length: 50 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

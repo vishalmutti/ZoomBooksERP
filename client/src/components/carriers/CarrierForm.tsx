@@ -1,21 +1,16 @@
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { LuPlus, LuTrash2 } from "react-icons/lu";
-
-const contactSchema = z.object({
-  name: z.string().min(1, "Contact name is required"),
-  email: z.string().email("Invalid email address"),
-  phone: z.string().min(10, "Phone number must be at least 10 digits"),
-});
 
 const formSchema = z.object({
   name: z.string().min(1, "Company name is required"),
   address: z.string().optional(),
-  contacts: z.array(contactSchema).min(1, "At least one contact is required"),
+  contactName: z.string().min(1, "Contact name is required"),
+  contactEmail: z.string().email("Invalid email address"),
+  contactPhone: z.string().min(10, "Phone number must be at least 10 digits"),
 });
 
 interface CarrierFormProps {
@@ -29,13 +24,10 @@ export function CarrierForm({ carrier, onComplete }: CarrierFormProps) {
     defaultValues: carrier || {
       name: "",
       address: "",
-      contacts: [{ name: "", email: "", phone: "" }],
+      contactName: "",
+      contactEmail: "",
+      contactPhone: "",
     },
-  });
-
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: "contacts",
   });
 
   return (
@@ -69,77 +61,47 @@ export function CarrierForm({ carrier, onComplete }: CarrierFormProps) {
           )}
         />
 
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <FormLabel>Contacts</FormLabel>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => append({ name: "", email: "", phone: "" })}
-            >
-              <LuPlus className="mr-2 h-4 w-4" /> Add Contact
-            </Button>
-          </div>
+        <FormField
+          control={form.control}
+          name="contactName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Contact Name</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          {fields.map((field, index) => (
-            <div key={field.id} className="space-y-4 p-4 border rounded-lg relative">
-              <FormField
-                control={form.control}
-                name={`contacts.${index}.name`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Contact Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+        <FormField
+          control={form.control}
+          name="contactEmail"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input {...field} type="email" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-              <FormField
-                control={form.control}
-                name={`contacts.${index}.email`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input {...field} type="email" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name={`contacts.${index}.phone`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone</FormLabel>
-                    <FormControl>
-                      <Input {...field} type="tel" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {fields.length > 1 && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-2 right-2"
-                  onClick={() => remove(index)}
-                >
-                  <LuTrash2 className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-          ))}
-        </div>
+        <FormField
+          control={form.control}
+          name="contactPhone"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Phone</FormLabel>
+              <FormControl>
+                <Input {...field} type="tel" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <Button type="submit" className="w-full">
           {carrier ? "Update" : "Add"} Carrier
