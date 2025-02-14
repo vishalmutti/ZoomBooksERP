@@ -16,7 +16,13 @@ export function FreightTable({ entries = [], isLoading, onEdit, onDelete }: Frei
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="space-y-2">
+        <div className="h-8 w-full animate-pulse bg-gray-200 rounded" />
+        <div className="h-8 w-full animate-pulse bg-gray-200 rounded" />
+        <div className="h-8 w-full animate-pulse bg-gray-200 rounded" />
+      </div>
+    );
   }
 
   return (
