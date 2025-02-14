@@ -19,7 +19,10 @@ export function CarrierDashboard() {
 
   const { data: carriers, isLoading: isLoadingCarriers } = useQuery<Carrier[]>({
     queryKey: ["/api/carriers"],
-    queryFn: () => apiRequest("GET", "/api/carriers")
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/carriers");
+      return Array.isArray(response) ? response : [];
+    }
   });
 
   const { data: freightEntries, isLoading: isLoadingFreight } = useQuery({
