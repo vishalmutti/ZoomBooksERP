@@ -58,23 +58,16 @@ export function LoadDashboard() {
 
       <div className="space-y-4">
         <div className="flex justify-end">
-          <Button onClick={() => setShowAddLoad(true)}>
-            <LuPlus className="mr-2 h-4 w-4" /> New Load
-          </Button>
+          <LoadForm
+            onClose={() => setShowAddLoad(false)}
+            defaultType="Incoming"
+            show={showAddLoad}
+          >
+            <Button onClick={() => setShowAddLoad(true)}>
+              <LuPlus className="mr-2 h-4 w-4" /> New Load
+            </Button>
+          </LoadForm>
         </div>
-        <Dialog open={showAddLoad} onOpenChange={setShowAddLoad}>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>Create New Load</DialogTitle>
-            </DialogHeader>
-            <LoadForm 
-              onClose={() => setShowAddLoad(false)} 
-              defaultType="Incoming"
-              show={true}
-              suppliers={suppliers}
-            />
-          </DialogContent>
-        </Dialog>
         <LoadTable 
           loads={filteredLoads} 
           isLoading={isLoading}
