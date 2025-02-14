@@ -42,9 +42,34 @@ export function CarrierForm({ initialData, onOpenChange, open }: CarrierFormProp
     setCarriers(mockCarriers);
   }, []);
 
-  const onSubmit = (data: CarrierFormData) => {
-    console.log("Form submitted:", data);
-    // Backend integration will be added later
+  const onSubmit = async (data: CarrierFormData) => {
+    try {
+      const response = await fetch('/api/carrier-loads', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          date: data.date,
+          referenceNumber: data.referenceNumber,
+          carrier: data.carrier,
+          freightCost: data.freightCost,
+          status: "UNPAID"
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create carrier load');
+      }
+
+      const result = await response.json();
+      console.log('Carrier load created:', result);
+      if (onOpenChange) {
+        onOpenChange(false);
+      }
+    } catch (error) {
+      console.error('Error creating carrier load:', error);
+    }
   };
 
   return (
