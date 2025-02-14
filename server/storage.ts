@@ -62,13 +62,7 @@ export class DatabaseStorage implements IStorage {
     this.sessionStore = new PostgresSessionStore({
       pool,
       createTableIfMissing: true,
-      ttl: 86400,
-      retry: {
-        retries: 3,
-        factor: 2,
-        minTimeout: 1000,
-        maxTimeout: 5000
-      }
+      ttl: 86400
     });
   }
 
@@ -421,10 +415,8 @@ export class DatabaseStorage implements IStorage {
   async updateLoad(id: number, updates: Partial<IncomingLoad>): Promise<IncomingLoad> {
     try {
       return await db.transaction(async (tx) => {
-        console.log('Updating load:', id, 'with data:', updates);
         const updateData: Partial<IncomingLoad> = {};
 
-        // Only include fields that are actually present in the updates object
         if (updates.scheduledPickup !== undefined) {
           updateData.scheduledPickup = updates.scheduledPickup ? new Date(updates.scheduledPickup).toISOString() : null;
         }
@@ -476,7 +468,6 @@ export class DatabaseStorage implements IStorage {
           ...updateData
         };
 
-        console.log('Updating load with data:', mergedData);
 
         const [updatedLoad] = await tx
           .update(incomingLoads)
@@ -494,7 +485,6 @@ export class DatabaseStorage implements IStorage {
           .where(eq(incomingLoads.id, id))
           .execute();
 
-        console.log('Load updated successfully:', result[0]);
         return result[0];
       });
     } catch (error) {
@@ -580,34 +570,36 @@ export class DatabaseStorage implements IStorage {
 
   async createCarrier(data: InsertCarrier): Promise<Carrier> {
     try {
-      const [carrier] = await db.insert(carriers).values({
-        name: data.name,
-        address: data.address || null,
-      }).returning();
+      return await db.transaction(async (tx) => {
+        const [carrier] = await tx.insert(carriers).values({
+          name: data.name,
+          address: data.address || null,
+        }).returning();
 
-      if (data.contacts?.length) {
-        await db.insert(carrierContacts).values(
-          data.contacts.map(contact => ({
-            carrierId: carrier.id,
-            name: contact.name,
-            email: contact.email || null,
-            phone: contact.phone || null,
-          }))
-        );
-      }
+        if (data.contacts?.length) {
+          await tx.insert(carrierContacts).values(
+            data.contacts.map(contact => ({
+              carrierId: carrier.id,
+              name: contact.name,
+              email: contact.email || null,
+              phone: contact.phone || null,
+            }))
+          );
+        }
 
-      const result = await db.query.carriers.findFirst({
-        where: eq(carriers.id, carrier.id),
-        with: {
-          contacts: true,
-        },
+        const result = await db.query.carriers.findFirst({
+          where: eq(carriers.id, carrier.id),
+          with: {
+            contacts: true,
+          },
+        });
+
+        if (!result) {
+          throw new Error('Failed to create carrier');
+        }
+
+        return result;
       });
-
-      if (!result) {
-        throw new Error('Failed to create carrier');
-      }
-
-      return result;
     } catch (error) {
       console.error('Error creating carrier:', error);
       throw error;

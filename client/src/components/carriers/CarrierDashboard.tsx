@@ -7,7 +7,7 @@ import { FreightTable } from "./FreightTable";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { LuPlus } from "react-icons/lu";
-import type { Carrier } from "@shared/schema";
+import type { Carrier, InsertCarrier } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -34,7 +34,7 @@ export function CarrierDashboard() {
   });
 
   const addCarrierMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: InsertCarrier) => {
       const response = await apiRequest("POST", "/api/carriers", data);
       if (!response) throw new Error("Failed to create carrier");
       return response;
@@ -57,7 +57,7 @@ export function CarrierDashboard() {
     },
   });
 
-  const handleAddCarrier = async (data: any) => {
+  const handleAddCarrier = async (data: InsertCarrier) => {
     await addCarrierMutation.mutate(data);
   };
 
@@ -87,7 +87,7 @@ export function CarrierDashboard() {
             <DialogHeader>
               <DialogTitle>Add New Freight Entry</DialogTitle>
             </DialogHeader>
-            <FreightForm onComplete={() => setShowAddFreight(false)} />
+            <FreightForm />
           </DialogContent>
         </Dialog>
 
