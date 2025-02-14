@@ -613,9 +613,6 @@ export class DatabaseStorage implements IStorage {
       throw error;
     }
   }
-
-        return result;
-      });
     } catch (error) {
       console.error('Error creating carrier:', error);
       throw error;
