@@ -55,7 +55,7 @@ export function CarrierForm({ initialData, onOpenChange, open }: CarrierFormProp
         date: data.date,
         referenceNumber: data.referenceNumber,
         carrier: data.carrier,
-        freightCost: data.freightCost,
+        freightCost: parseFloat(data.freightCost.toString()),
         status: "UNPAID"
       }));
       
@@ -69,6 +69,7 @@ export function CarrierForm({ initialData, onOpenChange, open }: CarrierFormProp
       const response = await fetch(url, {
         method,
         body: formData,
+        credentials: 'include'
       });
 
       if (!response.ok) {
