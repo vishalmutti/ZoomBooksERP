@@ -6,13 +6,17 @@ import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-interface CarrierManagementFormData {
-  name: string;
-  contactName: string;
-  email: string;
-  phone: string;
-}
+const formSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  contactName: z.string().min(1, "Contact name is required"),
+  email: z.string().email("Invalid email"),
+  phone: z.string().min(1, "Phone is required"),
+});
+
+type CarrierManagementFormData = z.infer<typeof formSchema>;
 
 interface CarrierManagementFormProps {
   initialData?: CarrierManagementFormData;
@@ -22,7 +26,13 @@ interface CarrierManagementFormProps {
 
 export function CarrierManagementForm({ initialData, onOpenChange, open }: CarrierManagementFormProps) {
   const form = useForm<CarrierManagementFormData>({
-    defaultValues: initialData,
+    resolver: zodResolver(formSchema),
+    defaultValues: initialData || {
+      name: "",
+      contactName: "",
+      email: "",
+      phone: "",
+    },
   });
 
   const queryClient = useQueryClient();
@@ -43,7 +53,10 @@ export function CarrierManagementForm({ initialData, onOpenChange, open }: Carri
         body: JSON.stringify(data),
       });
       
-      if (!response.ok) throw new Error("Failed to save carrier");
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to save carrier");
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -53,6 +66,7 @@ export function CarrierManagementForm({ initialData, onOpenChange, open }: Carri
         description: `Carrier ${initialData ? "updated" : "created"} successfully`,
       });
       if (onOpenChange) onOpenChange(false);
+      form.reset();
     },
     onError: (error: Error) => {
       toast({
@@ -62,6 +76,10 @@ export function CarrierManagementForm({ initialData, onOpenChange, open }: Carri
       });
     },
   });
+
+  const onSubmit = (data: CarrierManagementFormData) => {
+    mutation.mutate(data);
+  };
 
   const onSubmit = (data: CarrierManagementFormData) => {
     mutation.mutate(data);

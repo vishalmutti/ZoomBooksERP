@@ -21,11 +21,14 @@ export function CarrierList() {
   const queryClient = useQueryClient();
   const [editingCarrier, setEditingCarrier] = useState<CarrierCompany | null>(null);
 
-  const { data = [], isLoading } = useQuery({
+  const { data = [], isLoading, isError } = useQuery({
     queryKey: ["carriers"],
     queryFn: async () => {
       const response = await fetch("/api/carriers");
-      if (!response.ok) throw new Error("Failed to fetch carriers");
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to fetch carriers");
+      }
       return response.json();
     },
   });
