@@ -51,7 +51,7 @@ export function CarrierDashboard() {
     }
   });
 
-  const addCarrierMutation = useMutation({
+  const mutation = useMutation({
     mutationFn: async (data: InsertCarrier) => {
       console.log('Submitting carrier data:', data);
       const response = await apiRequest("POST", "/api/carriers", {
@@ -84,7 +84,7 @@ export function CarrierDashboard() {
 
   const handleAddCarrier = async (data: InsertCarrier) => {
     try {
-      await addCarrierMutation.mutateAsync(data);
+      await mutation.mutateAsync(data);
     } catch (error) {
       console.error("Error in handleAddCarrier:", error);
     }
