@@ -9,6 +9,7 @@ import DashboardPage from "@/pages/dashboard-page";
 import SuppliersPage from "@/pages/suppliers-page";
 import HomePage from "@/pages/home-page";
 import { LoadsPage } from "@/pages/LoadsPage";
+import { CarrierPage } from "@/pages/CarrierPage";
 import { ProtectedRoute } from "./lib/protected-route";
 import { Navbar } from "@/components/dashboard/navbar";
 
