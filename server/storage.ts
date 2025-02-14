@@ -621,18 +621,8 @@ export class DatabaseStorage implements IStorage {
             );
         }
 
-        // Get the complete carrier with contacts
-        const [result] = await tx
-          .select()
-          .from(carriers)
-          .where(eq(carriers.id, carrier.id))
-          .execute();
-
-        if (!result) {
-          throw new Error('Failed to fetch created carrier');
-        }
-
-        return result[0];
+        // Return the created carrier
+        return carrier;
       });
     } catch (error) {
       console.error('Error creating carrier:', error);
