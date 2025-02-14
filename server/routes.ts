@@ -645,11 +645,10 @@ export function registerRoutes(app: Express): Server {
     res.json(carriers);
   });
 
-  app.post("/api/carriers", upload, async (req, res) => {
+  app.post("/api/carriers", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
-      const carrierData = JSON.parse(req.body.carrierData);
-      const carrier = await storage.createCarrier(carrierData);
+      const carrier = await storage.createCarrier(req.body);
       res.status(201).json(carrier);
     } catch (error) {
       console.error('Error creating carrier:', error);

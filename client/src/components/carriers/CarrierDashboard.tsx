@@ -28,8 +28,10 @@ export function CarrierDashboard() {
   });
 
   const addCarrierMutation = useMutation({
-    mutationFn: (data: any) => {
-      return apiRequest("POST", "/api/carriers", data);
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("POST", "/api/carriers", data);
+      if (!response) throw new Error("Failed to create carrier");
+      return response;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/carriers"] });
@@ -40,6 +42,7 @@ export function CarrierDashboard() {
       });
     },
     onError: (error) => {
+      console.error("Carrier creation error:", error);
       toast({
         title: "Error",
         description: "Failed to add carrier",
