@@ -623,32 +623,9 @@ export class DatabaseStorage implements IStorage {
 
         // Get the complete carrier with contacts
         const result = await tx
-          .select({
-            id: carriers.id,
-            name: carriers.name,
-            address: carriers.address,
-            createdAt: carriers.createdAt,
-            contacts: sql<CarrierContact[]>`
-              COALESCE(
-                jsonb_agg(
-                  CASE WHEN ${carrierContacts.id} IS NOT NULL THEN
-                    jsonb_build_object(
-                      'id', ${carrierContacts.id},
-                      'carrierId', ${carrierContacts.carrierId},
-                      'name', ${carrierContacts.name},
-                      'email', ${carrierContacts.email},
-                      'phone', ${carrierContacts.phone},
-                      'createdAt', ${carrierContacts.createdAt}
-                    )
-                  ELSE NULL END
-                ) FILTER (WHERE ${carrierContacts.id} IS NOT NULL),
-                '[]'::jsonb
-              )`
-          })
+          .select()
           .from(carriers)
-          .leftJoin(carrierContacts, eq(carriers.id, carrierContacts.carrierId))
           .where(eq(carriers.id, carrier.id))
-          .groupBy(carriers.id)
           .execute();
 
         if (!result[0]) {
