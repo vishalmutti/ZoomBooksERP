@@ -19,12 +19,12 @@ export function CarrierDashboard() {
 
   const { data: carriers, isLoading: isLoadingCarriers } = useQuery<Carrier[]>({
     queryKey: ["/api/carriers"],
-    queryFn: () => apiRequest("/api/carriers")
+    queryFn: () => apiRequest("GET", "/api/carriers")
   });
 
   const { data: freightEntries, isLoading: isLoadingFreight } = useQuery({
     queryKey: ["/api/freight"],
-    queryFn: () => apiRequest("/api/freight")
+    queryFn: () => apiRequest("GET", "/api/freight")
   });
 
   const addCarrierMutation = useMutation({
