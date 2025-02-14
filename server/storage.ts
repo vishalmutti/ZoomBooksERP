@@ -564,19 +564,20 @@ export class DatabaseStorage implements IStorage {
           createdAt: carriers.createdAt,
           contacts: sql<CarrierContact[]>`
             COALESCE(
-              json_agg(
-                json_build_object(
-                  'id', ${carrierContacts.id},
-                  'carrierId', ${carrierContacts.carrierId},
-                  'name', ${carrierContacts.name},
-                  'email', ${carrierContacts.email},
-                  'phone', ${carrierContacts.phone},
-                  'createdAt', ${carrierContacts.createdAt}
-                )
+              jsonb_agg(
+                CASE WHEN ${carrierContacts.id} IS NOT NULL THEN
+                  jsonb_build_object(
+                    'id', ${carrierContacts.id},
+                    'carrierId', ${carrierContacts.carrierId},
+                    'name', ${carrierContacts.name},
+                    'email', ${carrierContacts.email},
+                    'phone', ${carrierContacts.phone},
+                    'createdAt', ${carrierContacts.createdAt}
+                  )
+                ELSE NULL END
               ) FILTER (WHERE ${carrierContacts.id} IS NOT NULL),
-              '[]'
-            )::json[]
-          `
+              '[]'::jsonb
+            )`
         })
         .from(carriers)
         .leftJoin(carrierContacts, eq(carriers.id, carrierContacts.carrierId))
@@ -620,8 +621,13 @@ export class DatabaseStorage implements IStorage {
             );
         }
 
-        // Fetch the complete carrier data with contacts
-        const [completeCarrier] = await this.getCarriers();
+        // Fetch all carriers and find the newly created one with contacts
+        const carriers = await this.getCarriers();
+        const completeCarrier = carriers.find(c => c.id === carrier.id);
+        if (!completeCarrier) {
+          throw new Error('Failed to fetch created carrier');
+        }
+
         return completeCarrier;
       });
     } catch (error) {
