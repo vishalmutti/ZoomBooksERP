@@ -580,33 +580,39 @@ export class DatabaseStorage implements IStorage {
 
   async createCarrier(data: InsertCarrier): Promise<Carrier> {
     try {
-      return await db.transaction(async (tx) => {
-        const [carrier] = await tx.insert(carriers).values({
-          name: data.name,
-          address: data.address,
-        }).returning();
+      const [carrier] = await db.insert(carriers).values({
+        name: data.name,
+        address: data.address || null,
+      }).returning();
 
-        if (data.contacts?.length) {
-          await tx.insert(carrierContacts).values(
-            data.contacts.map(contact => ({
-              carrierId: carrier.id,
-              name: contact.name,
-              email: contact.email || null,
-              phone: contact.phone || null,
-            }))
-          );
-        }
+      if (data.contacts?.length) {
+        await db.insert(carrierContacts).values(
+          data.contacts.map(contact => ({
+            carrierId: carrier.id,
+            name: contact.name,
+            email: contact.email || null,
+            phone: contact.phone || null,
+          }))
+        );
+      }
 
-        const result = await db.query.carriers.findFirst({
-          where: eq(carriers.id, carrier.id),
-          with: {
-            contacts: true,
-          },
-        });
+      const result = await db.query.carriers.findFirst({
+        where: eq(carriers.id, carrier.id),
+        with: {
+          contacts: true,
+        },
+      });
 
-        if (!result) {
-          throw new Error('Failed to create carrier');
-        }
+      if (!result) {
+        throw new Error('Failed to create carrier');
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Error creating carrier:', error);
+      throw error;
+    }
+  }
 
         return result;
       });
