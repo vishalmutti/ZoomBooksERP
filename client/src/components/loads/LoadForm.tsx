@@ -181,24 +181,32 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
       const savedLoad = await response.json();
       console.log('Server response success:', savedLoad);
 
-      // Create corresponding carrier load entry
-      const carrierLoadData = new FormData();
-      carrierLoadData.append('carrierData', JSON.stringify({
-        date: data.scheduledPickup,
-        referenceNumber: data.referenceNumber,
-        carrier: data.carrier,
-        freightCost: data.freightCost,
-        status: "UNPAID"
-      }));
+      // If this is an update and we have a freight invoice, sync with carrier loads
+      if (initialData && (files.freightInvoice || data.carrier !== initialData.carrier)) {
+        const carrierLoadData = new FormData();
+        carrierLoadData.append('carrierData', JSON.stringify({
+          date: data.scheduledPickup,
+          referenceNumber: data.referenceNumber,
+          carrier: data.carrier,
+          freightCost: data.freightCost,
+        }));
 
-      if (files.bol) {
-        carrierLoadData.append('pod', files.bol);
+        if (files.freightInvoice) {
+          carrierLoadData.append('freightInvoice', files.freightInvoice);
+        }
+
+        // Find and update corresponding carrier load
+        const carrierLoadsResponse = await fetch('/api/carrier-loads');
+        const carrierLoads = await carrierLoadsResponse.json();
+        const matchingLoad = carrierLoads.find(cl => cl.referenceNumber === data.referenceNumber);
+
+        if (matchingLoad) {
+          await fetch(`/api/carrier-loads/${matchingLoad.id}`, {
+            method: 'PATCH',
+            body: carrierLoadData,
+          });
+        }
       }
-
-      await fetch('/api/carrier-loads', {
-        method: 'POST',
-        body: carrierLoadData,
-      });
 
       await queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
       await queryClient.invalidateQueries({ queryKey: ["/api/carrier-loads"] });
