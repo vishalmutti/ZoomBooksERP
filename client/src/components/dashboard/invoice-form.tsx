@@ -186,7 +186,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       if (updatedInvoice) {
         form.reset({
           ...updatedInvoice,
-          items: updatedInvoice.items?.map(item => ({
+          items: updatedInvoice.items?.map((item: InvoiceItem) => ({
             description: item.description,
             quantity: item.quantity?.toString() || "0",
             unitPrice: item.unitPrice?.toString() || "0",
@@ -475,7 +475,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                             type="number"
                             step="0.01"
                             placeholder="Quantity"
-                            defaultValue={item.quantity}
+                            defaultValue={item.quantity?.toString() ?? "0"}
                             {...form.register(`items.${index}.quantity`)}
                             onChange={(e) => handleItemChange(index, "quantity", e.target.value)}
                           />
@@ -485,7 +485,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                             type="number"
                             step="0.01"
                             placeholder="Unit Price"
-                            defaultValue={item.unitPrice}
+                            defaultValue={item.unitPrice?.toString() ?? "0"}
                             {...form.register(`items.${index}.unitPrice`)}
                             onChange={(e) => handleItemChange(index, "unitPrice", e.target.value)}
                           />
