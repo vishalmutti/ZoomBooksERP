@@ -5,7 +5,8 @@ import { LoadTable } from "./LoadTable";
 import type { IncomingLoad, Supplier } from "@shared/schema";
 import { LoadSupplierList } from "./LoadSupplierList";
 import { LoadSupplierForm } from "./LoadSupplierForm";
-import { Button, Dialog, DialogContent } from "@headlessui/react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { LuPlus } from "react-icons/lu";
 
 export function LoadDashboard() {
