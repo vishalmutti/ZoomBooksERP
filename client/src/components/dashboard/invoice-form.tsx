@@ -443,6 +443,14 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                 <Input {...form.register("carrier")} />
               </div>
 
+              <div>
+                <Label htmlFor="dueDate">Due Date</Label>
+                <Input
+                  type="date"
+                  {...form.register("dueDate")}
+                />
+              </div>
+
               <TabsContent value="manual">
                 <div>
                   <Label>Items</Label>
