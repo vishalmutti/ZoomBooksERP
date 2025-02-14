@@ -52,7 +52,9 @@ const upload = multer({
   { name: 'bolFile', maxCount: 1 },
   { name: 'materialInvoiceFile', maxCount: 1 },
   { name: 'freightInvoiceFile', maxCount: 1 },
-  { name: 'loadPerformanceFile', maxCount: 1 }
+  { name: 'loadPerformanceFile', maxCount: 1 },
+  { name: 'freightInvoice', maxCount: 1 },
+  { name: 'pod', maxCount: 1 }
 ]);
 
 async function generatePDFForInvoice(invoice: InvoiceData) {
@@ -680,7 +682,7 @@ export function registerRoutes(app: Express): Server {
       
       const result = await db.insert(carrierLoads).values({
         ...carrierData,
-        freightInvoice: files?.freightInvoice?.[0]?.filename || null,
+        freightInvoice: files?.freightInvoice?.[0]?.filename || files?.freightInvoiceFile?.[0]?.filename || null,
         pod: files?.pod?.[0]?.filename || null,
       }).returning();
       
