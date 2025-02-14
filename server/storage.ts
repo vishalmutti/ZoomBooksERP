@@ -595,7 +595,7 @@ export class DatabaseStorage implements IStorage {
     try {
       return await db.transaction(async (tx) => {
         // Insert the carrier
-        const [newCarrier] = await tx
+        const [carrier] = await tx
           .insert(carriers)
           .values({
             name: data.name,
@@ -603,7 +603,7 @@ export class DatabaseStorage implements IStorage {
           })
           .returning();
 
-        if (!newCarrier) {
+        if (!carrier) {
           throw new Error('Failed to create carrier');
         }
 
@@ -613,7 +613,7 @@ export class DatabaseStorage implements IStorage {
             .insert(carrierContacts)
             .values(
               data.contacts.map(contact => ({
-                carrierId: newCarrier.id,
+                carrierId: carrier.id,
                 name: contact.name,
                 email: contact.email || null,
                 phone: contact.phone || null,
