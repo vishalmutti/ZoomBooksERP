@@ -13,11 +13,46 @@ interface CarrierCompany {
   phone: string;
 }
 
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+
 export function CarrierList() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [editingCarrier, setEditingCarrier] = useState<CarrierCompany | null>(null);
 
-  // Sample data - will be replaced with real data later
-  const data: CarrierCompany[] = [
+  const { data = [], isLoading } = useQuery({
+    queryKey: ["carriers"],
+    queryFn: async () => {
+      const response = await fetch("/api/carriers");
+      if (!response.ok) throw new Error("Failed to fetch carriers");
+      return response.json();
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await fetch(`/api/carriers/${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error("Failed to delete carrier");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["carriers"] });
+      toast({
+        title: "Success",
+        description: "Carrier deleted successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
     {
       id: 1,
       name: "ABC Trucking",

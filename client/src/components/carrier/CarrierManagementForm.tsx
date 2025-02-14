@@ -23,9 +23,46 @@ export function CarrierManagementForm({ initialData, onOpenChange, open }: Carri
     defaultValues: initialData,
   });
 
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const mutation = useMutation({
+    mutationFn: async (data: CarrierManagementFormData) => {
+      const url = initialData 
+        ? `/api/carriers/${initialData.id}`
+        : "/api/carriers";
+      const method = initialData ? "PUT" : "POST";
+      
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) throw new Error("Failed to save carrier");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["carriers"] });
+      toast({
+        title: "Success",
+        description: `Carrier ${initialData ? "updated" : "created"} successfully`,
+      });
+      if (onOpenChange) onOpenChange(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (data: CarrierManagementFormData) => {
-    console.log("Form submitted:", data);
-    // Backend integration will be added later
+    mutation.mutate(data);
   };
 
   return (

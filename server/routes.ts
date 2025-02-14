@@ -639,3 +639,49 @@ export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
   return httpServer;
 }
+// ... (keep existing imports)
+
+// Add these routes in the router configuration
+router.get("/api/carriers", async (req, res) => {
+  const carriers = await db.query.carriers.findMany();
+  return res.json(carriers);
+});
+
+router.post("/api/carriers", async (req, res) => {
+  const result = await db.insert(carriers).values(req.body);
+  return res.json(result);
+});
+
+router.put("/api/carriers/:id", async (req, res) => {
+  const result = await db.update(carriers)
+    .set(req.body)
+    .where(eq(carriers.id, parseInt(req.params.id)));
+  return res.json(result);
+});
+
+router.delete("/api/carriers/:id", async (req, res) => {
+  await db.delete(carriers).where(eq(carriers.id, parseInt(req.params.id)));
+  return res.json({ success: true });
+});
+
+router.get("/api/carrier-loads", async (req, res) => {
+  const loads = await db.query.carrierLoads.findMany();
+  return res.json(loads);
+});
+
+router.post("/api/carrier-loads", async (req, res) => {
+  const result = await db.insert(carrierLoads).values(req.body);
+  return res.json(result);
+});
+
+router.put("/api/carrier-loads/:id", async (req, res) => {
+  const result = await db.update(carrierLoads)
+    .set(req.body)
+    .where(eq(carrierLoads.id, parseInt(req.params.id)));
+  return res.json(result);
+});
+
+router.delete("/api/carrier-loads/:id", async (req, res) => {
+  await db.delete(carrierLoads).where(eq(carrierLoads.id, parseInt(req.params.id)));
+  return res.json({ success: true });
+});

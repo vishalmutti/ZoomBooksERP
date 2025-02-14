@@ -255,3 +255,28 @@ export type InsertFreightInvoice = z.infer<typeof insertFreightInvoiceSchema>;
 export type FreightInvoice = typeof freightInvoices.$inferSelect;
 export type InsertSupplierContact = z.infer<typeof insertSupplierContactSchema>;
 export type SupplierContact = typeof supplierContacts.$inferSelect;
+import { z } from "zod";
+
+// ... (keep existing schemas)
+
+export const CarrierSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  contactName: z.string(),
+  email: z.string().email(),
+  phone: z.string(),
+});
+
+export const CarrierLoadSchema = z.object({
+  id: z.number(),
+  date: z.string(),
+  referenceNumber: z.string(),
+  carrier: z.string(),
+  freightCost: z.number(),
+  freightInvoice: z.string().optional(),
+  pod: z.string().optional(),
+  status: z.enum(["PAID", "UNPAID"]),
+});
+
+export type Carrier = z.infer<typeof CarrierSchema>;
+export type CarrierLoad = z.infer<typeof CarrierLoadSchema>;
