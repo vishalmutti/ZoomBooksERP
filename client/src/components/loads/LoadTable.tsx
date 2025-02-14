@@ -395,18 +395,34 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
             <TableHead>Type</TableHead>
             <TableHead>Supplier</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Reference Number</TableHead>
-            <TableHead>Location</TableHead>
-            <TableHead>Carrier</TableHead>
-            <TableHead onClick={() => handleSort('scheduledPickup')} className="cursor-pointer hover:bg-accent">
-              Scheduled Pickup {sortConfig?.key === 'scheduledPickup' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-            </TableHead>
-            <TableHead onClick={() => handleSort('scheduledDelivery')} className="cursor-pointer hover:bg-accent">
-              Scheduled Delivery {sortConfig?.key === 'scheduledDelivery' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-            </TableHead>
-            <TableHead onClick={() => handleSort('loadCost')} className="cursor-pointer hover:bg-accent">
-              Load Cost {sortConfig?.key === 'loadCost' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-            </TableHead>
+            {filteredAndSortedLoads.some(load => load.loadType === 'Wholesale') ? (
+              <>
+                <TableHead>Invoice Number</TableHead>
+                <TableHead>Location</TableHead>
+                <TableHead>Carrier</TableHead>
+                <TableHead onClick={() => handleSort('scheduledDate')} className="cursor-pointer hover:bg-accent">
+                  Date {sortConfig?.key === 'scheduledDate' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                </TableHead>
+                <TableHead onClick={() => handleSort('amount')} className="cursor-pointer hover:bg-accent">
+                  Amount {sortConfig?.key === 'amount' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                </TableHead>
+              </>
+            ) : (
+              <>
+                <TableHead>Reference Number</TableHead>
+                <TableHead>Location</TableHead>
+                <TableHead>Carrier</TableHead>
+                <TableHead onClick={() => handleSort('scheduledPickup')} className="cursor-pointer hover:bg-accent">
+                  Scheduled Pickup {sortConfig?.key === 'scheduledPickup' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                </TableHead>
+                <TableHead onClick={() => handleSort('scheduledDelivery')} className="cursor-pointer hover:bg-accent">
+                  Scheduled Delivery {sortConfig?.key === 'scheduledDelivery' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                </TableHead>
+                <TableHead onClick={() => handleSort('loadCost')} className="cursor-pointer hover:bg-accent">
+                  Load Cost {sortConfig?.key === 'loadCost' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                </TableHead>
+              </>
+            )}
             <TableHead onClick={() => handleSort('freightCost')} className="cursor-pointer hover:bg-accent">
               Freight Cost {sortConfig?.key === 'freightCost' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
             </TableHead>
