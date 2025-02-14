@@ -639,14 +639,13 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Carrier routes
-  app.get("/api/carriers", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+  app.get("/api/carriers", async (_req, res) => {
     try {
       const carriers = await storage.getCarriers();
-      res.json(carriers);
+      res.json(carriers || []);
     } catch (error) {
-      console.error('Error fetching carriers:', error);
-      res.status(500).json({ message: 'Failed to fetch carriers' });
+      console.error("Error fetching carriers:", error);
+      res.status(500).json({ message: "Error fetching carriers" });
     }
   });
 

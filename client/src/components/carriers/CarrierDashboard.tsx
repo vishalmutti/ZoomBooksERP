@@ -18,7 +18,7 @@ export function CarrierDashboard() {
   const { toast } = useToast();
 
   const { data: carriers, isLoading: isLoadingCarriers } = useQuery<Carrier[]>({
-    queryKey: ["/api/carriers"],
+    queryKey: ["carriers"],
     queryFn: async () => {
       const response = await apiRequest("GET", "/api/carriers");
       if (!response || !Array.isArray(response)) {
@@ -26,6 +26,20 @@ export function CarrierDashboard() {
         return [];
       }
       return response;
+    }
+  });
+
+  const addCarrierMutation = useMutation({
+    mutationFn: async (data: InsertCarrier) => {
+      return await apiRequest("POST", "/api/carriers", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["carriers"] });
+      setShowAddCarrier(false);
+      toast({
+        title: "Success",
+        description: "Carrier added successfully",
+      });
     }
   });
 
