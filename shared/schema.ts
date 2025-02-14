@@ -312,7 +312,7 @@ export const insertCarrierSchema = createInsertSchema(carriers)
     createdAt: true,
   })
   .extend({
-    contacts: z.array(insertCarrierContactSchema),
+    contacts: z.array(insertCarrierContactSchema).optional(),
   });
 
 // Add relations for carriers and carrier contacts
