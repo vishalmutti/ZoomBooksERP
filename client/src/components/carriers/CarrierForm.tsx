@@ -1,18 +1,18 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { insertCarrierSchema } from "@shared/schema";
+import type { InsertCarrier } from "@shared/schema";
 
 interface CarrierFormProps {
-  carrier?: z.infer<typeof insertCarrierSchema>;
-  onComplete: (data: z.infer<typeof insertCarrierSchema>) => Promise<void>;
+  carrier?: InsertCarrier;
+  onComplete: (data: InsertCarrier) => Promise<void>;
 }
 
 export function CarrierForm({ carrier, onComplete }: CarrierFormProps) {
-  const form = useForm<z.infer<typeof insertCarrierSchema>>({
+  const form = useForm<InsertCarrier>({
     resolver: zodResolver(insertCarrierSchema),
     defaultValues: carrier || {
       name: "",

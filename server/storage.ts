@@ -571,10 +571,10 @@ export class DatabaseStorage implements IStorage {
         .insert(carriers)
         .values({
           name: data.name,
-          address: data.address,
-          contact_name: data.contact_name,
-          contact_email: data.contact_email,
-          contact_phone: data.contact_phone,
+          address: data.address ?? null,
+          contact_name: data.contact_name ?? null,
+          contact_email: data.contact_email ?? null,
+          contact_phone: data.contact_phone ?? null,
         })
         .returning();
 

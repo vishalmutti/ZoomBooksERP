@@ -40,7 +40,13 @@ export function CarrierDashboard() {
   const addCarrierMutation = useMutation({
     mutationFn: async (data: InsertCarrier) => {
       console.log('Submitting carrier data:', data);
-      const response = await apiRequest("POST", "/api/carriers", data);
+      const response = await apiRequest("POST", "/api/carriers", {
+        name: data.name,
+        address: data.address,
+        contact_name: data.contact_name,
+        contact_email: data.contact_email,
+        contact_phone: data.contact_phone
+      });
       if (!response) throw new Error("Failed to create carrier");
       return response as Carrier;
     },
