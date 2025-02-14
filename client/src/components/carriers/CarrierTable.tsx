@@ -1,4 +1,3 @@
-
 import type { Carrier } from "@shared/schema";
 import {
   Table,
@@ -39,24 +38,24 @@ export function CarrierTable({ carriers, onEdit, onDelete, isLoading }: CarrierT
           <TableHead>Contact Name</TableHead>
           <TableHead>Email</TableHead>
           <TableHead>Phone</TableHead>
-          <TableHead>Actions</TableHead>
+          <TableHead className="w-[100px]">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        {carriers?.flatMap((carrier) => 
-          (carrier.contacts || []).map((contact, index) => (
+        {carriers?.map((carrier) => 
+          (carrier.contacts && carrier.contacts.length > 0 ? carrier.contacts : [{}]).map((contact, index) => (
             <TableRow key={`${carrier.id}-${index}`}>
               {index === 0 ? (
                 <>
-                  <TableCell rowSpan={carrier.contacts?.length || 1}>{carrier.name}</TableCell>
-                  <TableCell rowSpan={carrier.contacts?.length || 1}>{carrier.address}</TableCell>
+                  <TableCell rowSpan={Math.max(1, carrier.contacts?.length || 1)}>{carrier.name}</TableCell>
+                  <TableCell rowSpan={Math.max(1, carrier.contacts?.length || 1)}>{carrier.address || "-"}</TableCell>
                 </>
               ) : null}
-              <TableCell>{contact.name}</TableCell>
-              <TableCell>{contact.email}</TableCell>
-              <TableCell>{contact.phone}</TableCell>
+              <TableCell>{contact.name || "-"}</TableCell>
+              <TableCell>{contact.email || "-"}</TableCell>
+              <TableCell>{contact.phone || "-"}</TableCell>
               {index === 0 ? (
-                <TableCell rowSpan={carrier.contacts?.length || 1} className="space-x-2">
+                <TableCell rowSpan={Math.max(1, carrier.contacts?.length || 1)} className="space-x-2">
                   <Button variant="ghost" size="icon" onClick={() => onEdit(carrier)}>
                     <LuPencil className="h-4 w-4" />
                   </Button>

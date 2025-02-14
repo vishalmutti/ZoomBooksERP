@@ -1,7 +1,6 @@
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import type { Carrier } from "@shared/schema";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,18 +19,14 @@ const formSchema = z.object({
 });
 
 interface CarrierFormProps {
-  carrier?: Carrier & { contacts?: Array<{ name: string; email: string; phone: string }> };
-  onComplete: (data: FormData) => Promise<void>;
+  carrier?: z.infer<typeof formSchema>;
+  onComplete: (data: z.infer<typeof formSchema>) => Promise<void>;
 }
 
 export function CarrierForm({ carrier, onComplete }: CarrierFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: carrier ? {
-      name: carrier.name,
-      address: carrier.address || "",
-      contacts: carrier.contacts || [{ name: "", email: "", phone: "" }],
-    } : {
+    defaultValues: carrier || {
       name: "",
       address: "",
       contacts: [{ name: "", email: "", phone: "" }],
@@ -43,15 +38,9 @@ export function CarrierForm({ carrier, onComplete }: CarrierFormProps) {
     name: "contacts",
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const formData = new FormData();
-    formData.append("carrierData", JSON.stringify(values));
-    await onComplete(formData);
-  };
-
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onComplete)} className="space-y-4">
         <FormField
           control={form.control}
           name="name"
