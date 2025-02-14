@@ -555,21 +555,35 @@ export class DatabaseStorage implements IStorage {
 
   async getCarriers(): Promise<Carrier[]> {
     try {
-      // First get all carriers
-      const carriersList = await db
-        .select()
-        .from(carriers);
+      const result = await db
+        .select({
+          id: carriers.id,
+          name: carriers.name,
+          address: carriers.address,
+          createdAt: carriers.createdAt,
+          contacts: sql<CarrierContact[]>`
+            COALESCE(
+              jsonb_agg(
+                CASE WHEN ${carrierContacts.id} IS NOT NULL THEN
+                  jsonb_build_object(
+                    'id', ${carrierContacts.id},
+                    'carrierId', ${carrierContacts.carrierId},
+                    'name', ${carrierContacts.name},
+                    'email', ${carrierContacts.email},
+                    'phone', ${carrierContacts.phone},
+                    'createdAt', ${carrierContacts.createdAt}
+                  )
+                ELSE NULL END
+              ) FILTER (WHERE ${carrierContacts.id} IS NOT NULL),
+              '[]'::jsonb
+            )`
+        })
+        .from(carriers)
+        .leftJoin(carrierContacts, eq(carriers.id, carrierContacts.carrierId))
+        .groupBy(carriers.id)
+        .execute();
 
-      // Then get all carrier contacts
-      const contactsList = await db
-        .select()
-        .from(carrierContacts);
-
-      // Map contacts to their carriers
-      return carriersList.map(carrier => ({
-        ...carrier,
-        contacts: contactsList.filter(contact => contact.carrierId === carrier.id)
-      }));
+      return result;
     } catch (error) {
       console.error('Error fetching carriers:', error);
       throw error;
