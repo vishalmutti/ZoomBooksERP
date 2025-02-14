@@ -59,9 +59,10 @@ export class DatabaseStorage implements IStorage {
     this.sessionStore = new PostgresSessionStore({
       pool,
       createTableIfMissing: true,
+      tableName: 'session',
       ttl: 86400,
       retry: {
-        retries: 3,
+        retries: 5,
         factor: 2,
         minTimeout: 1000,
         maxTimeout: 5000
