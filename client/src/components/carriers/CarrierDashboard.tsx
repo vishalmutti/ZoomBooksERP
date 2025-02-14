@@ -14,14 +14,21 @@ export function CarrierDashboard() {
   const [selectedFreightLoad, setSelectedFreightLoad] = useState<(FreightLoad & { id: number }) | null>(null);
   const { toast } = useToast();
 
-  const { data: carriers = [], isLoading: isLoadingCarriers } = useQuery<(Carrier & { id: number })[]>({
+  const { data: carriers = [], isLoading: isLoadingCarriers, error } = useQuery<(Carrier & { id: number })[]>({
     queryKey: ["/api/carriers"],
     refetchInterval: 30000, // Refetch every 30 seconds instead of continuously
+    retry: 3,
   });
 
   const { data: freightLoads = [], isLoading: isLoadingFreightLoads } = useQuery<FreightLoad[]>({
     queryKey: ["/api/freight-loads"],
   });
+
+  if (error) {
+    return <div className="flex justify-center items-center h-48">
+      <div className="text-lg text-red-500">Error loading carriers: {error.message}</div>
+    </div>;
+  }
 
   const deleteCarrier = async (id: number) => {
     try {
