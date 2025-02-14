@@ -3,6 +3,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { LuFileText } from "react-icons/lu";
+import { useToast } from "@/hooks/use-toast";
 
 interface CarrierLoad {
   id: number;
