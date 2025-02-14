@@ -1,4 +1,3 @@
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { LuFileText, LuPencil, LuTrash } from "react-icons/lu";
@@ -39,7 +38,7 @@ export function FreightTable({ entries = [], isLoading, onEdit, onDelete }: Frei
           </TableRow>
         </TableHeader>
         <TableBody>
-          {entries.map((entry) => (
+          {(Array.isArray(entries) ? entries : [])?.map((entry) => (
             <TableRow key={entry.id}>
               <TableCell>{entry.referenceNumber}</TableCell>
               <TableCell>{entry.carrier}</TableCell>
