@@ -2,10 +2,11 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { LoadForm } from "./LoadForm";
 import { LoadTable } from "./LoadTable";
-import { LoadSelector } from "./LoadSelector";
 import type { IncomingLoad, Supplier } from "@shared/schema";
 import { LoadSupplierList } from "./LoadSupplierList";
 import { LoadSupplierForm } from "./LoadSupplierForm";
+import { Button, Dialog, DialogContent } from "@headlessui/react";
+import { LuPlus } from "react-icons/lu";
 
 export function LoadDashboard() {
   const [showAddSupplier, setShowAddSupplier] = useState(false);
@@ -56,8 +57,20 @@ export function LoadDashboard() {
 
       <div className="space-y-4">
         <div className="flex justify-end">
-          <LoadSelector />
+          <Button onClick={() => setShowAddLoad(true)}>
+            <LuPlus className="mr-2 h-4 w-4" /> New Load
+          </Button>
         </div>
+        <Dialog open={showAddLoad} onOpenChange={setShowAddLoad}>
+          <DialogContent className="sm:max-w-[600px]">
+            <LoadForm 
+              onClose={() => setShowAddLoad(false)} 
+              defaultType="Incoming"
+              show={true}
+              suppliers={suppliers}
+            />
+          </DialogContent>
+        </Dialog>
         <LoadTable 
           loads={filteredLoads} 
           isLoading={isLoading}
@@ -72,17 +85,10 @@ export function LoadDashboard() {
           initialData={editingLoad}
           onClose={handleClose}
           show={true}
-        />
-      )}
-
-      {showAddLoad && (
-        <LoadForm
-          defaultType="Incoming"
-          onClose={handleClose}
-          show={true}
           suppliers={suppliers}
         />
       )}
+
 
       <div className="mt-8">
         <div className="flex justify-between items-center mb-4">
