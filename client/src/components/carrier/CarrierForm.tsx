@@ -4,6 +4,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from "@/components/ui/select";
+import { useState, useEffect } from "react";
+
+interface Carrier {
+  id: number;
+  name: string;
+}
 
 interface CarrierFormData {
   date: string;
@@ -21,9 +28,19 @@ interface CarrierFormProps {
 }
 
 export function CarrierForm({ initialData, onOpenChange, open }: CarrierFormProps) {
+  const [carriers, setCarriers] = useState<Carrier[]>([]);
   const form = useForm<CarrierFormData>({
     defaultValues: initialData,
   });
+
+  useEffect(() => {
+    // This will be replaced with actual API call when backend is ready
+    const mockCarriers = [
+      { id: 1, name: "ABC Trucking" },
+      { id: 2, name: "XYZ Transport" }
+    ];
+    setCarriers(mockCarriers);
+  }, []);
 
   const onSubmit = (data: CarrierFormData) => {
     console.log("Form submitted:", data);
@@ -75,9 +92,26 @@ export function CarrierForm({ initialData, onOpenChange, open }: CarrierFormProp
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Carrier</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a carrier" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Carriers</SelectLabel>
+                        {carriers.map((carrier) => (
+                          <SelectItem key={carrier.id} value={carrier.name}>
+                            {carrier.name}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
                 </FormItem>
               )}
             />
