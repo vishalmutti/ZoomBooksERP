@@ -555,38 +555,35 @@ export class DatabaseStorage implements IStorage {
 
   async getCarriers(): Promise<Carrier[]> {
     try {
-      // Get all carriers first
-      const allCarriers = await db
-        .select()
+      // Get all carriers with their contacts in a single query
+      const result = await db
+        .select({
+          id: carriers.id,
+          name: carriers.name,
+          address: carriers.address,
+          createdAt: carriers.createdAt,
+          contacts: sql<CarrierContact[]>`
+            COALESCE(
+              json_agg(
+                json_build_object(
+                  'id', ${carrierContacts.id},
+                  'carrierId', ${carrierContacts.carrierId},
+                  'name', ${carrierContacts.name},
+                  'email', ${carrierContacts.email},
+                  'phone', ${carrierContacts.phone},
+                  'createdAt', ${carrierContacts.createdAt}
+                )
+              ) FILTER (WHERE ${carrierContacts.id} IS NOT NULL),
+              '[]'
+            )::json[]
+          `
+        })
         .from(carriers)
+        .leftJoin(carrierContacts, eq(carriers.id, carrierContacts.carrierId))
+        .groupBy(carriers.id)
         .orderBy(carriers.name);
 
-      if (allCarriers.length === 0) {
-        return [];
-      }
-
-      // Get all contacts in a single query
-      const allContacts = await db
-        .select()
-        .from(carrierContacts)
-        .where(
-          sql`carrier_id = ANY(${sql.array(allCarriers.map(c => c.id), 'int4')})`
-        );
-
-      // Group contacts by carrier ID
-      const contactsByCarrier = allContacts.reduce((acc, contact) => {
-        if (!acc[contact.carrierId]) {
-          acc[contact.carrierId] = [];
-        }
-        acc[contact.carrierId].push(contact);
-        return acc;
-      }, {} as Record<number, CarrierContact[]>);
-
-      // Return carriers with their contacts
-      return allCarriers.map(carrier => ({
-        ...carrier,
-        contacts: contactsByCarrier[carrier.id] || []
-      }));
+      return result;
     } catch (error) {
       console.error('Error fetching carriers:', error);
       throw error;
@@ -596,8 +593,8 @@ export class DatabaseStorage implements IStorage {
   async createCarrier(data: InsertCarrier): Promise<Carrier> {
     try {
       return await db.transaction(async (tx) => {
-        // First insert the carrier
-        const [newCarrier] = await tx
+        // Insert the carrier
+        const [carrier] = await tx
           .insert(carriers)
           .values({
             name: data.name,
@@ -605,29 +602,27 @@ export class DatabaseStorage implements IStorage {
           })
           .returning();
 
-        if (!newCarrier) {
+        if (!carrier) {
           throw new Error('Failed to create carrier');
         }
 
-        // Then insert contacts if provided
-        const carrierContactsList = data.contacts?.length 
-          ? await tx
-              .insert(carrierContacts)
-              .values(
-                data.contacts.map(contact => ({
-                  carrierId: newCarrier.id,
-                  name: contact.name,
-                  email: contact.email || null,
-                  phone: contact.phone || null,
-                }))
-              )
-              .returning()
-          : [];
+        // Insert contacts if provided
+        if (data.contacts?.length) {
+          await tx
+            .insert(carrierContacts)
+            .values(
+              data.contacts.map(contact => ({
+                carrierId: carrier.id,
+                name: contact.name,
+                email: contact.email || null,
+                phone: contact.phone || null,
+              }))
+            );
+        }
 
-        return {
-          ...newCarrier,
-          contacts: carrierContactsList
-        };
+        // Fetch the complete carrier data with contacts
+        const [completeCarrier] = await this.getCarriers();
+        return completeCarrier;
       });
     } catch (error) {
       console.error('Error creating carrier:', error);
