@@ -45,9 +45,7 @@ export function CarrierForm({ carrier, onComplete }: CarrierFormProps) {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const formData = new FormData();
-    formData.append("name", values.name);
-    if (values.address) formData.append("address", values.address);
-    formData.append("contacts", JSON.stringify(values.contacts));
+    formData.append("carrierData", JSON.stringify(values));
     await onComplete(formData);
   };
 

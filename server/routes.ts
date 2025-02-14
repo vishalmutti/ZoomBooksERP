@@ -636,6 +636,26 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Carrier routes
+  app.get("/api/carriers", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const carriers = await storage.getCarriers();
+    res.json(carriers);
+  });
+
+  app.post("/api/carriers", upload, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const carrierData = JSON.parse(req.body.carrierData);
+      const carrier = await storage.createCarrier(carrierData);
+      res.status(201).json(carrier);
+    } catch (error) {
+      console.error('Error creating carrier:', error);
+      res.status(500).json({ message: 'Failed to create carrier' });
+    }
+  });
+
+
   const httpServer = createServer(app);
   return httpServer;
 }
