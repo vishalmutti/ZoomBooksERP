@@ -1,11 +1,10 @@
-
 import { DataTable } from "@/components/ui/data-table";
-import { useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { LuFileText } from "react-icons/lu";
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { LuFileText } from "react-icons/lu";
 
 interface CarrierLoad {
   id: number;
