@@ -9,17 +9,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { LuPencil } from "react-icons/lu";
+import { LuPencil, LuTrash2 } from "react-icons/lu";
 import { Skeleton } from "@/components/ui/skeleton";
+import { format } from "date-fns";
 
 interface CarrierTableProps {
   carriers: Carrier[];
   transactions: CarrierTransaction[];
   onEdit: (carrier: Carrier) => void;
+  onDelete: (carrier: Carrier) => void;
   isLoading: boolean;
 }
 
-export function CarrierTable({ carriers, transactions, onEdit, isLoading }: CarrierTableProps) {
+export function CarrierTable({ carriers, transactions, onEdit, onDelete, isLoading }: CarrierTableProps) {
   if (isLoading) {
     return (
       <div className="space-y-2">
@@ -50,9 +52,12 @@ export function CarrierTable({ carriers, transactions, onEdit, isLoading }: Carr
             <TableCell>{carrier.contact}</TableCell>
             <TableCell>{carrier.email}</TableCell>
             <TableCell>{carrier.phone}</TableCell>
-            <TableCell>
+            <TableCell className="space-x-2">
               <Button variant="ghost" size="icon" onClick={() => onEdit(carrier)}>
                 <LuPencil className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={() => onDelete(carrier)}>
+                <LuTrash2 className="h-4 w-4" />
               </Button>
             </TableCell>
           </TableRow>

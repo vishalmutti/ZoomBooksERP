@@ -21,6 +21,27 @@ export function CarrierDashboard() {
     queryKey: ["/api/carrier-transactions"],
   });
 
+  const handleSubmit = async (formData: FormData) => {
+    const url = editingCarrier ? `/api/carriers/${editingCarrier.id}` : "/api/carriers";
+    const method = editingCarrier ? "PUT" : "POST";
+
+    await fetch(url, {
+      method,
+      body: formData,
+    });
+
+    setShowAddCarrier(false);
+    setEditingCarrier(null);
+    refetch();
+  };
+
+  const handleDelete = async (carrier: Carrier) => {
+    await fetch(`/api/carriers/${carrier.id}`, {
+      method: "DELETE",
+    });
+    refetch();
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
@@ -35,6 +56,7 @@ export function CarrierDashboard() {
         carriers={carriers}
         transactions={transactions}
         onEdit={setEditingCarrier}
+        onDelete={handleDelete}
         isLoading={isLoading}
       />
 
@@ -44,10 +66,7 @@ export function CarrierDashboard() {
             <DialogTitle>Add New Carrier</DialogTitle>
           </DialogHeader>
           <CarrierForm
-            onComplete={() => {
-              setShowAddCarrier(false);
-              refetch();
-            }}
+            onComplete={handleSubmit}
           />
         </DialogContent>
       </Dialog>
@@ -63,10 +82,7 @@ export function CarrierDashboard() {
           {editingCarrier && (
             <CarrierForm
               carrier={editingCarrier}
-              onComplete={() => {
-                setEditingCarrier(null);
-                refetch();
-              }}
+              onComplete={handleSubmit}
             />
           )}
         </DialogContent>
