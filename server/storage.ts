@@ -555,36 +555,21 @@ export class DatabaseStorage implements IStorage {
 
   async getCarriers(): Promise<Carrier[]> {
     try {
-      // Get all carriers with their contacts in a single query
-      const result = await db
-        .select({
-          id: carriers.id,
-          name: carriers.name,
-          address: carriers.address,
-          createdAt: carriers.createdAt,
-          contacts: sql<CarrierContact[]>`
-            COALESCE(
-              jsonb_agg(
-                CASE WHEN ${carrierContacts.id} IS NOT NULL THEN
-                  jsonb_build_object(
-                    'id', ${carrierContacts.id},
-                    'carrierId', ${carrierContacts.carrierId},
-                    'name', ${carrierContacts.name},
-                    'email', ${carrierContacts.email},
-                    'phone', ${carrierContacts.phone},
-                    'createdAt', ${carrierContacts.createdAt}
-                  )
-                ELSE NULL END
-              ) FILTER (WHERE ${carrierContacts.id} IS NOT NULL),
-              '[]'::jsonb
-            )`
-        })
-        .from(carriers)
-        .leftJoin(carrierContacts, eq(carriers.id, carrierContacts.carrierId))
-        .groupBy(carriers.id)
-        .orderBy(carriers.name);
+      // First get all carriers
+      const carriersList = await db
+        .select()
+        .from(carriers);
 
-      return result;
+      // Then get all carrier contacts
+      const contactsList = await db
+        .select()
+        .from(carrierContacts);
+
+      // Map contacts to their carriers
+      return carriersList.map(carrier => ({
+        ...carrier,
+        contacts: contactsList.filter(contact => contact.carrierId === carrier.id)
+      }));
     } catch (error) {
       console.error('Error fetching carriers:', error);
       throw error;
@@ -594,8 +579,8 @@ export class DatabaseStorage implements IStorage {
   async createCarrier(data: InsertCarrier): Promise<Carrier> {
     try {
       return await db.transaction(async (tx) => {
-        // Insert the carrier
-        const [carrier] = await tx
+        // Insert the carrier first
+        const [newCarrier] = await tx
           .insert(carriers)
           .values({
             name: data.name,
@@ -603,26 +588,31 @@ export class DatabaseStorage implements IStorage {
           })
           .returning();
 
-        if (!carrier) {
+        if (!newCarrier) {
           throw new Error('Failed to create carrier');
         }
 
         // Insert contacts if provided
-        if (data.contacts?.length) {
-          await tx
+        let carrierContactsList: CarrierContact[] = [];
+        if (data.contacts && data.contacts.length > 0) {
+          const contactsToInsert = data.contacts.map(contact => ({
+            carrierId: newCarrier.id,
+            name: contact.name,
+            email: contact.email || null,
+            phone: contact.phone || null,
+          }));
+
+          carrierContactsList = await tx
             .insert(carrierContacts)
-            .values(
-              data.contacts.map(contact => ({
-                carrierId: carrier.id,
-                name: contact.name,
-                email: contact.email || null,
-                phone: contact.phone || null,
-              }))
-            );
+            .values(contactsToInsert)
+            .returning();
         }
 
-        // Return the created carrier
-        return carrier;
+        // Return the complete carrier with contacts
+        return {
+          ...newCarrier,
+          contacts: carrierContactsList
+        };
       });
     } catch (error) {
       console.error('Error creating carrier:', error);
