@@ -50,7 +50,9 @@ export default function InvoiceTable({ invoices: initialInvoices }: { invoices: 
       <TableHeader>
         <TableRow>
           <TableHead>Client</TableHead>
+          <TableHead>Carrier</TableHead>
           <TableHead>Amount</TableHead>
+          <TableHead>Freight Cost</TableHead>
           <TableHead>Due Date</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Actions</TableHead>
@@ -60,7 +62,9 @@ export default function InvoiceTable({ invoices: initialInvoices }: { invoices: 
         {(invoices || []).map((invoice) => (
           <TableRow key={invoice.id}>
             <TableCell>{invoice.clientName}</TableCell>
-            <TableCell>{invoice.currency === 'CAD' ? 'C' : '$'}{invoice.amount.toString()}</TableCell>
+            <TableCell>{invoice.carrier || 'N/A'}</TableCell>
+            <TableCell>{invoice.currency === 'CAD' ? 'C' : '$'}{invoice.totalAmount.toString()}</TableCell>
+            <TableCell>{invoice.freightCost ? `${invoice.freightCostCurrency === 'CAD' ? 'C' : '$'}${invoice.freightCost}` : 'N/A'}</TableCell>
             <TableCell>{format(new Date(invoice.dueDate), "MMM d, yyyy")}</TableCell>
             <TableCell>
               {invoice.isPaid ? (
