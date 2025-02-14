@@ -45,7 +45,7 @@ export function CarrierTable({ carriers, transactions, onEdit, onDelete, isLoadi
         </TableRow>
       </TableHeader>
       <TableBody>
-        {carriers.map((carrier) => (
+        {(carriers || []).map((carrier) => (
           <TableRow key={carrier.id}>
             <TableCell>{carrier.name}</TableCell>
             <TableCell>{carrier.mcNumber}</TableCell>

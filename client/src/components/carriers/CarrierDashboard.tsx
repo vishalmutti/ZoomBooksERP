@@ -14,6 +14,11 @@ export function CarrierDashboard() {
 
   const { data: carriers, isLoading: isLoadingCarriers } = useQuery({
     queryKey: ["/api/carriers"],
+    queryFn: async () => {
+      const response = await fetch("/api/carriers");
+      if (!response.ok) throw new Error("Failed to fetch carriers");
+      return response.json();
+    },
   });
 
   const { data: freightEntries, isLoading: isLoadingFreight } = useQuery({
