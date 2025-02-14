@@ -12,6 +12,7 @@ interface CarrierLoad {
   freightCost: number;
   freightInvoice?: string;
   pod?: string;
+  status: "PAID" | "UNPAID";
 }
 
 const FileLink = ({ file }: { file?: string }) => {
@@ -30,6 +31,40 @@ const FileLink = ({ file }: { file?: string }) => {
 
 export function CarrierTable() {
   // Sample data - will be replaced with real data later
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ loadId, newStatus }: { loadId: number; newStatus: "PAID" | "UNPAID" }) => {
+      const response = await fetch(`/api/carrier-loads/${loadId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update status');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["carrier-loads"] });
+      toast({
+        title: "Success",
+        description: "Payment status updated successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const data: CarrierLoad[] = [
     {
       id: 1,
@@ -38,7 +73,8 @@ export function CarrierTable() {
       carrier: "ABC Trucking",
       freightCost: 1500.00,
       freightInvoice: "invoice1.pdf",
-      pod: "pod1.pdf"
+      pod: "pod1.pdf",
+      status: "PAID"
     },
     {
       id: 2,
@@ -46,6 +82,7 @@ export function CarrierTable() {
       referenceNumber: "REF002",
       carrier: "XYZ Transport",
       freightCost: 2000.00,
+      status: "UNPAID"
     }
   ];
 
@@ -78,6 +115,26 @@ export function CarrierTable() {
       accessorKey: "pod",
       header: "POD",
       cell: ({ row }) => <FileLink file={row.getValue("pod")} />,
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => {
+        const status = row.getValue("status") as "PAID" | "UNPAID";
+        return (
+          <select
+            className="w-24 h-8 px-2 py-1 bg-background border border-input rounded-md text-sm"
+            value={status}
+            onChange={(e) => {
+              const newStatus = e.target.value as "PAID" | "UNPAID";
+              updateStatusMutation.mutate({ loadId: row.original.id, newStatus });
+            }}
+          >
+            <option value="PAID">PAID</option>
+            <option value="UNPAID">UNPAID</option>
+          </select>
+        );
+      },
     },
   ];
 
