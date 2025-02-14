@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CarrierForm } from "./CarrierForm";
@@ -5,7 +6,7 @@ import { CarrierTable } from "./CarrierTable";
 import { FreightForm } from "./FreightForm";
 import { FreightTable } from "./FreightTable";
 import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { LuPlus } from "react-icons/lu";
 
 export function CarrierDashboard() {
@@ -25,6 +26,15 @@ export function CarrierDashboard() {
     queryKey: ["/api/freight"],
   });
 
+  const handleAddCarrier = async (formData: FormData) => {
+    // Handle carrier submission
+    await fetch("/api/carriers", {
+      method: "POST",
+      body: formData,
+    });
+    setShowAddCarrier(false);
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-8">
       {/* Freight Management Section */}
@@ -36,10 +46,14 @@ export function CarrierDashboard() {
           </Button>
         </div>
 
-        <FreightForm 
-          show={showAddFreight} 
-          onClose={() => setShowAddFreight(false)} 
-        />
+        <Dialog open={showAddFreight} onOpenChange={setShowAddFreight}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New Freight Entry</DialogTitle>
+            </DialogHeader>
+            <FreightForm onComplete={() => setShowAddFreight(false)} />
+          </DialogContent>
+        </Dialog>
 
         <FreightTable 
           entries={freightEntries} 
@@ -58,10 +72,14 @@ export function CarrierDashboard() {
           </Button>
         </div>
 
-        <CarrierForm 
-          show={showAddCarrier} 
-          onClose={() => setShowAddCarrier(false)} 
-        />
+        <Dialog open={showAddCarrier} onOpenChange={setShowAddCarrier}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New Carrier</DialogTitle>
+            </DialogHeader>
+            <CarrierForm onComplete={handleAddCarrier} />
+          </DialogContent>
+        </Dialog>
 
         <CarrierTable 
           carriers={carriers} 
