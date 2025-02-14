@@ -50,18 +50,25 @@ export function CarrierForm({ initialData, onOpenChange, open }: CarrierFormProp
       const url = initialData ? `/api/carrier-loads/${initialData.id}` : '/api/carrier-loads';
       const method = initialData ? 'PATCH' : 'POST';
       
+      const formData = new FormData();
+      formData.append('carrierData', JSON.stringify({
+        date: data.date,
+        referenceNumber: data.referenceNumber,
+        carrier: data.carrier,
+        freightCost: data.freightCost,
+        status: "UNPAID"
+      }));
+      
+      if (data.freightInvoice) {
+        formData.append('freightInvoice', data.freightInvoice);
+      }
+      if (data.pod) {
+        formData.append('pod', data.pod);
+      }
+
       const response = await fetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          date: data.date,
-          referenceNumber: data.referenceNumber,
-          carrier: data.carrier,
-          freightCost: data.freightCost,
-          status: "UNPAID"
-        }),
+        body: formData,
       });
 
       if (!response.ok) {

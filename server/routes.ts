@@ -672,20 +672,46 @@ export function registerRoutes(app: Express): Server {
     return res.json(loads);
   });
 
-  router.post("/api/carrier-loads", async (req, res) => {
+  router.post("/api/carrier-loads", upload, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    const result = await db.insert(carrierLoads).values(req.body);
-    return res.json(result);
+    try {
+      const carrierData = JSON.parse(req.body.carrierData);
+      const files = req.files as UploadedFiles;
+      
+      const result = await db.insert(carrierLoads).values({
+        ...carrierData,
+        freightInvoice: files?.freightInvoice?.[0]?.filename || null,
+        pod: files?.pod?.[0]?.filename || null,
+      }).returning();
+      
+      return res.json(result[0]);
+    } catch (error) {
+      console.error('Error creating carrier load:', error);
+      res.status(500).json({ message: 'Failed to create carrier load' });
+    }
   });
 
-  router.patch("/api/carrier-loads/:id", async (req, res) => {
+  router.patch("/api/carrier-loads/:id", upload, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    const id = parseInt(req.params.id);
-    const result = await db.update(carrierLoads)
-      .set(req.body)
-      .where(eq(carrierLoads.id, id))
-      .returning();
-    return res.json(result[0]);
+    try {
+      const id = parseInt(req.params.id);
+      const carrierData = JSON.parse(req.body.carrierData);
+      const files = req.files as UploadedFiles;
+      
+      const result = await db.update(carrierLoads)
+        .set({
+          ...carrierData,
+          freightInvoice: files?.freightInvoice?.[0]?.filename || undefined,
+          pod: files?.pod?.[0]?.filename || undefined,
+        })
+        .where(eq(carrierLoads.id, id))
+        .returning();
+        
+      return res.json(result[0]);
+    } catch (error) {
+      console.error('Error updating carrier load:', error);
+      res.status(500).json({ message: 'Failed to update carrier load' });
+    }
   });
 
   router.delete("/api/carrier-loads/:id", async (req, res) => {
