@@ -1,3 +1,4 @@
+
 import { DataTable } from "@/components/ui/data-table";
 import { useQuery } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
@@ -18,6 +19,8 @@ interface CarrierLoad {
   status: "PAID" | "UNPAID";
 }
 
+import { CarrierForm } from "./CarrierForm";
+
 const FileLink = ({ file }: { file?: string }) => {
   if (!file) return null;
   return (
@@ -32,12 +35,21 @@ const FileLink = ({ file }: { file?: string }) => {
   );
 };
 
-import { CarrierForm } from "./CarrierForm";
-
 export function CarrierTable() {
-  // Sample data - will be replaced with real data later
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [editingCarrier, setEditingCarrier] = useState<CarrierLoad | null>(null);
+
+  const { data = [], isLoading } = useQuery({
+    queryKey: ['carrier-loads'],
+    queryFn: async () => {
+      const response = await fetch('/api/carrier-loads');
+      if (!response.ok) {
+        throw new Error('Failed to fetch carrier loads');
+      }
+      return response.json();
+    }
+  });
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ loadId, newStatus }: { loadId: number; newStatus: "PAID" | "UNPAID" }) => {
@@ -69,23 +81,6 @@ export function CarrierTable() {
       });
     },
   });
-
-  const { data = [], isLoading } = useQuery({
-    queryKey: ['carrier-loads'],
-    queryFn: async () => {
-      const response = await fetch('/api/carrier-loads');
-      if (!response.ok) {
-        throw new Error('Failed to fetch carrier loads');
-      }
-      return response.json();
-    }
-  });
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  const [editingCarrier, setEditingCarrier] = useState<CarrierLoad | null>(null);
 
   const columns: ColumnDef<CarrierLoad>[] = [
     {
@@ -153,9 +148,9 @@ export function CarrierTable() {
             variant="destructive"
             size="sm"
             onClick={() => {
-              if (confirm("Are you sure you want to delete this carrier?")) {
+              if (confirm("Are you sure you want to delete this carrier load?")) {
                 // Delete mutation will be added later
-                console.log("Delete carrier:", row.original.id);
+                console.log("Delete carrier load:", row.original.id);
               }
             }}
           >
@@ -165,6 +160,10 @@ export function CarrierTable() {
       ),
     },
   ];
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="container mx-auto py-8">
