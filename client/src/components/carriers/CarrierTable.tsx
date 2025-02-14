@@ -63,7 +63,7 @@ export function CarrierTable({ carriers, onEdit, onDelete, isLoading }: CarrierT
         </TableRow>
       </TableHeader>
       <TableBody>
-        {(Array.isArray(carriers) ? carriers : [])?.map((carrier) => 
+        {Array.isArray(carriers) && carriers.map((carrier) => 
           (carrier.contacts && carrier.contacts.length > 0 ? carrier.contacts : [{}]).map((contact, index) => (
             <TableRow key={`${carrier.id}-${index}`}>
               {index === 0 ? (

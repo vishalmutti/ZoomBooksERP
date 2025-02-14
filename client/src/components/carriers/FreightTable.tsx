@@ -38,7 +38,7 @@ export function FreightTable({ entries = [], isLoading, onEdit, onDelete }: Frei
           </TableRow>
         </TableHeader>
         <TableBody>
-          {(Array.isArray(entries) ? entries : [])?.map((entry) => (
+          {Array.isArray(entries) && entries.map((entry) => (
             <TableRow key={entry.id}>
               <TableCell>{entry.referenceNumber}</TableCell>
               <TableCell>{entry.carrier}</TableCell>
