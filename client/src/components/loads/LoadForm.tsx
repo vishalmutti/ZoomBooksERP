@@ -210,28 +210,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="loadType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Load Type</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select load type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Incoming">Incoming</SelectItem>
-                      <SelectItem value="Wholesale">Wholesale</SelectItem>
-                      <SelectItem value="Miscellaneous">Miscellaneous</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <input type="hidden" {...form.register("loadType")} value="Incoming" />
           </div>
 
           <FormField

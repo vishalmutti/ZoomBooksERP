@@ -1,17 +1,13 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoadForm } from "./LoadForm";
 import { LoadTable } from "./LoadTable";
 import { LoadSelector } from "./LoadSelector";
-import { Button } from "@/components/ui/button";
 import type { IncomingLoad, Supplier } from "@shared/schema";
-import { LuPackage2, LuPlus, LuShip, LuStore } from "react-icons/lu";
 import { LoadSupplierList } from "./LoadSupplierList";
 import { LoadSupplierForm } from "./LoadSupplierForm";
 
 export function LoadDashboard() {
-  const [activeTab, setActiveTab] = useState<"Incoming" | "Wholesale" | "Miscellaneous">("Incoming");
   const [showAddSupplier, setShowAddSupplier] = useState(false);
   const [editingLoad, setEditingLoad] = useState<IncomingLoad | null>(null);
   const [showAddLoad, setShowAddLoad] = useState(false);
@@ -27,7 +23,7 @@ export function LoadDashboard() {
   });
 
   const filteredLoads = loads?.filter(load => 
-    load.loadType?.toLowerCase() === activeTab.toLowerCase()
+    load.loadType === "Incoming"
   );
 
   const handleEdit = (load: IncomingLoad) => {
@@ -37,7 +33,7 @@ export function LoadDashboard() {
   const handleDelete = async (id: number) => {
     try {
       await fetch(`/api/loads/${id}`, { method: 'DELETE' });
-      refetch(); // Manually trigger a refetch after deletion
+      refetch();
     } catch (error) {
       console.error('Failed to delete load:', error);
     }
@@ -46,7 +42,7 @@ export function LoadDashboard() {
   const handleClose = () => {
     setEditingLoad(null);
     setShowAddLoad(false);
-    refetch(); // Ensure data is refreshed when form is closed
+    refetch();
   };
 
   return (
@@ -58,47 +54,30 @@ export function LoadDashboard() {
         </p>
       </div>
 
-      <Tabs defaultValue="Incoming" className="w-full" value={activeTab} onValueChange={(value) => setActiveTab(value as typeof activeTab)}>
-        <TabsList className="w-full grid grid-cols-3">
-          <TabsTrigger value="Incoming" className="flex items-center gap-2">
-            <LuShip className="h-4 w-4" />
-            Incoming
-          </TabsTrigger>
-          <TabsTrigger value="Wholesale" className="flex items-center gap-2">
-            <LuStore className="h-4 w-4" />
-            Wholesale
-          </TabsTrigger>
-          <TabsTrigger value="Miscellaneous" className="flex items-center gap-2">
-            <LuPackage2 className="h-4 w-4" />
-            Miscellaneous
-          </TabsTrigger>
-        </TabsList>
+      <div className="space-y-4">
+        <div className="flex justify-end">
+          <LoadSelector />
+        </div>
+        <LoadTable 
+          loads={filteredLoads} 
+          isLoading={isLoading}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          suppliers={suppliers}
+        />
+      </div>
 
-        {editingLoad && (
-          <LoadForm
-            initialData={editingLoad}
-            onClose={handleClose}
-            show={true}
-          />
-        )}
-
-        <TabsContent value={activeTab} className="space-y-4">
-          <div className="flex justify-end">
-            <LoadSelector />
-          </div>
-          <LoadTable 
-            loads={filteredLoads} 
-            isLoading={isLoading}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            suppliers={suppliers}
-          />
-        </TabsContent>
-      </Tabs>
+      {editingLoad && (
+        <LoadForm
+          initialData={editingLoad}
+          onClose={handleClose}
+          show={true}
+        />
+      )}
 
       {showAddLoad && (
         <LoadForm
-          defaultType={activeTab}
+          defaultType="Incoming"
           onClose={handleClose}
           show={true}
           suppliers={suppliers}
@@ -108,10 +87,7 @@ export function LoadDashboard() {
       <div className="mt-8">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold">Load Suppliers</h2>
-          <Button onClick={() => setShowAddSupplier(true)}>
-            <LuPlus className="h-4 w-4 mr-2" />
-            Add Supplier
-          </Button>
+          <button onClick={() => setShowAddSupplier(true)}>Add Supplier</button>
         </div>
 
         <LoadSupplierList suppliers={suppliers} />
