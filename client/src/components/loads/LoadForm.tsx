@@ -181,7 +181,27 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
       const savedLoad = await response.json();
       console.log('Server response success:', savedLoad);
 
+      // Create corresponding carrier load entry
+      const carrierLoadData = new FormData();
+      carrierLoadData.append('carrierData', JSON.stringify({
+        date: data.scheduledPickup,
+        referenceNumber: data.referenceNumber,
+        carrier: data.carrier,
+        freightCost: data.freightCost,
+        status: "UNPAID"
+      }));
+
+      if (files.bol) {
+        carrierLoadData.append('pod', files.bol);
+      }
+
+      await fetch('/api/carrier-loads', {
+        method: 'POST',
+        body: carrierLoadData,
+      });
+
       await queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/carrier-loads"] });
       handleClose();
       toast({
         title: initialData ? "Load updated successfully" : "Load created successfully",
