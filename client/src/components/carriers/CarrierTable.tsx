@@ -71,76 +71,31 @@ export function CarrierTable({ carriers, onEdit, onDelete, isLoading }: CarrierT
               </TableCell>
             </TableRow>
           ) : (
-            carriers.map((carrier) => {
-              // If carrier has contacts, create a row for each contact
-              const hasContacts = carrier.contacts && carrier.contacts.length > 0;
-              if (hasContacts) {
-                return carrier.contacts!.map((contact, contactIndex) => (
-                  <TableRow key={`${carrier.id}-${contactIndex}`}>
-                    {/* Only show carrier info in first contact row */}
-                    {contactIndex === 0 ? (
-                      <>
-                        <TableCell rowSpan={carrier.contacts!.length}>
-                          {carrier.name}
-                        </TableCell>
-                        <TableCell rowSpan={carrier.contacts!.length}>
-                          {carrier.address || "-"}
-                        </TableCell>
-                      </>
-                    ) : null}
-                    <TableCell>{contact.name || "-"}</TableCell>
-                    <TableCell>{contact.email || "-"}</TableCell>
-                    <TableCell>{contact.phone || "-"}</TableCell>
-                    {/* Only show actions in first contact row */}
-                    {contactIndex === 0 ? (
-                      <TableCell rowSpan={carrier.contacts!.length} className="space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onEdit(carrier)}
-                        >
-                          <LuPencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onDelete(carrier)}
-                        >
-                          <LuTrash2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    ) : null}
-                  </TableRow>
-                ));
-              }
-
-              // If carrier has no contacts, show a single row
-              return (
-                <TableRow key={carrier.id}>
-                  <TableCell>{carrier.name}</TableCell>
-                  <TableCell>{carrier.address || "-"}</TableCell>
-                  <TableCell>-</TableCell>
-                  <TableCell>-</TableCell>
-                  <TableCell>-</TableCell>
-                  <TableCell className="space-x-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onEdit(carrier)}
-                    >
-                      <LuPencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onDelete(carrier)}
-                    >
-                      <LuTrash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              );
-            })
+            carriers.map((carrier) => (
+              <TableRow key={carrier.id}>
+                <TableCell>{carrier.name}</TableCell>
+                <TableCell>{carrier.address || "-"}</TableCell>
+                <TableCell>{carrier.contactName || "-"}</TableCell>
+                <TableCell>{carrier.contactEmail || "-"}</TableCell>
+                <TableCell>{carrier.contactPhone || "-"}</TableCell>
+                <TableCell className="space-x-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onEdit(carrier)}
+                  >
+                    <LuPencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onDelete(carrier)}
+                  >
+                    <LuTrash2 className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
           )}
         </TableBody>
       </Table>

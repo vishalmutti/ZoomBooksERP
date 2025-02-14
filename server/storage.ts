@@ -555,7 +555,10 @@ export class DatabaseStorage implements IStorage {
 
   async getCarriers(): Promise<Carrier[]> {
     try {
-      return await db.select().from(carriers);
+      return await db
+        .select()
+        .from(carriers)
+        .orderBy(carriers.name);
     } catch (error) {
       console.error('Error fetching carriers:', error);
       throw error;
@@ -568,7 +571,7 @@ export class DatabaseStorage implements IStorage {
         .insert(carriers)
         .values({
           name: data.name,
-          address: data.address || null,
+          address: data.address,
           contactName: data.contactName,
           contactEmail: data.contactEmail,
           contactPhone: data.contactPhone,
