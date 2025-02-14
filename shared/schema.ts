@@ -14,12 +14,14 @@ export const carriers = pgTable("carriers", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Create the insert schema for carriers
-export const insertCarrierSchema = createInsertSchema(carriers)
-  .omit({
-    id: true,
-    createdAt: true,
-  });
+export const insertCarrierSchema = createInsertSchema(carriers).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Export types
+export type InsertCarrier = z.infer<typeof insertCarrierSchema>;
+export type Carrier = typeof carriers.$inferSelect;
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -301,5 +303,3 @@ export type SupplierContact = typeof supplierContacts.$inferSelect;
 
 // Define carrier contact schema before carrier schema
 // Define types
-export type InsertCarrier = z.infer<typeof insertCarrierSchema>;
-export type Carrier = typeof carriers.$inferSelect;

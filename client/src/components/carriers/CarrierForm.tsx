@@ -4,23 +4,16 @@ import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-
-const formSchema = z.object({
-  name: z.string().min(1, "Company name is required"),
-  address: z.string().optional(),
-  contactName: z.string().min(1, "Contact name is required"),
-  contactEmail: z.string().email("Invalid email address"),
-  contactPhone: z.string().min(10, "Phone number must be at least 10 digits"),
-});
+import { insertCarrierSchema } from "@shared/schema";
 
 interface CarrierFormProps {
-  carrier?: z.infer<typeof formSchema>;
-  onComplete: (data: z.infer<typeof formSchema>) => Promise<void>;
+  carrier?: z.infer<typeof insertCarrierSchema>;
+  onComplete: (data: z.infer<typeof insertCarrierSchema>) => Promise<void>;
 }
 
 export function CarrierForm({ carrier, onComplete }: CarrierFormProps) {
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<typeof insertCarrierSchema>>({
+    resolver: zodResolver(insertCarrierSchema),
     defaultValues: carrier || {
       name: "",
       address: "",
