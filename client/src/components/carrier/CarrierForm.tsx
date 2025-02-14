@@ -14,8 +14,16 @@ interface CarrierFormData {
   pod?: File;
 }
 
-export function CarrierForm() {
-  const form = useForm<CarrierFormData>();
+interface CarrierFormProps {
+  initialData?: CarrierFormData;
+  onOpenChange?: (open: boolean) => void;
+  open?: boolean;
+}
+
+export function CarrierForm({ initialData, onOpenChange, open }: CarrierFormProps) {
+  const form = useForm<CarrierFormData>({
+    defaultValues: initialData,
+  });
 
   const onSubmit = (data: CarrierFormData) => {
     console.log("Form submitted:", data);
@@ -23,13 +31,15 @@ export function CarrierForm() {
   };
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button className="mb-4">Add New Carrier</Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {!initialData && (
+        <DialogTrigger asChild>
+          <Button className="mb-4">Add New Carrier</Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New Carrier</DialogTitle>
+          <DialogTitle>{initialData ? 'Edit Carrier' : 'Add New Carrier'}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

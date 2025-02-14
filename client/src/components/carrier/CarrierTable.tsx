@@ -90,6 +90,8 @@ export function CarrierTable() {
     }
   ];
 
+  const [editingCarrier, setEditingCarrier] = useState<CarrierLoad | null>(null);
+
   const columns: ColumnDef<CarrierLoad>[] = [
     {
       accessorKey: "date",
@@ -140,6 +142,33 @@ export function CarrierTable() {
         );
       },
     },
+    {
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }) => (
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setEditingCarrier(row.original)}
+          >
+            Edit
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => {
+              if (confirm("Are you sure you want to delete this carrier?")) {
+                // Delete mutation will be added later
+                console.log("Delete carrier:", row.original.id);
+              }
+            }}
+          >
+            Delete
+          </Button>
+        </div>
+      ),
+    },
   ];
 
   return (
@@ -148,6 +177,13 @@ export function CarrierTable() {
         <h2 className="text-2xl font-bold">Carrier Loads</h2>
         <CarrierForm />
       </div>
+      {editingCarrier && (
+        <CarrierForm
+          initialData={editingCarrier}
+          open={!!editingCarrier}
+          onOpenChange={(open) => !open && setEditingCarrier(null)}
+        />
+      )}
       <DataTable
         columns={columns}
         data={data}
