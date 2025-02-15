@@ -172,9 +172,25 @@ export function CarrierForm({ initialData, onOpenChange, open }: CarrierFormProp
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Freight Cost</FormLabel>
-                  <FormControl>
-                    <Input type="number" step="0.01" {...field} />
-                  </FormControl>
+                  <div className="flex gap-2">
+                    <FormControl>
+                      <Input type="number" step="0.01" {...field} />
+                    </FormControl>
+                    <Select
+                      onValueChange={(value) => form.setValue("freightCostCurrency", value)}
+                      defaultValue="CAD"
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-24">
+                          <SelectValue placeholder="CAD" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="CAD">CAD</SelectItem>
+                        <SelectItem value="USD">USD</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </FormItem>
               )}
             />
