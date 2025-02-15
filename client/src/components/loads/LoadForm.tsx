@@ -142,28 +142,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
       }
 
       // Create/update carrier load
-      const carrierLoadData = {
-        date: data.scheduledPickup || new Date().toISOString().split('T')[0],
-        referenceNumber: data.referenceNumber,
-        carrier: data.carrier,
-        freightCost: data.freightCost,
-        freightCostCurrency: data.freightCostCurrency,
-        status: "UNPAID"
-      };
-
-      // Create/update carrier load based on reference number
-      const carrierResponse = await fetch('/api/carrier-loads', {
-        method: 'GET'
-      });
-      const carrierLoads = await carrierResponse.json();
-      const existingCarrierLoad = carrierLoads.find(load => load.referenceNumber === data.referenceNumber);
-
-      const carrierEndpoint = existingCarrierLoad 
-        ? `/api/carrier-loads/${existingCarrierLoad.id}`
-        : '/api/carrier-loads';
-      const carrierMethod = existingCarrierLoad ? 'PATCH' : 'POST';
-
-      // Create carrier data FormData
+      // Create/update carrier load
       const carrierFormData = new FormData();
       carrierFormData.append('carrierData', JSON.stringify({
         date: data.scheduledPickup || new Date().toISOString().split('T')[0],
@@ -176,10 +155,15 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
         freightInvoice: data.freightInvoiceFile
       }));
 
-      await fetch(carrierEndpoint, {
-        method: carrierMethod,
+      if (files.bol) carrierFormData.append('pod', files.bol);
+      if (files.freightInvoice) carrierFormData.append('freightInvoice', files.freightInvoice);
+
+      await fetch('/api/carrier-loads', {
+        method: 'POST',
         body: carrierFormData
       });
+
+      await queryClient.invalidateQueries({ queryKey: ["/api/carrier-loads"] });
 
       // Log form data and files for debugging
       console.log('Form data to submit:', data);
