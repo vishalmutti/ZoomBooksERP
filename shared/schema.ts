@@ -103,7 +103,6 @@ export const incomingLoads = pgTable("incoming_loads", {
   notes: text("notes"),
   loadCost: decimal("load_cost", { precision: 10, scale: 2 }).notNull(),
   freightCost: decimal("freight_cost", { precision: 10, scale: 2 }).notNull(),
-  freightCostCurrency: varchar("freight_cost_currency", { length: 3 }).default('CAD').notNull().$type<'CAD' | 'USD'>(),
   profitRoi: decimal("profit_roi", { precision: 10, scale: 2 }).notNull(),
   bolFile: text("bol_file"),
   materialInvoiceFile: text("material_invoice_file"),

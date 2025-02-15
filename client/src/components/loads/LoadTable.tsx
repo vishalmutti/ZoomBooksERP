@@ -478,7 +478,7 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
                   {load.scheduledDelivery && format(new Date(load.scheduledDelivery), "MMM d, yyyy")}
                 </TableCell>
                 <TableCell>${Number(load.loadCost).toFixed(2)}</TableCell>
-                <TableCell>${Number(load.freightCost).toFixed(2)} {load.freightCostCurrency || 'CAD'}</TableCell>
+                <TableCell>${Number(load.freightCost).toFixed(2)}</TableCell>
                 <TableCell>{Number(load.profitRoi).toFixed(2)}%</TableCell>
                 <TableCell>
                   <FileLink file={typeof load.bolFile === 'string' ? load.bolFile : ''} label="BOL Document" />
