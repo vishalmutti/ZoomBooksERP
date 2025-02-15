@@ -19,7 +19,6 @@ interface CarrierFormData {
   freightCost: number;
   freightInvoice?: File;
   pod?: File;
-  freightCostCurrency?: string;
 }
 
 interface CarrierFormProps {
@@ -64,7 +63,6 @@ export function CarrierForm({ initialData, onOpenChange, open }: CarrierFormProp
         referenceNumber: data.referenceNumber,
         carrier: data.carrier,
         freightCost: parseFloat(data.freightCost.toString()),
-        freightCostCurrency: form.getValues("freightCostCurrency") || "CAD",
         status: "UNPAID"
       }));
 
@@ -174,25 +172,9 @@ export function CarrierForm({ initialData, onOpenChange, open }: CarrierFormProp
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Freight Cost</FormLabel>
-                  <div className="flex gap-2">
-                    <FormControl>
-                      <Input type="number" step="0.01" {...field} />
-                    </FormControl>
-                    <Select
-                      onValueChange={(value) => form.setValue("freightCostCurrency", value)}
-                      defaultValue="CAD"
-                    >
-                      <FormControl>
-                        <SelectTrigger className="w-24">
-                          <SelectValue placeholder="CAD" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="CAD">CAD</SelectItem>
-                        <SelectItem value="USD">USD</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <FormControl>
+                    <Input type="number" step="0.01" {...field} />
+                  </FormControl>
                 </FormItem>
               )}
             />

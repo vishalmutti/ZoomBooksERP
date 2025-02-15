@@ -13,7 +13,6 @@ interface CarrierLoad {
   referenceNumber: string;
   carrier: string;
   freightCost: number;
-  freightCostCurrency?: string; // Added freightCostCurrency to the interface
   freightInvoice?: string;
   pod?: string;
   status: "PAID" | "UNPAID";
@@ -78,7 +77,7 @@ export function CarrierTable() {
       });
     },
   });
-
+  
   const updateStatusMutation = useMutation({
     mutationFn: async ({ loadId, newStatus }: { loadId: number; newStatus: "PAID" | "UNPAID" }) => {
       const response = await fetch(`/api/carrier-loads/${loadId}/status`, {
@@ -129,8 +128,7 @@ export function CarrierTable() {
       cell: ({ row }) => {
         const value = row.getValue<string | number>("freightCost");
         const numericValue = typeof value === 'string' ? parseFloat(value) : value;
-        const currency = row.original.freightCostCurrency || 'CAD';
-        return `${currency === 'CAD' ? 'C' : '$'}${numericValue.toFixed(2)} ${currency}`;
+        return `$${numericValue.toFixed(2)}`;
       },
     },
     {

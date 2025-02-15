@@ -272,16 +272,10 @@ export const carrierLoads = pgTable("carrier_loads", {
   referenceNumber: varchar("reference_number", { length: 255 }).notNull(),
   carrier: varchar("carrier", { length: 255 }).notNull(),
   freightCost: decimal("freight_cost", { precision: 10, scale: 2 }).notNull(),
-  freightCostCurrency: varchar("freight_cost_currency", { length: 3 }).default('CAD').notNull(),
   freightInvoice: text("freight_invoice"),
   pod: text("pod"),
   status: varchar("status", { length: 10 }).notNull().$type<"PAID" | "UNPAID">(),
 });
-
-export const alterCarrierLoads = sql`
-  ALTER TABLE carrier_loads 
-  ADD COLUMN IF NOT EXISTS freight_cost_currency varchar(3) DEFAULT 'CAD' NOT NULL;
-`;
 
 // Zod schemas
 
