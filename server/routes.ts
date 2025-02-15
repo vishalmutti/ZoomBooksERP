@@ -12,6 +12,9 @@ import { db } from "./db";
 import { carriers, carrierLoads } from "@shared/schema";
 import { insertInvoiceSchema, insertPaymentSchema, insertSupplierSchema, invoiceItems } from "@shared/schema";
 import { insertIncomingLoadSchema, insertFreightInvoiceSchema } from "@shared/schema";
+import mime from 'mime-types';
+import FormData from 'form-data';
+
 
 // Type definitions for file uploads
 interface UploadedFiles {
@@ -80,23 +83,61 @@ async function generatePDFForInvoice(invoice: InvoiceData) {
 }
 
 export function registerRoutes(app: Express): Server {
-  // Serve static files first
+  // Serve static files first with improved error handling and logging
   app.use('/uploads', (req, res, next) => {
-    const decodedPath = decodeURIComponent(req.path);
-    console.log('Attempting to access file:', decodedPath);
-    console.log('Full URL:', req.url);
-    console.log('File path:', path.join(uploadDir, decodedPath));
-    req.url = decodedPath; // Update the URL with decoded path
-    next();
-  }, express.static(uploadDir, {
-    setHeaders: (res, filePath) => {
-      console.log('Serving file:', filePath);
-      if (filePath.endsWith('.pdf')) {
-        res.set('Content-Type', 'application/pdf');
-        res.set('Content-Disposition', 'inline');
+    try {
+      const decodedPath = decodeURIComponent(req.path);
+      const filePath = path.join(uploadDir, decodedPath.replace(/^\/+/, ''));
+
+      console.log('Attempting to serve file:', {
+        originalPath: req.path,
+        decodedPath,
+        fullFilePath: filePath
+      });
+
+      // Check if file exists
+      if (!fs.existsSync(filePath)) {
+        console.error('File not found:', filePath);
+        return res.status(404).json({
+          error: 'File not found',
+          path: decodedPath
+        });
+      }
+
+      // Get MIME type
+      const mimeType = mime.lookup(filePath) || 'application/octet-stream';
+
+      // Set proper headers
+      res.set({
+        'Content-Type': mimeType,
+        'Content-Disposition': mimeType === 'application/pdf' ? 'inline' : 'attachment',
+        'Content-Security-Policy': "default-src 'self'",
+        'X-Content-Type-Options': 'nosniff'
+      });
+
+      // Stream the file
+      const stream = fs.createReadStream(filePath);
+      stream.on('error', (err) => {
+        console.error('Error streaming file:', err);
+        if (!res.headersSent) {
+          res.status(500).json({
+            error: 'Error serving file',
+            details: err.message
+          });
+        }
+      });
+
+      stream.pipe(res);
+    } catch (error) {
+      console.error('Error in file serving middleware:', error);
+      if (!res.headersSent) {
+        res.status(500).json({
+          error: 'Internal server error',
+          details: error instanceof Error ? error.message : 'Unknown error'
+        });
       }
     }
-  }));
+  });
 
   const router = Router();
   setupAuth(app);
@@ -306,7 +347,7 @@ export function registerRoutes(app: Express): Server {
       const parsed = insertInvoiceSchema.partial().safeParse(invoiceData);
 
       if (!parsed.success) {
-        return res.status(400).json({ message: 'Invalid invoice data' });
+        return res.status(400).json({ message: 'Invalid invoice data', errors: parsed.error.errors });
       }
 
       let existingInvoice = await storage.getInvoice(id);
@@ -316,25 +357,50 @@ export function registerRoutes(app: Express): Server {
 
       // Get uploaded files
       const files = req.files as UploadedFiles;
+      console.log('Received files during update:', files);
 
-      // Only update file paths if new files are uploaded
+      // Construct FormData similar to creation process
+      const formData = new FormData();
       const updateData = {
         ...parsed.data,
-        uploadedFile: files?.file?.[0]?.filename || existingInvoice.uploadedFile,
-        bolFile: files?.bolFile?.[0]?.filename || existingInvoice.bolFile
+        uploadedFile: existingInvoice.uploadedFile,
+        bolFile: existingInvoice.bolFile,
+        freightInvoiceFile: existingInvoice.freightInvoiceFile
       };
+
+      // Update file paths if new files are uploaded
+      if (files?.file?.[0]) {
+        updateData.uploadedFile = files.file[0].filename;
+      }
+      if (files?.bolFile?.[0]) {
+        updateData.bolFile = files.bolFile[0].filename;
+      }
+      if (files?.freightInvoiceFile?.[0]) {
+        updateData.freightInvoiceFile = files.freightInvoiceFile[0].filename;
+        // Ensure the file is properly attached to FormData
+        formData.append('freightInvoiceFile', files.freightInvoiceFile[0]);
+      }
+
+      console.log('Update data to be applied:', updateData);
 
       // Update invoice with new data
       const updatedInvoice = await storage.updateInvoice(id, updateData);
+      console.log('Updated invoice result:', updatedInvoice);
 
-      // If this is a manual entry and we have items, generate a new PDF
+      // Handle PDF generation for manual entries
       if (!files?.file?.[0] && (parsed.data.items?.length || existingInvoice.items?.length)) {
-        const pdfFileName = await generatePDFForInvoice(updateData as InvoiceData);
+        const pdfFileName = await generatePDFForInvoice({
+          ...updateData,
+          supplierId: existingInvoice.supplierId,
+          items: parsed.data.items || existingInvoice.items
+        });
+
         if (pdfFileName) {
-          // Update the invoice with the new PDF file name but preserve the BOL file
-          await storage.updateInvoice(id, {
+          // Update the invoice while preserving all other files
+          const finalUpdate = await storage.updateInvoice(id, {
             uploadedFile: pdfFileName,
-            bolFile: updateData.bolFile
+            bolFile: updateData.bolFile,
+            freightInvoiceFile: updateData.freightInvoiceFile
           });
 
           updatedInvoice.uploadedFile = pdfFileName;
@@ -370,7 +436,10 @@ export function registerRoutes(app: Express): Server {
       }
     } catch (error) {
       console.error('Invoice update error:', error);
-      res.status(500).json({ message: 'Failed to update invoice' });
+      res.status(500).json({ 
+        message: 'Failed to update invoice',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 

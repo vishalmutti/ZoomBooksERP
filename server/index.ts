@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { pool, db } from "./db";
 import { alterSupplierContacts } from "@shared/schema";
+import { createServer as createNetServer, type Server as NetServer } from "net";
 
 const app = express();
 app.use(express.json());
@@ -68,24 +69,35 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   console.error(err);
 });
 
+// Find an available port
+const findAvailablePort = async (startPort: number, maxAttempts: number = 10): Promise<number> => {
+  const isPortAvailable = (port: number): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const server = createNetServer()
+        .once('error', () => resolve(false))
+        .once('listening', () => {
+          server.close();
+          resolve(true);
+        })
+        .listen(port, '0.0.0.0');
+    });
+  };
+
+  for (let port = startPort; port < startPort + maxAttempts; port++) {
+    if (await isPortAvailable(port)) {
+      return port;
+    }
+  }
+  throw new Error(`No available ports found between ${startPort} and ${startPort + maxAttempts - 1}`);
+};
+
 const startServer = async (port: number) => {
   try {
     // Force close any existing connections
     if (server.listening) {
       await new Promise((resolve) => server.close(resolve));
     }
-    
-    // Kill any process using the port
-    try {
-      const { execSync } = require('child_process');
-      execSync(`fuser -k ${port}/tcp`, { stdio: 'ignore' });
-    } catch (e) {
-      // Ignore errors from port killing
-    }
-    
-    // Small delay to ensure port is released
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     // Initialize database first
     const dbInitialized = await initializeDatabase();
     if (!dbInitialized) {
@@ -99,17 +111,15 @@ const startServer = async (port: number) => {
       serveStatic(app);
     }
 
+    const availablePort = await findAvailablePort(port);
+
     return new Promise<void>((resolve, reject) => {
-      server.listen(port, "0.0.0.0", () => {
-        log(`✨ Server running at http://0.0.0.0:${port}`);
-        log(`🔒 API available at http://0.0.0.0:${port}/api`);
+      server.listen(availablePort, "0.0.0.0", () => {
+        log(`✨ Server running at http://0.0.0.0:${availablePort}`);
+        log(`🔒 API available at http://0.0.0.0:${availablePort}/api`);
         resolve();
       }).on('error', (err: Error & { code?: string }) => {
-        if (err.code === 'EADDRINUSE') {
-          reject(new Error(`Port ${port} is already in use`));
-        } else {
-          reject(err);
-        }
+        reject(err);
       });
     });
   } catch (err) {
@@ -120,21 +130,16 @@ const startServer = async (port: number) => {
 
 // Start server with retries if needed
 const startWithRetries = async (initialPort: number, maxRetries: number = 3) => {
-  let currentPort = initialPort;
   let lastError: Error | undefined;
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
-      await startServer(currentPort);
+      await startServer(initialPort);
       return; // Successfully started
     } catch (err) {
       lastError = err as Error;
-      if (err instanceof Error && err.message.includes('EADDRINUSE')) {
-        currentPort++; // Try next port
-        console.log(`Port ${currentPort - 1} in use, trying ${currentPort}...`);
-      } else {
-        break; // Non-port related error, stop retrying
-      }
+      console.log(`Failed attempt ${attempt + 1}/${maxRetries}, retrying...`);
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait before retry
     }
   }
 
@@ -142,7 +147,7 @@ const startWithRetries = async (initialPort: number, maxRetries: number = 3) => 
   process.exit(1);
 };
 
-// Start with port 5000 as specified in .replit
+// Start with initial port as specified in .replit
 startWithRetries(5000).catch((err) => {
   console.error('Critical server error:', err);
   process.exit(1);

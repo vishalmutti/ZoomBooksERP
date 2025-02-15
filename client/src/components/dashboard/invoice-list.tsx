@@ -143,10 +143,9 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
         const invoice = row.original;
         if (!invoice.freightInvoiceFile) return null;
 
-        const encodedFileName = encodeURIComponent(invoice.freightInvoiceFile);
         return (
           <a
-            href={`${window.location.origin}/uploads/${encodedFileName}`}
+            href={`/uploads/${encodeURIComponent(invoice.freightInvoiceFile)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-500 hover:text-blue-700 flex items-center gap-1"
