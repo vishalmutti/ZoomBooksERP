@@ -105,7 +105,8 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
       freightCost: "0",
       profitRoi: "0",
       supplierId: "",
-      carrier: ""
+      carrier: "",
+      freightCostCurrency: "CAD" //added default value
     }
   });
 
@@ -338,19 +339,42 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="freightCost"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Freight Cost</FormLabel>
-                  <FormControl>
-                    <Input type="number" step="0.01" {...field} defaultValue={field.value || "0"} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="freightCost"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Freight Cost</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.01" {...field} defaultValue={field.value || "0"} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="freightCostCurrency"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Currency</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value || "CAD"}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select currency" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="CAD">CAD</SelectItem>
+                        <SelectItem value="USD">USD</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <FormField
               control={form.control}
               name="profitRoi"
