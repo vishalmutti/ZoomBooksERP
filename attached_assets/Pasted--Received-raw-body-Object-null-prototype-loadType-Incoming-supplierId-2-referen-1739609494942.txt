@@ -1,0 +1,97 @@
+}
+Received raw body: [Object: null prototype] {
+  loadType: 'Incoming',
+  supplierId: '2',
+  referenceNumber: 'Gunner123',
+  location: 'British Columbia',
+  scheduledPickup: '2025-02-15T00:00:00.000Z',
+  scheduledDelivery: '2025-02-20T00:00:00.000Z',
+  carrier: 'Supersonic',
+  notes: '',
+  loadCost: '169',
+  freightCost: '169',
+  freightCostCurrency: 'CAD',
+  profitRoi: '0'
+}
+Received files: [Object: null prototype] {}
+Parsed load data: [Object: null prototype] {
+  loadType: 'Incoming',
+  supplierId: '2',
+  referenceNumber: 'Gunner123',
+  location: 'British Columbia',
+  scheduledPickup: '2025-02-15T00:00:00.000Z',
+  scheduledDelivery: '2025-02-20T00:00:00.000Z',
+  carrier: 'Supersonic',
+  notes: '',
+  loadCost: '169',
+  freightCost: '169',
+  freightCostCurrency: 'CAD',
+  profitRoi: '0'
+}
+Extracted file data: {
+  bolFile: undefined,
+  materialInvoiceFile: undefined,
+  freightInvoiceFile: undefined,
+  loadPerformanceFile: undefined
+}
+Material Invoice File details: undefined
+Data to validate: {
+  loadType: 'Incoming',
+  supplierId: '2',
+  referenceNumber: 'Gunner123',
+  location: 'British Columbia',
+  scheduledPickup: '2025-02-15T00:00:00.000Z',
+  scheduledDelivery: '2025-02-20T00:00:00.000Z',
+  carrier: 'Supersonic',
+  notes: '',
+  loadCost: '169',
+  freightCost: '169',
+  freightCostCurrency: 'CAD',
+  profitRoi: '0',
+  bolFile: undefined,
+  materialInvoiceFile: undefined,
+  freightInvoiceFile: undefined,
+  loadPerformanceFile: undefined
+}
+Parsed data before storage: {
+  loadType: 'Incoming',
+  supplierId: '2',
+  referenceNumber: 'Gunner123',
+  location: 'British Columbia',
+  scheduledPickup: '2025-02-15T00:00:00.000Z',
+  scheduledDelivery: '2025-02-20T00:00:00.000Z',
+  carrier: 'Supersonic',
+  notes: '',
+  loadCost: '169',
+  freightCost: '169',
+  freightCostCurrency: 'CAD',
+  profitRoi: '0',
+  bolFile: undefined,
+  materialInvoiceFile: undefined,
+  freightInvoiceFile: undefined,
+  loadPerformanceFile: undefined
+}
+Created load: {
+  id: 16,
+  loadType: 'Incoming',
+  supplierId: '2',
+  referenceNumber: 'Gunner123',
+  location: 'British Columbia',
+  pickupLocation: null,
+  deliveryLocation: null,
+  scheduledPickup: '2025-02-15',
+  scheduledDelivery: '2025-02-20',
+  status: 'Pending',
+  carrier: 'Supersonic',
+  notes: '',
+  loadCost: '169.00',
+  freightCost: '169.00',
+  freightCostCurrency: 'CAD',
+  profitRoi: '0.00',
+  bolFile: null,
+  materialInvoiceFile: null,
+  freightInvoiceFile: null,
+  loadPerformanceFile: null,
+  materialInvoiceStatus: 'UNPAID',
+  freightInvoiceStatus: 'UNPAID',
+  createdAt: 2025-02-15T08:50:38.338Z
