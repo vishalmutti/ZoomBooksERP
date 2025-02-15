@@ -157,6 +157,9 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
         }
       }
 
+      // Explicitly append freightCostCurrency to ensure it's included
+      formData.append('freightCostCurrency', data.freightCostCurrency || 'USD');
+
       // Append files only if they exist or keep existing files
       if (files.bol) formData.append('bolFile', files.bol);
       if (files.materialInvoice) formData.append('materialInvoiceFile', files.materialInvoice);
@@ -167,6 +170,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
       const method = initialData ? 'PATCH' : 'POST';
 
       console.log(`Making ${method} request to ${url}`);
+      console.log('FormData entries:', [...formData.entries()]);
 
       const response = await fetch(url, {
         method,
