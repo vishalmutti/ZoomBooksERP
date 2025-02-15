@@ -278,6 +278,11 @@ export const carrierLoads = pgTable("carrier_loads", {
   status: varchar("status", { length: 10 }).notNull().$type<"PAID" | "UNPAID">(),
 });
 
+export const alterCarrierLoads = sql`
+  ALTER TABLE carrier_loads 
+  ADD COLUMN IF NOT EXISTS freight_cost_currency varchar(3) DEFAULT 'CAD' NOT NULL;
+`;
+
 // Zod schemas
 
 export const CarrierSchema = z.object({
