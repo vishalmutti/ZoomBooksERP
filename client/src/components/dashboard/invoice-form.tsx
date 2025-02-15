@@ -47,6 +47,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   const { toast } = useToast();
   const [file, setFile] = useState<File | null>(null);
   const [bolFile, setBolFile] = useState<File | null>(null);
+  const [freightInvoiceFile, setFreightInvoiceFile] = useState<File | null>(null); // Added state for freight invoice file
 
   // Add polling to invoice query
   const { data: currentInvoiceData } = useQuery<Invoice & { items?: InvoiceItem[] }>({
@@ -147,6 +148,11 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         formData.append('bolFile', bolFile);
       }
 
+      // Append freight invoice file if present
+      if (freightInvoiceFile) {
+        formData.append('freightInvoiceFile', freightInvoiceFile);
+      }
+
       const invoiceData = {
         ...data,
         mode,
@@ -208,6 +214,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       }
       setFile(null);
       setBolFile(null);
+      setFreightInvoiceFile(null); // Clear freight invoice file state
     },
     onError: (error: Error) => {
       if (!error.message.includes('Failed to update invoice')) {
@@ -250,6 +257,12 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   const handleBolFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setBolFile(e.target.files[0]);
+    }
+  };
+
+  const handleFreightInvoiceChange = (e: React.ChangeEvent<HTMLInputElement>) => { //Added handler for freight invoice
+    if (e.target.files && e.target.files[0]) {
+      setFreightInvoiceFile(e.target.files[0]);
     }
   };
 
@@ -528,21 +541,16 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                       </div>
                       <div className="space-y-2">
                         <Label>Freight Cost</Label>
-                        <div className="flex gap-2">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            placeholder="Enter freight cost"
-                            {...form.register("freightCost")}
-                          />
-                          <select
-                            className="flex h-10 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                            {...form.register("freightCostCurrency")}
-                          >
-                            <option value="USD">USD</option>
-                            <option value="CAD">CAD</option>
-                          </select>
-                        </div>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="Enter freight cost"
+                          {...form.register("freightCost")}
+                        />
+                      </div>
+                      <div className="space-y-2"> {/* Added div for freight invoice upload */}
+                        <Label>Freight Invoice</Label>
+                        <Input type="file" onChange={handleFreightInvoiceChange} {...form.register("freightInvoiceFile")} />
                       </div>
                     </div>
                     <Button

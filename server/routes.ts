@@ -242,11 +242,13 @@ export function registerRoutes(app: Express): Server {
       const files = req.files as UploadedFiles;
       const uploadedFile = files?.file?.[0]?.filename;
       const bolFile = files?.bolFile?.[0]?.filename;
+      const freightInvoiceFile = files?.freightInvoiceFile?.[0]?.filename;
 
       const invoice = await storage.createInvoice({
         ...parsed.data,
         uploadedFile: uploadedFile || null,
-        bolFile: bolFile || null
+        bolFile: bolFile || null,
+        freightInvoiceFile: freightInvoiceFile || null
       });
 
       if (!uploadedFile && invoiceData.items?.length) {
