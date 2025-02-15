@@ -151,13 +151,33 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
         status: "UNPAID"
       };
 
-      // Create/update carrier load
-      await fetch('/api/carrier-loads', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ carrierData: carrierLoadData })
+      // Create/update carrier load based on reference number
+      const carrierResponse = await fetch('/api/carrier-loads', {
+        method: 'GET'
+      });
+      const carrierLoads = await carrierResponse.json();
+      const existingCarrierLoad = carrierLoads.find(load => load.referenceNumber === data.referenceNumber);
+
+      const carrierEndpoint = existingCarrierLoad 
+        ? `/api/carrier-loads/${existingCarrierLoad.id}`
+        : '/api/carrier-loads';
+      const carrierMethod = existingCarrierLoad ? 'PATCH' : 'POST';
+
+      const formData = new FormData();
+      formData.append('carrierData', JSON.stringify({
+        date: data.scheduledPickup || new Date().toISOString().split('T')[0],
+        referenceNumber: data.referenceNumber,
+        carrier: data.carrier,
+        freightCost: data.freightCost,
+        freightCostCurrency: data.freightCostCurrency,
+        status: "UNPAID",
+        pod: data.bolFile,
+        freightInvoice: data.freightInvoiceFile
+      }));
+
+      await fetch(carrierEndpoint, {
+        method: carrierMethod,
+        body: formData
       });
 
       // Log form data and files for debugging
