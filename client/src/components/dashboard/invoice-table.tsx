@@ -69,7 +69,7 @@ export default function InvoiceTable({ invoices: initialInvoices }: { invoices: 
             <TableCell>
               {invoice.freightInvoiceFile ? (
                 <a
-                  href={`/uploads/${invoice.freightInvoiceFile}`}
+                  href={`${window.location.origin}/uploads/${encodeURIComponent(invoice.freightInvoiceFile)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
