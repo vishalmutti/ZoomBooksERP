@@ -158,6 +158,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         ...data,
         mode,
         items: mode === "manual" ? data.items : undefined,
+        freightInvoiceFile: freightInvoiceFile ? freightInvoiceFile.name : undefined
       };
 
       if (invoiceData.dueDate) {
