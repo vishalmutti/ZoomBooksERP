@@ -70,7 +70,7 @@ const FileLink = ({ file, label }: { file: string | null; label: string }) => {
       variant="ghost"
       size="sm"
       className="h-8 w-8 p-0"
-      onClick={() => window.open(`/uploads/${file}`, "_blank")}
+      onClick={() => window.open(`${window.location.origin}/uploads/${encodeURIComponent(file)}`, "_blank")}
       title={label}
     >
       <LuFileText className="h-4 w-4" />
