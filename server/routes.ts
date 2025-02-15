@@ -80,8 +80,7 @@ async function generatePDFForInvoice(invoice: InvoiceData) {
 }
 
 export function registerRoutes(app: Express): Server {
-  const router = Router();
-
+  // Serve static files first
   app.use('/uploads', express.static(uploadDir, {
     setHeaders: (res, path) => {
       if (path.endsWith('.pdf')) {
@@ -90,6 +89,8 @@ export function registerRoutes(app: Express): Server {
       }
     }
   }));
+
+  const router = Router();
   setupAuth(app);
 
   // Supplier routes
