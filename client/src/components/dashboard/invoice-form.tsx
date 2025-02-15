@@ -47,6 +47,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   const { toast } = useToast();
   const [file, setFile] = useState<File | null>(null);
   const [bolFile, setBolFile] = useState<File | null>(null);
+  const [freightInvoiceFile, setFreightInvoiceFile] = useState<File | null>(null);
 
   // Add polling to invoice query
   const { data: currentInvoiceData } = useQuery<Invoice & { items?: InvoiceItem[] }>({
@@ -142,9 +143,14 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         formData.append('file', file);
       }
 
-      // Always append BOL file if present, regardless of mode
+      // Always append BOL file if present
       if (bolFile) {
         formData.append('bolFile', bolFile);
+      }
+
+      // Always append freight invoice file if present
+      if (freightInvoiceFile) {
+        formData.append('freightInvoiceFile', freightInvoiceFile);
       }
 
       const invoiceData = {
@@ -208,6 +214,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       }
       setFile(null);
       setBolFile(null);
+      setFreightInvoiceFile(null);
     },
     onError: (error: Error) => {
       if (!error.message.includes('Failed to update invoice')) {
@@ -250,6 +257,12 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   const handleBolFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setBolFile(e.target.files[0]);
+    }
+  };
+
+  const handleFreightInvoiceFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFreightInvoiceFile(e.target.files[0]);
     }
   };
 
@@ -656,6 +669,42 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                           <span className="text-sm">{editInvoice.bolFile}</span>
                           <a
                             href={`/uploads/${editInvoice.bolFile}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center text-blue-600 hover:text-blue-800"
+                          >
+                            <Download className="h-4 w-4 mr-1" />
+                            Download
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <Label>Upload Freight Invoice</Label>
+                    <div className="mt-2">
+                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <Upload className="w-8 h-8 mb-2 text-gray-400" />
+                          <p className="mb-2 text-sm text-gray-500">
+                            {freightInvoiceFile ? freightInvoiceFile.name : editInvoice?.freightInvoice ? "Replace current file" : "Click to upload freight invoice or drag and drop"}
+                          </p>
+                        </div>
+                        <input
+                          type="file"
+                          className="hidden"
+                          onChange={handleFreightInvoiceFileChange}
+                          accept=".pdf,.png,.jpg,.jpeg"
+                        />
+                      </label>
+                    </div>
+                    {editInvoice?.freightInvoice && (
+                      <div className="mt-4">
+                        <Label>Current Freight Invoice File</Label>
+                        <div className="flex items-center justify-between p-2 mt-1 border rounded">
+                          <span className="text-sm">{editInvoice.freightInvoice}</span>
+                          <a
+                            href={`/uploads/${editInvoice.freightInvoice}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center text-blue-600 hover:text-blue-800"
