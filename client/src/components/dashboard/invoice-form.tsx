@@ -63,6 +63,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
 
   const form = useForm<InsertInvoice>({
     resolver: zodResolver(insertInvoiceSchema),
+    mode: "onSubmit",
     defaultValues: {
       supplierId: currentInvoiceData?.supplierId || editInvoice?.supplierId || 0,
       invoiceNumber: currentInvoiceData?.invoiceNumber || editInvoice?.invoiceNumber || "",
@@ -279,7 +280,11 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     });
   };
 
-  const handleSubmit = form.handleSubmit((data) => {
+  const handleSubmit = form.handleSubmit(async (data) => {
+    if (!data) {
+      console.error('No form data');
+      return;
+    }
     if (!data.supplierId) {
       toast({
         title: "Error",
@@ -395,7 +400,8 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
             <TabsTrigger value="upload">Upload Invoice</TabsTrigger>
           </TabsList>
 
-          <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+          <Form {...form}>
+            <form onSubmit={handleSubmit} className="space-y-6 mt-4">
             <div className="space-y-4">
               <div>
                 <Label>Supplier</Label>
@@ -695,6 +701,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
               {editInvoice ? "Update" : "Create"} Invoice
             </Button>
           </form>
+          </Form>
         </Tabs>
       </DialogContent>
     </Dialog>
