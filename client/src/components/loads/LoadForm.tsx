@@ -181,16 +181,18 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
       const savedLoad = await response.json();
       console.log('Server response success:', savedLoad);
 
-      // If this is an update and we have a freight invoice, sync with carrier loads
-      if (initialData && (files.freightInvoice || data.carrier !== initialData.carrier)) {
+      // Sync with carrier loads if we have carrier and freight info
+      if (savedLoad.carrier && savedLoad.freightCost) {
         const carrierLoadData = new FormData();
         carrierLoadData.append('carrierData', JSON.stringify({
-          date: data.scheduledPickup,
-          referenceNumber: data.referenceNumber,
-          carrier: data.carrier,
-          freightCost: data.freightCost,
+          date: savedLoad.scheduledPickup,
+          referenceNumber: savedLoad.referenceNumber,
+          carrier: savedLoad.carrier,
+          freightCost: savedLoad.freightCost,
+          status: 'UNPAID'
         }));
 
+        // Check if freight invoice file exists
         if (files.freightInvoice) {
           carrierLoadData.append('freightInvoice', files.freightInvoice);
         }
@@ -198,18 +200,23 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
         // Find and update corresponding carrier load
         const carrierLoadsResponse = await fetch('/api/carrier-loads');
         const carrierLoads = await carrierLoadsResponse.json();
-        const matchingLoad = carrierLoads.find(cl => cl.referenceNumber === data.referenceNumber);
+        const matchingLoad = carrierLoads.find(cl => cl.referenceNumber === savedLoad.referenceNumber);
 
         if (matchingLoad) {
           await fetch(`/api/carrier-loads/${matchingLoad.id}`, {
             method: 'PATCH',
             body: carrierLoadData,
           });
+        } else {
+          await fetch('/api/carrier-loads', {
+            method: 'POST',
+            body: carrierLoadData,
+          });
         }
       }
 
       await queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
-      await queryClient.invalidateQueries({ queryKey: ["/api/carrier-loads"] });
+      await queryClient.invalidateQueries({ queryKey: ["carrier-loads"] });
       handleClose();
       toast({
         title: initialData ? "Load updated successfully" : "Load created successfully",
