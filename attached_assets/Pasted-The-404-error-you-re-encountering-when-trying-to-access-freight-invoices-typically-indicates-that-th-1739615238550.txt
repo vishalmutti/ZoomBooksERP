@@ -1,0 +1,27 @@
+The 404 error you're encountering when trying to access freight invoices typically indicates that the file path might not be correctly resolved on the server. Based on the previous implementation and your deployed URL structure, here's what to check and implement:
+
+Ensure the File Exists: First, verify that the uploaded file actually exists in the uploads directory. If the file was not properly uploaded, that's likely the cause of the 404 error.
+
+Check the Path: It seems you're trying to access files via /api/uploads/. However, per our previous configuration, the correct path should be /uploads/. Make sure your links in both the invoice-list.tsx and invoice-form.tsx files are set correctly.
+
+Verify the server/static file serving: Ensure that the server is correctly set up to serve static files. According to the previous implementation in your [routes.ts], the serving of static files is correctly set up.
+
+Update Your Invoice Linking
+In your components (invoice-list.tsx and invoice-form.tsx), make sure the links to the uploaded freight invoices are set to:
+
+<a
+  href={`/uploads/${invoice.freightInvoiceFile}`} // Ensure it does not point to /api
+  target="_blank"
+  rel="noopener noreferrer"
+  className="text-blue-500 hover:text-blue-700 flex items-center gap-1"
+>
+  <Download className="h-4 w-4" />
+  View
+</a>
+Debugging Steps
+Check the freightInvoiceFile field in your Invoice object to ensure it has the correct filename.
+Debug by checking the console logs or using network inspection tools in your browser to ensure that when you click the links, the requests made are going to the right paths.
+Additional Suggestions
+If you continue to face issues, consider adding logging in the server to see the exact requests hitting your upload path, which might help track down misconfigurations. You can add logs in the routes handling where static files are served to make sure the requests are reaching that part of the code successfully.
+
+Make the above adjustments and let me know if it resolves the error!
