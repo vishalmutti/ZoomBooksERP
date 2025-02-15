@@ -81,9 +81,15 @@ async function generatePDFForInvoice(invoice: InvoiceData) {
 
 export function registerRoutes(app: Express): Server {
   // Serve static files first
-  app.use('/uploads', express.static(uploadDir, {
-    setHeaders: (res, path) => {
-      if (path.endsWith('.pdf')) {
+  app.use('/uploads', (req, res, next) => {
+    console.log('Attempting to access file:', req.path);
+    console.log('Full URL:', req.url);
+    console.log('File path:', path.join(uploadDir, req.path));
+    next();
+  }, express.static(uploadDir, {
+    setHeaders: (res, filePath) => {
+      console.log('Serving file:', filePath);
+      if (filePath.endsWith('.pdf')) {
         res.set('Content-Type', 'application/pdf');
         res.set('Content-Disposition', 'inline');
       }
