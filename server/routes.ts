@@ -522,6 +522,7 @@ export function registerRoutes(app: Express): Server {
         ...fileData,
         location,
         loadType: existingLoad.loadType,
+        freightCostCurrency: req.body.freightCostCurrency,
       };
 
       const parsed = insertIncomingLoadSchema.partial().safeParse(updateData);
@@ -679,13 +680,13 @@ export function registerRoutes(app: Express): Server {
     try {
       const carrierData = JSON.parse(req.body.carrierData);
       const files = req.files as UploadedFiles;
-      
+
       const result = await db.insert(carrierLoads).values({
         ...carrierData,
         freightInvoice: files?.freightInvoice?.[0]?.filename || files?.freightInvoiceFile?.[0]?.filename || null,
         pod: files?.pod?.[0]?.filename || null,
       }).returning();
-      
+
       return res.json(result[0]);
     } catch (error) {
       console.error('Error creating carrier load:', error);
@@ -699,7 +700,7 @@ export function registerRoutes(app: Express): Server {
       const id = parseInt(req.params.id);
       const carrierData = JSON.parse(req.body.carrierData);
       const files = req.files as UploadedFiles;
-      
+
       const result = await db.update(carrierLoads)
         .set({
           ...carrierData,
@@ -708,7 +709,7 @@ export function registerRoutes(app: Express): Server {
         })
         .where(eq(carrierLoads.id, id))
         .returning();
-        
+
       return res.json(result[0]);
     } catch (error) {
       console.error('Error updating carrier load:', error);
