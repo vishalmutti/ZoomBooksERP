@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Form } from "@/components/ui/form";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertInvoiceSchema, type InsertInvoice, type InsertInvoiceItem, type Invoice, type InvoiceItem, type Supplier } from "@shared/schema";
@@ -401,8 +401,8 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
             <TabsTrigger value="upload">Upload Invoice</TabsTrigger>
           </TabsList>
 
-          <Form {...form}>
-            <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+          <Form {...form} onSubmit={handleSubmit}>
+            <div className="space-y-6 mt-4">
             <div className="space-y-4">
               <div>
                 <Label>Supplier</Label>
@@ -701,7 +701,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
               )}
               {editInvoice ? "Update" : "Create"} Invoice
             </Button>
-          </form>
+          </div>
           </Form>
         </Tabs>
       </DialogContent>
