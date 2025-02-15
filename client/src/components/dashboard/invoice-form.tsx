@@ -153,6 +153,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       // Append freight invoice file if present
       if (freightInvoiceFile) {
         formData.append('freightInvoiceFile', freightInvoiceFile);
+        console.log("Appending freight invoice file:", freightInvoiceFile.name);
       }
 
       const invoiceData = {
@@ -262,9 +263,10 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     }
   };
 
-  const handleFreightInvoiceChange = (e: React.ChangeEvent<HTMLInputElement>) => { //Added handler for freight invoice
+  const handleFreightInvoiceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFreightInvoiceFile(e.target.files[0]);
+      form.setValue("freightInvoiceFile", e.target.files[0].name);
     }
   };
 
