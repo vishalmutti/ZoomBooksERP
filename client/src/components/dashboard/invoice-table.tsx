@@ -1,3 +1,4 @@
+
 import {
   Table,
   TableBody,
@@ -12,11 +13,10 @@ import { format } from "date-fns";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Download } from "lucide-react";
 
 export default function InvoiceTable({ invoices: initialInvoices }: { invoices: Invoice[] }) {
   const { toast } = useToast();
-
+  
   // Add real-time query for invoices data
   const { data: invoices = initialInvoices } = useQuery<Invoice[]>({
     queryKey: ["/api/invoices"],
@@ -53,7 +53,6 @@ export default function InvoiceTable({ invoices: initialInvoices }: { invoices: 
           <TableHead>Carrier</TableHead>
           <TableHead>Amount</TableHead>
           <TableHead>Freight Cost</TableHead>
-          <TableHead>Freight Invoice</TableHead>
           <TableHead>Due Date</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Actions</TableHead>
@@ -66,19 +65,6 @@ export default function InvoiceTable({ invoices: initialInvoices }: { invoices: 
             <TableCell>{invoice.carrier || 'N/A'}</TableCell>
             <TableCell>{invoice.currency === 'CAD' ? 'C' : '$'}{invoice.totalAmount.toString()}</TableCell>
             <TableCell>{invoice.freightCost ? `${invoice.freightCostCurrency === 'CAD' ? 'C' : '$'}${invoice.freightCost}` : 'N/A'}</TableCell>
-            <TableCell>
-              {invoice.freightInvoiceFile ? (
-                <a
-                  href={`/uploads/${invoice.freightInvoiceFile}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 hover:text-blue-700 flex items-center gap-1"
-                >
-                  <Download className="h-4 w-4" />
-                  View
-                </a>
-              ) : 'N/A'}
-            </TableCell>
             <TableCell>{format(new Date(invoice.dueDate), "MMM d, yyyy")}</TableCell>
             <TableCell>
               {invoice.isPaid ? (

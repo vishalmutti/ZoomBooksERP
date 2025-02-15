@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertInvoiceSchema, type InsertInvoice, type InsertInvoiceItem, type Invoice, type InvoiceItem, type Supplier } from "@shared/schema";
@@ -48,7 +47,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   const { toast } = useToast();
   const [file, setFile] = useState<File | null>(null);
   const [bolFile, setBolFile] = useState<File | null>(null);
-  const [freightInvoiceFile, setFreightInvoiceFile] = useState<File | null>(null); // Added state for freight invoice file
 
   // Add polling to invoice query
   const { data: currentInvoiceData } = useQuery<Invoice & { items?: InvoiceItem[] }>({
@@ -64,7 +62,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
 
   const form = useForm<InsertInvoice>({
     resolver: zodResolver(insertInvoiceSchema),
-    mode: "onSubmit",
     defaultValues: {
       supplierId: currentInvoiceData?.supplierId || editInvoice?.supplierId || 0,
       invoiceNumber: currentInvoiceData?.invoiceNumber || editInvoice?.invoiceNumber || "",
@@ -150,12 +147,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         formData.append('bolFile', bolFile);
       }
 
-      // Append freight invoice file if present
-      if (freightInvoiceFile) {
-        formData.append('freightInvoiceFile', freightInvoiceFile);
-        console.log("Appending freight invoice file:", freightInvoiceFile.name);
-      }
-
       const invoiceData = {
         ...data,
         mode,
@@ -217,7 +208,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       }
       setFile(null);
       setBolFile(null);
-      setFreightInvoiceFile(null); // Clear freight invoice file state
     },
     onError: (error: Error) => {
       if (!error.message.includes('Failed to update invoice')) {
@@ -263,13 +253,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     }
   };
 
-  const handleFreightInvoiceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFreightInvoiceFile(e.target.files[0]);
-      form.setValue("freightInvoiceFile", e.target.files[0].name);
-    }
-  };
-
   const handleModeChange = (value: string) => {
     setMode(value as "manual" | "upload");
     const currentValues = form.getValues();
@@ -283,11 +266,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     });
   };
 
-  const handleSubmit = form.handleSubmit(async (data) => {
-    if (!data) {
-      console.error('No form data');
-      return;
-    }
+  const handleSubmit = form.handleSubmit((data) => {
     if (!data.supplierId) {
       toast({
         title: "Error",
@@ -403,9 +382,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
             <TabsTrigger value="upload">Upload Invoice</TabsTrigger>
           </TabsList>
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <div className="space-y-6 mt-4">
+          <form onSubmit={handleSubmit} className="space-y-6 mt-4">
             <div className="space-y-4">
               <div>
                 <Label>Supplier</Label>
@@ -551,16 +528,21 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                       </div>
                       <div className="space-y-2">
                         <Label>Freight Cost</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="Enter freight cost"
-                          {...form.register("freightCost")}
-                        />
-                      </div>
-                      <div className="space-y-2"> {/* Added div for freight invoice upload */}
-                        <Label>Freight Invoice</Label>
-                        <Input type="file" onChange={handleFreightInvoiceChange} {...form.register("freightInvoiceFile")} />
+                        <div className="flex gap-2">
+                          <Input
+                            type="number"
+                            step="0.01"
+                            placeholder="Enter freight cost"
+                            {...form.register("freightCost")}
+                          />
+                          <select
+                            className="flex h-10 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                            {...form.register("freightCostCurrency")}
+                          >
+                            <option value="USD">USD</option>
+                            <option value="CAD">CAD</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
                     <Button
@@ -704,9 +686,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
               )}
               {editInvoice ? "Update" : "Create"} Invoice
             </Button>
-          </div>
           </form>
-          </Form>
         </Tabs>
       </DialogContent>
     </Dialog>
