@@ -360,7 +360,6 @@ export function registerRoutes(app: Express): Server {
       console.log('Received files during update:', files);
 
       // Construct FormData similar to creation process
-      const formData = new FormData();
       const updateData = {
         ...parsed.data,
         uploadedFile: existingInvoice.uploadedFile,
@@ -377,8 +376,6 @@ export function registerRoutes(app: Express): Server {
       }
       if (files?.freightInvoiceFile?.[0]) {
         updateData.freightInvoiceFile = files.freightInvoiceFile[0].filename;
-        // Ensure the file is properly attached to FormData
-        formData.append('freightInvoiceFile', files.freightInvoiceFile[0]);
       }
 
       console.log('Update data to be applied:', updateData);
