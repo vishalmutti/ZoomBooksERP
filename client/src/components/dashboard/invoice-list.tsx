@@ -145,7 +145,7 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
 
         return (
           <a
-            href={`/uploads/${invoice.freightInvoiceFile}`}
+            href={`/api/uploads/${invoice.freightInvoiceFile}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-500 hover:text-blue-700 flex items-center gap-1"
