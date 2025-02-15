@@ -86,23 +86,22 @@ export function registerRoutes(app: Express): Server {
   // Serve static files first with improved error handling and logging
   app.use('/uploads', (req, res, next) => {
     try {
-      const decodedPath = decodeURIComponent(req.path);
-      const filePath = path.join(uploadDir, decodedPath.replace(/^\/+/, ''));
-
-      console.log('Attempting to serve file:', {
-        originalPath: req.path,
-        decodedPath,
-        fullFilePath: filePath
-      });
-
-      // Check if file exists
-      if (!fs.existsSync(filePath)) {
-        console.error('File not found:', filePath);
+      const decodedPath = decodeURIComponent(req.path).trim();
+      const filename = path.basename(decodedPath);
+      
+      // Find the actual file in uploads directory that matches the name ignoring case
+      const files = fs.readdirSync(uploadDir);
+      const actualFile = files.find(f => f.toLowerCase() === filename.toLowerCase());
+      
+      if (!actualFile) {
+        console.error('File not found:', filename);
         return res.status(404).json({
           error: 'File not found',
           path: decodedPath
         });
       }
+
+      const filePath = path.join(uploadDir, actualFile);
 
       // Get MIME type
       const mimeType = mime.lookup(filePath) || 'application/octet-stream';
