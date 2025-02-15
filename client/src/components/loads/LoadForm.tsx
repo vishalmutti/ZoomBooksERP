@@ -106,7 +106,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
       profitRoi: "0",
       supplierId: "",
       carrier: "",
-      freightCostCurrency: "CAD" //added default value
+      freightCostCurrency: "CAD"
     }
   });
 
