@@ -157,6 +157,26 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
       },
     },
     {
+      id: "freightInvoice",
+      header: "Freight Invoice",
+      cell: ({ row }) => {
+        const invoice = row.original;
+        if (!invoice.freightInvoiceFile) return null;
+
+        return (
+          <a
+            href={`/uploads/${invoice.freightInvoiceFile}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500 hover:text-blue-700 flex items-center gap-1"
+          >
+            <Download className="h-4 w-4" />
+            View
+          </a>
+        );
+      },
+    },
+    {
       accessorKey: "dueDate",
       header: "Due Date",
       cell: ({ row }) => format(new Date(row.getValue("dueDate")), "MM/dd/yyyy"),

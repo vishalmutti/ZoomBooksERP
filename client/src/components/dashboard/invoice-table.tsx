@@ -53,6 +53,7 @@ export default function InvoiceTable({ invoices: initialInvoices }: { invoices: 
           <TableHead>Carrier</TableHead>
           <TableHead>Amount</TableHead>
           <TableHead>Freight Cost</TableHead>
+          <TableHead>Freight Invoice</TableHead>
           <TableHead>Due Date</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Actions</TableHead>
@@ -65,6 +66,19 @@ export default function InvoiceTable({ invoices: initialInvoices }: { invoices: 
             <TableCell>{invoice.carrier || 'N/A'}</TableCell>
             <TableCell>{invoice.currency === 'CAD' ? 'C' : '$'}{invoice.totalAmount.toString()}</TableCell>
             <TableCell>{invoice.freightCost ? `${invoice.freightCostCurrency === 'CAD' ? 'C' : '$'}${invoice.freightCost}` : 'N/A'}</TableCell>
+            <TableCell>
+              {invoice.freightInvoiceFile ? (
+                <a
+                  href={`/uploads/${invoice.freightInvoiceFile}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  View
+                </a>
+              ) : 'N/A'}
+            </TableCell>
             <TableCell>{format(new Date(invoice.dueDate), "MMM d, yyyy")}</TableCell>
             <TableCell>
               {invoice.isPaid ? (
