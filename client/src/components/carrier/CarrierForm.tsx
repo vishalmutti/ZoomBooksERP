@@ -67,7 +67,7 @@ export function CarrierForm({ initialData, onOpenChange, open }: CarrierFormProp
         referenceNumber: data.referenceNumber,
         carrier: data.carrier,
         freightCost: parseFloat(data.freightCost.toString()),
-        freightCostCurrency: data.freightCostCurrency || 'CAD',
+        freightCostCurrency: data.freightCostCurrency,
         status: "UNPAID"
       };
       formData.append('carrierData', JSON.stringify(carrierData));

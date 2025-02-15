@@ -141,6 +141,25 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
         formData.append('id', initialData.id.toString());
       }
 
+      // Create/update carrier load
+      const carrierLoadData = {
+        date: data.scheduledPickup || new Date().toISOString().split('T')[0],
+        referenceNumber: data.referenceNumber,
+        carrier: data.carrier,
+        freightCost: data.freightCost,
+        freightCostCurrency: data.freightCostCurrency,
+        status: "UNPAID"
+      };
+
+      // Create/update carrier load
+      await fetch('/api/carrier-loads', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ carrierData: carrierLoadData })
+      });
+
       // Log form data and files for debugging
       console.log('Form data to submit:', data);
       console.log('Files to submit:', files);
