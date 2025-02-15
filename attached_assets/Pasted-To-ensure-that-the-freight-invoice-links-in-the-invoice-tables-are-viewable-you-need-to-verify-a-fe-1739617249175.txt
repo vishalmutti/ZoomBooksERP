@@ -1,0 +1,49 @@
+To ensure that the freight invoice links in the invoice tables are viewable, you need to verify a few things and make sure the links are constructed correctly.
+
+Check that the uploaded file path is being referenced correctly in the invoice-table.tsx. Make sure that the invoice.freightInvoiceFile is pointing to the correct file after upload.
+
+Update the invoice-table component to use the correct full URL construction for the freight invoice, akin to how you did in other components. Here's how the link should be constructed:
+
+Update in invoice-table.tsx
+Make sure the link for the freight invoice is properly encoded and uses the window.location.origin. Here's the relevant code snippet:
+
+<TableCell>
+  {invoice.freightInvoiceFile ? (
+    <a
+      href={`${window.location.origin}/uploads/${encodeURIComponent(invoice.freightInvoiceFile)}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
+    >
+      View Freight Invoice
+    </a>
+  ) : "N/A"}
+</TableCell>
+Example of the complete invoice-table.tsx cell
+Here’s a complete example of how the freight invoice column in your table might look:
+
+{
+  id: "freightInvoice",
+  header: "Freight Invoice",
+  cell: ({ row }) => {
+    const invoice = row.original;
+    if (!invoice.freightInvoiceFile) return null;
+    return (
+      <a
+        href={`${window.location.origin}/uploads/${encodeURIComponent(invoice.freightInvoiceFile)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
+      >
+        View Freight Invoice
+      </a>
+    );
+  },
+},
+Ensure Upload Logic is Correct
+Make sure the upload logic in your backend (server/routes.ts) where the freight invoice is stored uses the same filename strategy. Verify that the file indeed exists in the given /uploads/ directory on your server after successful uploads.
+
+Test the Changes
+After applying these changes, refresh the table in your application and ensure that the links point to the right places. If the invoice files were uploaded successfully to the /uploads/ directory, the links should work directly.
+
+By following these steps, the freight invoice links in your tables should now reference the uploaded files correctly.
