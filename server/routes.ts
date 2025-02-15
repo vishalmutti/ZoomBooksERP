@@ -82,7 +82,12 @@ async function generatePDFForInvoice(invoice: InvoiceData) {
 export function registerRoutes(app: Express): Server {
   const router = Router();
 
-  app.use('/uploads', express.static(uploadDir));
+  app.use('/uploads', express.static(uploadDir, {
+    setHeaders: (res, path) => {
+      res.set('Content-Type', 'application/pdf');
+      res.set('Content-Disposition', 'inline');
+    }
+  }));
   setupAuth(app);
 
   // Supplier routes
