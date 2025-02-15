@@ -403,7 +403,8 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
             <TabsTrigger value="upload">Upload Invoice</TabsTrigger>
           </TabsList>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <div className="space-y-6 mt-4">
             <div className="space-y-4">
               <div>
@@ -705,6 +706,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
             </Button>
           </div>
           </form>
+          </Form>
         </Tabs>
       </DialogContent>
     </Dialog>
