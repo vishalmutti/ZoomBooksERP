@@ -17,6 +17,7 @@ interface CarrierFormData {
   referenceNumber: string;
   carrier: string;
   freightCost: number;
+  freightCostCurrency: "CAD" | "USD";
   freightInvoice?: File;
   pod?: File;
 }
@@ -63,6 +64,7 @@ export function CarrierForm({ initialData, onOpenChange, open }: CarrierFormProp
         referenceNumber: data.referenceNumber,
         carrier: data.carrier,
         freightCost: parseFloat(data.freightCost.toString()),
+        freightCostCurrency: data.freightCostCurrency || 'CAD',
         status: "UNPAID"
       }));
 
@@ -166,18 +168,43 @@ export function CarrierForm({ initialData, onOpenChange, open }: CarrierFormProp
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="freightCost"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Freight Cost</FormLabel>
-                  <FormControl>
-                    <Input type="number" step="0.01" {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+            <div className="flex gap-2">
+              <FormField
+                control={form.control}
+                name="freightCost"
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormLabel>Freight Cost</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.01" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="freightCostCurrency"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Currency</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-24">
+                          <SelectValue placeholder="CAD" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="CAD">CAD</SelectItem>
+                        <SelectItem value="USD">USD</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}
