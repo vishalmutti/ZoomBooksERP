@@ -274,11 +274,17 @@ export class DatabaseStorage implements IStorage {
         .values({
           supplierId: invoice.supplierId,
           invoiceNumber: invoice.invoiceNumber,
+          carrier: invoice.carrier,
           totalAmount: invoice.totalAmount,
+          freightCost: invoice.freightCost,
+          currency: invoice.currency,
+          freightCostCurrency: invoice.freightCostCurrency,
           dueDate: invoice.dueDate,
           isPaid: invoice.isPaid,
           notes: invoice.notes,
           uploadedFile: invoice.uploadedFile,
+          bolFile: invoice.bolFile,
+          freightInvoiceFile: invoice.freightInvoiceFile,
         })
         .returning();
 
@@ -304,10 +310,14 @@ export class DatabaseStorage implements IStorage {
           dueDate: updates.dueDate ? new Date(updates.dueDate).toISOString() : undefined,
           paymentDate: updates.paymentDate ? new Date(updates.paymentDate).toISOString() : undefined,
           totalAmount: updates.totalAmount?.toString(),
+          freightCost: updates.freightCost?.toString(),
           isPaid: updates.isPaid ?? false,
           bolFile: updates.bolFile === undefined ?
             (await this.getInvoice(id))?.bolFile :
-            updates.bolFile
+            updates.bolFile,
+          freightInvoiceFile: updates.freightInvoiceFile === undefined ?
+            (await this.getInvoice(id))?.freightInvoiceFile :
+            updates.freightInvoiceFile
         })
         .where(eq(invoices.id, id))
         .returning();

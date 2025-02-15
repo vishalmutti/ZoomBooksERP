@@ -66,6 +66,7 @@ export const invoices = pgTable("invoices", {
   notes: text("notes"),
   uploadedFile: text("uploaded_file"),
   bolFile: text("bol_file"),
+  freightInvoiceFile: text("freight_invoice_file"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

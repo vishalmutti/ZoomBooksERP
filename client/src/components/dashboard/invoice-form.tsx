@@ -117,7 +117,8 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
           invoiceId: invoiceData.id
         })) || [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }],
         carrier: invoiceData.carrier || "",
-        freightCost: invoiceData.freightCost?.toString() || "0"
+        freightCost: invoiceData.freightCost?.toString() || "0",
+        freightInvoiceFile: invoiceData.freightInvoiceFile || null // Added line
       });
     }
   }, [currentInvoiceData, editInvoice, form]);
@@ -558,6 +559,42 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                         </div>
                       </div>
                     </div>
+                    <div className="space-y-2">
+                      <Label>Upload Freight Invoice</Label>
+                      <div className="mt-2">
+                        <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50">
+                          <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                            <Upload className="w-8 h-8 mb-2 text-gray-400" />
+                            <p className="mb-2 text-sm text-gray-500">
+                              {freightInvoiceFile ? freightInvoiceFile.name : editInvoice?.freightInvoiceFile ? "Replace current file" : "Click to upload freight invoice or drag and drop"}
+                            </p>
+                          </div>
+                          <input
+                            type="file"
+                            className="hidden"
+                            onChange={handleFreightInvoiceFileChange}
+                            accept=".pdf,.png,.jpg,.jpeg"
+                          />
+                        </label>
+                      </div>
+                      {editInvoice?.freightInvoiceFile && (
+                        <div className="mt-4">
+                          <Label>Current Freight Invoice File</Label>
+                          <div className="flex items-center justify-between p-2 mt-1 border rounded">
+                            <span className="text-sm">{editInvoice.freightInvoiceFile}</span>
+                            <a
+                              href={`/uploads/${editInvoice.freightInvoiceFile}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center text-blue-600 hover:text-blue-800"
+                            >
+                              <Download className="h-4 w-4 mr-1" />
+                              Download
+                            </a>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                     <Button
                       type="button"
                       variant="outline"
@@ -669,42 +706,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                           <span className="text-sm">{editInvoice.bolFile}</span>
                           <a
                             href={`/uploads/${editInvoice.bolFile}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center text-blue-600 hover:text-blue-800"
-                          >
-                            <Download className="h-4 w-4 mr-1" />
-                            Download
-                          </a>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <Label>Upload Freight Invoice</Label>
-                    <div className="mt-2">
-                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50">
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                          <Upload className="w-8 h-8 mb-2 text-gray-400" />
-                          <p className="mb-2 text-sm text-gray-500">
-                            {freightInvoiceFile ? freightInvoiceFile.name : editInvoice?.freightInvoice ? "Replace current file" : "Click to upload freight invoice or drag and drop"}
-                          </p>
-                        </div>
-                        <input
-                          type="file"
-                          className="hidden"
-                          onChange={handleFreightInvoiceFileChange}
-                          accept=".pdf,.png,.jpg,.jpeg"
-                        />
-                      </label>
-                    </div>
-                    {editInvoice?.freightInvoice && (
-                      <div className="mt-4">
-                        <Label>Current Freight Invoice File</Label>
-                        <div className="flex items-center justify-between p-2 mt-1 border rounded">
-                          <span className="text-sm">{editInvoice.freightInvoice}</span>
-                          <a
-                            href={`/uploads/${editInvoice.freightInvoice}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center text-blue-600 hover:text-blue-800"
