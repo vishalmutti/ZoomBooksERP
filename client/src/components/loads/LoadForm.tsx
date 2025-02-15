@@ -105,7 +105,8 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
       freightCost: "0",
       profitRoi: "0",
       supplierId: "",
-      carrier: ""
+      carrier: "",
+      freightCostCurrency: "USD" //Added default currency
     }
   });
 
@@ -332,25 +333,48 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
                 <FormItem>
                   <FormLabel>Load Cost</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" {...field} defaultValue={field.value || "0"} />
+                    <Input type="number" step="0.01" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="freightCost"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Freight Cost</FormLabel>
-                  <FormControl>
-                    <Input type="number" step="0.01" {...field} defaultValue={field.value || "0"} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-2">
+              <FormField
+                control={form.control}
+                name="freightCost"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Freight Cost</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.01" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="freightCostCurrency"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Currency</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || 'USD'}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select currency" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="USD">USD</SelectItem>
+                        <SelectItem value="CAD">CAD</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <FormField
               control={form.control}
               name="profitRoi"
@@ -358,7 +382,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
                 <FormItem>
                   <FormLabel>Profit ROI</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" {...field} defaultValue={field.value || "0"} />
+                    <Input type="number" step="0.01" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -373,7 +397,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
               <FormItem>
                 <FormLabel>Reference #</FormLabel>
                 <FormControl>
-                  <Input {...field} defaultValue={field.value || ""} />
+                  <Input {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -460,7 +484,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
               <FormItem>
                 <FormLabel>Notes</FormLabel>
                 <FormControl>
-                  <Textarea {...field} placeholder="Add any relevant notes here..." defaultValue={field.value || ""} />
+                  <Textarea {...field} placeholder="Add any relevant notes here..." />
                 </FormControl>
                 <FormMessage />
               </FormItem>
