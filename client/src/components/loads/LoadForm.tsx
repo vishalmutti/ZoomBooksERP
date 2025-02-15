@@ -106,14 +106,13 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
       profitRoi: "0",
       supplierId: "",
       carrier: "",
-      freightCostCurrency: "USD" //Added default currency
+      freightCostCurrency: "USD" 
     }
   });
 
   const handleFileChange = (type: keyof typeof files, e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
       const file = e.target.files[0];
-      console.log(`Setting ${type} file:`, file);
       setFiles(prev => ({
         ...prev,
         [type]: file
@@ -156,9 +155,6 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
           }
         }
       }
-
-      // Explicitly append freightCostCurrency to ensure it's included
-      formData.append('freightCostCurrency', data.freightCostCurrency || 'USD');
 
       // Append files only if they exist or keep existing files
       if (files.bol) formData.append('bolFile', files.bol);

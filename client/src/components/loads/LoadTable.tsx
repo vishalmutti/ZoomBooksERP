@@ -479,8 +479,7 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
                 </TableCell>
                 <TableCell>${Number(load.loadCost).toFixed(2)}</TableCell>
                 <TableCell>
-                  {load.freightCostCurrency === 'CAD' ? 'C$' : '$'}
-                  {Number(load.freightCost).toFixed(2)} {load.freightCostCurrency}
+                  {load.freightCostCurrency === 'CAD' ? 'C' : '$'}{Number(load.freightCost).toFixed(2)} {load.freightCostCurrency}
                 </TableCell>
                 <TableCell>{Number(load.profitRoi).toFixed(2)}%</TableCell>
                 <TableCell>
