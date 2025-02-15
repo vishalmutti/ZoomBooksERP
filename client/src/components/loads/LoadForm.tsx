@@ -163,8 +163,9 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
         : '/api/carrier-loads';
       const carrierMethod = existingCarrierLoad ? 'PATCH' : 'POST';
 
-      const formData = new FormData();
-      formData.append('carrierData', JSON.stringify({
+      // Create carrier data FormData
+      const carrierFormData = new FormData();
+      carrierFormData.append('carrierData', JSON.stringify({
         date: data.scheduledPickup || new Date().toISOString().split('T')[0],
         referenceNumber: data.referenceNumber,
         carrier: data.carrier,
@@ -177,7 +178,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
 
       await fetch(carrierEndpoint, {
         method: carrierMethod,
-        body: formData
+        body: carrierFormData
       });
 
       // Log form data and files for debugging
