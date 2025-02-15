@@ -84,8 +84,10 @@ export function registerRoutes(app: Express): Server {
 
   app.use('/uploads', express.static(uploadDir, {
     setHeaders: (res, path) => {
-      res.set('Content-Type', 'application/pdf');
-      res.set('Content-Disposition', 'inline');
+      if (path.endsWith('.pdf')) {
+        res.set('Content-Type', 'application/pdf');
+        res.set('Content-Disposition', 'inline');
+      }
     }
   }));
   setupAuth(app);
