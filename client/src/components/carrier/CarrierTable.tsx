@@ -133,10 +133,6 @@ export function CarrierTable() {
       },
     },
     {
-      accessorKey: "freightCostCurrency",
-      header: "Currency",
-    },
-    {
       accessorKey: "freightInvoice",
       header: "Freight Invoice",
       cell: ({ row }) => <FileLink file={row.getValue("freightInvoice")} />,
