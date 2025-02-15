@@ -106,7 +106,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
       profitRoi: "0",
       supplierId: "",
       carrier: "",
-      freightCostCurrency: "USD" 
+      freightCostCurrency: "USD"
     }
   });
 
@@ -146,7 +146,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
       console.log('Files to submit:', files);
 
       // Append form fields
-      for (const [key, value] of Object.entries(data)) {
+      Object.entries(data).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
           if (key === 'scheduledPickup' || key === 'scheduledDelivery') {
             formData.append(key, value ? new Date(value).toISOString() : '');
@@ -154,7 +154,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
             formData.append(key, value.toString());
           }
         }
-      }
+      });
 
       // Append files only if they exist or keep existing files
       if (files.bol) formData.append('bolFile', files.bol);
@@ -182,42 +182,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
       const savedLoad = await response.json();
       console.log('Server response success:', savedLoad);
 
-      // Sync with carrier loads if we have carrier and freight info
-      if (savedLoad.carrier && savedLoad.freightCost) {
-        const carrierLoadData = new FormData();
-        carrierLoadData.append('carrierData', JSON.stringify({
-          date: savedLoad.scheduledPickup,
-          referenceNumber: savedLoad.referenceNumber,
-          carrier: savedLoad.carrier,
-          freightCost: savedLoad.freightCost,
-          status: 'UNPAID'
-        }));
-
-        // Check if freight invoice file exists
-        if (files.freightInvoice) {
-          carrierLoadData.append('freightInvoice', files.freightInvoice);
-        }
-
-        // Find and update corresponding carrier load
-        const carrierLoadsResponse = await fetch('/api/carrier-loads');
-        const carrierLoads = await carrierLoadsResponse.json();
-        const matchingLoad = carrierLoads.find(cl => cl.referenceNumber === savedLoad.referenceNumber);
-
-        if (matchingLoad) {
-          await fetch(`/api/carrier-loads/${matchingLoad.id}`, {
-            method: 'PATCH',
-            body: carrierLoadData,
-          });
-        } else {
-          await fetch('/api/carrier-loads', {
-            method: 'POST',
-            body: carrierLoadData,
-          });
-        }
-      }
-
       await queryClient.invalidateQueries({ queryKey: ["/api/loads"] });
-      await queryClient.invalidateQueries({ queryKey: ["carrier-loads"] });
       handleClose();
       toast({
         title: initialData ? "Load updated successfully" : "Load created successfully",
@@ -227,7 +192,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
       console.error('Error saving load:', error);
       toast({
         title: "Error",
-        description: `Failed to ${initialData ? 'update' : 'create'} load. Please try again.`,
+        description: `Failed to ${initialData ? 'update' : 'create'} load: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       });
     }
