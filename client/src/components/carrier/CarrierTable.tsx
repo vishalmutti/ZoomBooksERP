@@ -176,10 +176,27 @@ export function CarrierTable() {
           <Button
             variant="destructive"
             size="sm"
-            onClick={() => {
+            onClick={async () => {
               if (confirm("Are you sure you want to delete this carrier load?")) {
-                // Delete mutation will be added later
-                console.log("Delete carrier load:", row.original.id);
+                try {
+                  const response = await fetch(`/api/carrier-loads/${row.original.id}`, {
+                    method: 'DELETE',
+                  });
+                  if (!response.ok) {
+                    throw new Error('Failed to delete carrier load');
+                  }
+                  await queryClient.invalidateQueries({ queryKey: ['carrier-loads'] });
+                  toast({
+                    title: "Success",
+                    description: "Carrier load deleted successfully",
+                  });
+                } catch (error) {
+                  toast({
+                    title: "Error",
+                    description: "Failed to delete carrier load",
+                    variant: "destructive",
+                  });
+                }
               }
             }}
           >
