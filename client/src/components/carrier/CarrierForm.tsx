@@ -31,7 +31,10 @@ interface CarrierFormProps {
 export function CarrierForm({ initialData, onOpenChange, open }: CarrierFormProps) {
   const [carriers, setCarriers] = useState<Carrier[]>([]);
   const form = useForm<CarrierFormData>({
-    defaultValues: initialData,
+    defaultValues: {
+      ...initialData,
+      freightCostCurrency: initialData?.freightCostCurrency || 'CAD'
+    },
   });
 
   useEffect(() => {
@@ -64,7 +67,7 @@ export function CarrierForm({ initialData, onOpenChange, open }: CarrierFormProp
         referenceNumber: data.referenceNumber,
         carrier: data.carrier,
         freightCost: parseFloat(data.freightCost.toString()),
-        freightCostCurrency: data.freightCostCurrency || 'CAD',
+        freightCostCurrency: data.freightCostCurrency,
         status: "UNPAID"
       }));
 
