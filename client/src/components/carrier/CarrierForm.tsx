@@ -62,14 +62,15 @@ export function CarrierForm({ initialData, onOpenChange, open }: CarrierFormProp
       const method = initialData ? 'PATCH' : 'POST';
 
       const formData = new FormData();
-      formData.append('carrierData', JSON.stringify({
+      const carrierData = {
         date: data.date,
         referenceNumber: data.referenceNumber,
         carrier: data.carrier,
         freightCost: parseFloat(data.freightCost.toString()),
-        freightCostCurrency: data.freightCostCurrency,
+        freightCostCurrency: data.freightCostCurrency || 'CAD',
         status: "UNPAID"
-      }));
+      };
+      formData.append('carrierData', JSON.stringify(carrierData));
 
       if (data.freightInvoice) {
         formData.append('freightInvoice', data.freightInvoice);
