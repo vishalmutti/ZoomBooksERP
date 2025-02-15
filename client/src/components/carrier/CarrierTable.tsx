@@ -130,7 +130,7 @@ export function CarrierTable() {
         const value = row.getValue<string | number>("freightCost");
         const numericValue = typeof value === 'string' ? parseFloat(value) : value;
         const currency = row.original.freightCostCurrency || 'CAD';
-        return `$${numericValue.toFixed(2)} ${currency}`;
+        return `${currency === 'CAD' ? 'C' : '$'}${numericValue.toFixed(2)} ${currency}`;
       },
     },
     {
