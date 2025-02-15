@@ -1,4 +1,3 @@
-
 import {
   Table,
   TableBody,
@@ -16,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function InvoiceTable({ invoices: initialInvoices }: { invoices: Invoice[] }) {
   const { toast } = useToast();
-  
+
   // Add real-time query for invoices data
   const { data: invoices = initialInvoices } = useQuery<Invoice[]>({
     queryKey: ["/api/invoices"],
