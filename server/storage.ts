@@ -277,7 +277,7 @@ export class DatabaseStorage implements IStorage {
           carrier: invoice.carrier,
           totalAmount: invoice.totalAmount,
           freightCost: invoice.freightCost,
-          currency: invoice.currency,
+          amountCurrency: invoice.amountCurrency,
           freightCostCurrency: invoice.freightCostCurrency,
           dueDate: invoice.dueDate,
           isPaid: invoice.isPaid,
