@@ -61,7 +61,7 @@ export async function generateInvoicePDF(data: PDFInvoiceData): Promise<string> 
 
   doc.font('Helvetica-Bold')
      .text('Total Amount:', 350, position + 20)
-     .text(`$${Number(data.invoice.totalAmount).toFixed(2)} ${data.invoice.currency}`, 450, position + 20)
+     .text(`$${Number(data.invoice.totalAmount).toFixed(2)} ${data.invoice.amountCurrency}`, 450, position + 20)
      .moveDown()
      .font('Helvetica-Bold')
      .fontSize(10)
