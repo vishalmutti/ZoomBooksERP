@@ -9,7 +9,7 @@ export function PayrollWidget() {
 
   return (
     <Card className="p-4 hover:shadow-lg transition-shadow w-full max-w-[1400px] mx-auto h-[900px] overflow-hidden">
-      <div className="space-y-4 h-full">
+      <div className="space-y-4 h-full overflow-y-auto scrollbar-none" style={{ WebkitOverflowScrolling: 'touch' }}>
         <div className="flex items-center gap-2 sticky top-0 bg-background z-10">
           <button
             onClick={() => setSelectedSheet('BC')}
