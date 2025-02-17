@@ -61,7 +61,11 @@ function Router() {
         </AppLayout>
       </Route>
 
-      <Route path="/payroll" component={PayrollPage} /> {/* Added Payroll Route */}
+      <Route path="/payroll">
+        <AppLayout>
+          <ProtectedRoute path="/payroll" component={PayrollPage} />
+        </AppLayout>
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );
