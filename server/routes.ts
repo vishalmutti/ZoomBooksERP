@@ -304,7 +304,8 @@ export function registerRoutes(app: Express): Server {
         ...parsed.data,
         uploadedFile: uploadedFile || null,
         bolFile: bolFile || null,
-        freightInvoiceFile: freightInvoiceFile || null
+        freightInvoiceFile: freightInvoiceFile || null,
+        amountCurrency: parsed.data.amountCurrency || 'USD'
       });
 
       if (!uploadedFile && invoiceData.items?.length) {
@@ -363,7 +364,8 @@ export function registerRoutes(app: Express): Server {
         ...parsed.data,
         uploadedFile: existingInvoice.uploadedFile,
         bolFile: existingInvoice.bolFile,
-        freightInvoiceFile: existingInvoice.freightInvoiceFile
+        freightInvoiceFile: existingInvoice.freightInvoiceFile,
+        amountCurrency: parsed.data.amountCurrency || existingInvoice.amountCurrency
       };
 
       // Update file paths if new files are uploaded
