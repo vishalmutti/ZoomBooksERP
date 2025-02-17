@@ -2,15 +2,28 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Invoice } from "@shared/schema";
 import { ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import { useState } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface AROverviewProps {
   invoices: Invoice[];
 }
 
 export function AROverview({ invoices }: AROverviewProps) {
+  const [dateFilter, setDateFilter] = useState<'30' | '90' | 'all'>('all');
+
+  const filteredInvoices = invoices.filter(invoice => {
+    if (dateFilter === 'all') return true;
+    
+    const dueDate = new Date(invoice.dueDate);
+    const now = new Date();
+    const daysDiff = Math.floor((now.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+    return daysDiff <= parseInt(dateFilter);
+  });
+
   const groupedInvoices = {
-    USD: invoices.filter(inv => inv.amountCurrency === 'USD'),
-    CAD: invoices.filter(inv => inv.amountCurrency === 'CAD')
+    USD: filteredInvoices.filter(inv => inv.amountCurrency === 'USD'),
+    CAD: filteredInvoices.filter(inv => inv.amountCurrency === 'CAD')
   };
 
   const totals = {
@@ -39,8 +52,21 @@ export function AROverview({ invoices }: AROverviewProps) {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle>AR Overview</CardTitle>
+        <Select
+          value={dateFilter}
+          onValueChange={(value: '30' | '90' | 'all') => setDateFilter(value)}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Select time range" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="30">Last 30 Days</SelectItem>
+            <SelectItem value="90">Last 90 Days</SelectItem>
+            <SelectItem value="all">All Time</SelectItem>
+          </SelectContent>
+        </Select>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
