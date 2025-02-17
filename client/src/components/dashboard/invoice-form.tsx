@@ -10,7 +10,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertInvoiceSchema, type InsertInvoice, type InsertInvoiceItem, type Invoice, type InvoiceItem, type Supplier } from "@shared/schema";
+import {
+  insertInvoiceSchema,
+  type InsertInvoice,
+  type InsertInvoiceItem,
+  type Invoice,
+  type InvoiceItem,
+  type Supplier,
+} from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useState, useEffect } from "react";
@@ -49,14 +56,14 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   const [bolFile, setBolFile] = useState<File | null>(null);
   const [freightInvoiceFile, setFreightInvoiceFile] = useState<File | null>(null);
 
-  // Add polling to invoice query
+  // Polling current invoice data when editing
   const { data: currentInvoiceData } = useQuery<Invoice & { items?: InvoiceItem[] }>({
     queryKey: [`/api/invoices/${editInvoice?.id}`],
     enabled: !!editInvoice?.id,
-    refetchInterval: 2000, // Poll every 2 seconds when editing
+    refetchInterval: 2000,
     queryFn: async () => {
       const response = await fetch(`/api/invoices/${editInvoice?.id}`);
-      if (!response.ok) throw new Error('Failed to fetch invoice');
+      if (!response.ok) throw new Error("Failed to fetch invoice");
       return response.json();
     },
   });
@@ -67,30 +74,55 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       supplierId: currentInvoiceData?.supplierId || editInvoice?.supplierId || 0,
       invoiceNumber: currentInvoiceData?.invoiceNumber || editInvoice?.invoiceNumber || "",
       carrier: currentInvoiceData?.carrier || editInvoice?.carrier || "",
-      dueDate: currentInvoiceData?.dueDate ? new Date(currentInvoiceData.dueDate).toISOString().split('T')[0] :
-               editInvoice?.dueDate ? new Date(editInvoice.dueDate).toISOString().split('T')[0] : "",
-      totalAmount: currentInvoiceData?.totalAmount?.toString() || editInvoice?.totalAmount?.toString() || "0",
-      freightCost: currentInvoiceData?.freightCost?.toString() || editInvoice?.freightCost?.toString() || "0",
+      dueDate:
+        currentInvoiceData?.dueDate
+          ? new Date(currentInvoiceData.dueDate).toISOString().split("T")[0]
+          : editInvoice?.dueDate
+          ? new Date(editInvoice.dueDate).toISOString().split("T")[0]
+          : "",
+      totalAmount:
+        currentInvoiceData?.totalAmount?.toString() ||
+        editInvoice?.totalAmount?.toString() ||
+        "0",
+      // Use separate currency fields
+      amountCurrency: currentInvoiceData?.amountCurrency || editInvoice?.amountCurrency || "USD",
+      freightCost:
+        currentInvoiceData?.freightCost?.toString() ||
+        editInvoice?.freightCost?.toString() ||
+        "0",
+      freightCostCurrency:
+        currentInvoiceData?.freightCostCurrency ||
+        editInvoice?.freightCostCurrency ||
+        "CAD",
       notes: currentInvoiceData?.notes || editInvoice?.notes || "",
       isPaid: currentInvoiceData?.isPaid || editInvoice?.isPaid || false,
-      items: currentInvoiceData?.items?.length
-        ? currentInvoiceData.items.map(item => ({
-            description: item.description,
-            quantity: item.quantity?.toString() || "0",
-            unitPrice: item.unitPrice?.toString() || "0",
-            totalPrice: item.totalPrice?.toString() || "0",
-            invoiceId: currentInvoiceData.id
-          }))
-        : editInvoice?.items?.length
-        ? editInvoice.items.map(item => ({
-            description: item.description,
-            quantity: item.quantity?.toString() || "0",
-            unitPrice: item.unitPrice?.toString() || "0",
-            totalPrice: item.totalPrice?.toString() || "0",
-            invoiceId: editInvoice.id
-          }))
-        : [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }]
-    }
+      items:
+        currentInvoiceData?.items?.length
+          ? currentInvoiceData.items.map((item) => ({
+              description: item.description,
+              quantity: item.quantity?.toString() || "0",
+              unitPrice: item.unitPrice?.toString() || "0",
+              totalPrice: item.totalPrice?.toString() || "0",
+              invoiceId: currentInvoiceData.id,
+            }))
+          : editInvoice?.items?.length
+          ? editInvoice.items.map((item) => ({
+              description: item.description,
+              quantity: item.quantity?.toString() || "0",
+              unitPrice: item.unitPrice?.toString() || "0",
+              totalPrice: item.totalPrice?.toString() || "0",
+              invoiceId: editInvoice.id,
+            }))
+          : [
+              {
+                description: "",
+                quantity: "0",
+                unitPrice: "0",
+                totalPrice: "0",
+                invoiceId: 0,
+              },
+            ],
+    },
   });
 
   useEffect(() => {
@@ -104,21 +136,31 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       form.reset({
         supplierId: invoiceData.supplierId,
         invoiceNumber: invoiceData.invoiceNumber,
-        dueDate: new Date(invoiceData.dueDate).toISOString().split('T')[0],
+        dueDate: new Date(invoiceData.dueDate).toISOString().split("T")[0],
         totalAmount: invoiceData.totalAmount.toString(),
-        currency: invoiceData.currency || "USD",
+        amountCurrency: invoiceData.amountCurrency || "USD",
         notes: invoiceData.notes || "",
         isPaid: invoiceData.isPaid,
-        items: invoiceData.items?.map(item => ({
-          description: item.description,
-          quantity: item.quantity?.toString() || "0",
-          unitPrice: item.unitPrice?.toString() || "0",
-          totalPrice: item.totalPrice?.toString() || "0",
-          invoiceId: invoiceData.id
-        })) || [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }],
+        items:
+          invoiceData.items?.map((item) => ({
+            description: item.description,
+            quantity: item.quantity?.toString() || "0",
+            unitPrice: item.unitPrice?.toString() || "0",
+            totalPrice: item.totalPrice?.toString() || "0",
+            invoiceId: invoiceData.id,
+          })) || [
+            {
+              description: "",
+              quantity: "0",
+              unitPrice: "0",
+              totalPrice: "0",
+              invoiceId: 0,
+            },
+          ],
         carrier: invoiceData.carrier || "",
         freightCost: invoiceData.freightCost?.toString() || "0",
-        freightInvoiceFile: invoiceData.freightInvoiceFile || null // Added line
+        freightCostCurrency: invoiceData.freightCostCurrency || "CAD",
+        freightInvoiceFile: invoiceData.freightInvoiceFile || null,
       });
     }
   }, [currentInvoiceData, editInvoice, form]);
@@ -141,31 +183,31 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
 
       // Handle invoice file upload
       if (mode === "upload" && file) {
-        formData.append('file', file);
+        formData.append("file", file);
       }
 
       // Always append BOL file if present
       if (bolFile) {
-        formData.append('bolFile', bolFile);
+        formData.append("bolFile", bolFile);
       }
 
       // Always append freight invoice file if present
       if (freightInvoiceFile) {
-        formData.append('freightInvoiceFile', freightInvoiceFile);
+        formData.append("freightInvoiceFile", freightInvoiceFile);
       }
 
       const invoiceData = {
         ...data,
         mode,
         items: mode === "manual" ? data.items : undefined,
-        freightInvoiceFile: freightInvoiceFile ? freightInvoiceFile.name : undefined
+        freightInvoiceFile: freightInvoiceFile ? freightInvoiceFile.name : undefined,
       };
 
       if (invoiceData.dueDate) {
         invoiceData.dueDate = new Date(invoiceData.dueDate).toISOString();
       }
 
-      formData.append('invoiceData', JSON.stringify(invoiceData));
+      formData.append("invoiceData", JSON.stringify(invoiceData));
 
       const res = await apiRequest(
         editInvoice ? "PATCH" : "POST",
@@ -183,24 +225,24 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: ["/api/invoices"],
-          refetchType: "all"
+          refetchType: "all",
         }),
         queryClient.invalidateQueries({
           queryKey: [`/api/invoices/${updatedInvoice.id}`],
-          refetchType: "all"
-        })
+          refetchType: "all",
+        }),
       ]);
 
       if (updatedInvoice) {
         form.reset({
           ...updatedInvoice,
-          items: updatedInvoice.items?.map(item => ({
+          items: updatedInvoice.items?.map((item) => ({
             description: item.description,
             quantity: item.quantity?.toString() || "0",
             unitPrice: item.unitPrice?.toString() || "0",
             totalPrice: item.totalPrice?.toString() || "0",
-            invoiceId: updatedInvoice.id
-          }))
+            invoiceId: updatedInvoice.id,
+          })),
         });
       }
 
@@ -219,7 +261,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       setFreightInvoiceFile(null);
     },
     onError: (error: Error) => {
-      if (!error.message.includes('Failed to update invoice')) {
+      if (!error.message.includes("Failed to update invoice")) {
         toast({
           title: "Error",
           description: error.message,
@@ -229,7 +271,11 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     },
   });
 
-  const handleItemChange = (index: number, field: keyof InsertInvoiceItem, value: string) => {
+  const handleItemChange = (
+    index: number,
+    field: keyof InsertInvoiceItem,
+    value: string
+  ) => {
     const items = [...(form.getValues("items") || [])];
     let item = items[index];
 
@@ -273,11 +319,20 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     const currentValues = form.getValues();
     form.reset({
       ...currentValues,
-      items: value === "manual"
-        ? currentValues.items?.length
-          ? currentValues.items
-          : [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }]
-        : currentValues.items
+      items:
+        value === "manual"
+          ? currentValues.items?.length
+            ? currentValues.items
+            : [
+                {
+                  description: "",
+                  quantity: "0",
+                  unitPrice: "0",
+                  totalPrice: "0",
+                  invoiceId: 0,
+                },
+              ]
+          : currentValues.items,
     });
   };
 
@@ -318,7 +373,11 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         });
         return;
       }
-      if (!data.totalAmount || isNaN(Number(data.totalAmount)) || Number(data.totalAmount) <= 0) {
+      if (
+        !data.totalAmount ||
+        isNaN(Number(data.totalAmount)) ||
+        Number(data.totalAmount) <= 0
+      ) {
         toast({
           title: "Error",
           description: "Please enter a valid total amount greater than 0",
@@ -345,7 +404,11 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
           });
           return;
         }
-        if (!item.quantity || isNaN(Number(item.quantity)) || Number(item.quantity) <= 0) {
+        if (
+          !item.quantity ||
+          isNaN(Number(item.quantity)) ||
+          Number(item.quantity) <= 0
+        ) {
           toast({
             title: "Error",
             description: "Please enter a valid quantity greater than 0",
@@ -353,7 +416,11 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
           });
           return;
         }
-        if (!item.unitPrice || isNaN(Number(item.unitPrice)) || Number(item.unitPrice) <= 0) {
+        if (
+          !item.unitPrice ||
+          isNaN(Number(item.unitPrice)) ||
+          Number(item.unitPrice) <= 0
+        ) {
           toast({
             title: "Error",
             description: "Please enter a valid unit price greater than 0",
@@ -364,7 +431,10 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       }
 
       data.totalAmount = data.items
-        .reduce((sum, item) => sum + (Number(item.quantity) * Number(item.unitPrice)), 0)
+        .reduce(
+          (sum, item) => sum + Number(item.quantity) * Number(item.unitPrice),
+          0
+        )
         .toString();
     }
 
@@ -410,7 +480,9 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                       className="w-full justify-between"
                     >
                       {form.watch("supplierId")
-                        ? suppliers.find((supplier) => supplier.id === form.watch("supplierId"))?.name
+                        ? suppliers.find(
+                            (supplier) => supplier.id === form.watch("supplierId")
+                          )?.name
                         : "Select supplier..."}
                     </Button>
                   </PopoverTrigger>
@@ -457,13 +529,9 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                 <Label htmlFor="carrier">Carrier</Label>
                 <Input {...form.register("carrier")} />
               </div>
-
               <div>
                 <Label htmlFor="dueDate">Due Date</Label>
-                <Input
-                  type="date"
-                  {...form.register("dueDate")}
-                />
+                <Input type="date" {...form.register("dueDate")} />
               </div>
 
               <TabsContent value="manual">
@@ -492,7 +560,9 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                             placeholder="Quantity"
                             defaultValue={item.quantity}
                             {...form.register(`items.${index}.quantity`)}
-                            onChange={(e) => handleItemChange(index, "quantity", e.target.value)}
+                            onChange={(e) =>
+                              handleItemChange(index, "quantity", e.target.value)
+                            }
                           />
                         </div>
                         <div className="col-span-2">
@@ -502,7 +572,9 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                             placeholder="Unit Price"
                             defaultValue={item.unitPrice}
                             {...form.register(`items.${index}.unitPrice`)}
-                            onChange={(e) => handleItemChange(index, "unitPrice", e.target.value)}
+                            onChange={(e) =>
+                              handleItemChange(index, "unitPrice", e.target.value)
+                            }
                           />
                         </div>
                         <div className="col-span-2">
@@ -522,7 +594,10 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                             className="text-destructive hover:text-destructive"
                             onClick={() => {
                               const items = form.getValues("items") || [];
-                              form.setValue("items", items.filter((_, i) => i !== index));
+                              form.setValue(
+                                "items",
+                                items.filter((_, i) => i !== index)
+                              );
                             }}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -535,7 +610,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                         <Label>Total Amount Currency</Label>
                         <select
                           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                          {...form.register("currency")}
+                          {...form.register("amountCurrency")}
                         >
                           <option value="USD">USD</option>
                           <option value="CAD">CAD</option>
@@ -567,7 +642,11 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                           <div className="flex flex-col items-center justify-center pt-5 pb-6">
                             <Upload className="w-8 h-8 mb-2 text-gray-400" />
                             <p className="mb-2 text-sm text-gray-500">
-                              {freightInvoiceFile ? freightInvoiceFile.name : editInvoice?.freightInvoiceFile ? "Replace current file" : "Click to upload freight invoice or drag and drop"}
+                              {freightInvoiceFile
+                                ? freightInvoiceFile.name
+                                : editInvoice?.freightInvoiceFile
+                                ? "Replace current file"
+                                : "Click to upload freight invoice or drag and drop"}
                             </p>
                           </div>
                           <input
@@ -582,7 +661,9 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                         <div className="mt-4">
                           <Label>Current Freight Invoice File</Label>
                           <div className="flex items-center justify-between p-2 mt-1 border rounded">
-                            <span className="text-sm">{editInvoice.freightInvoiceFile}</span>
+                            <span className="text-sm">
+                              {editInvoice.freightInvoiceFile}
+                            </span>
                             <a
                               href={`/uploads/${editInvoice.freightInvoiceFile}`}
                               target="_blank"
@@ -603,7 +684,13 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                         const items = form.getValues("items") || [];
                         form.setValue("items", [
                           ...items,
-                          { description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 },
+                          {
+                            description: "",
+                            quantity: "0",
+                            unitPrice: "0",
+                            totalPrice: "0",
+                            invoiceId: 0,
+                          },
                         ]);
                       }}
                     >
@@ -635,11 +722,23 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                         {...form.register("freightCost")}
                       />
                     </div>
-                    <div className="w-24">
-                      <Label>Currency</Label>
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <Label>Total Amount Currency</Label>
                       <select
                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                        {...form.register("currency")}
+                        {...form.register("amountCurrency")}
+                      >
+                        <option value="USD">USD</option>
+                        <option value="CAD">CAD</option>
+                      </select>
+                    </div>
+                    <div className="flex-1">
+                      <Label>Freight Cost Currency</Label>
+                      <select
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                        {...form.register("freightCostCurrency")}
                       >
                         <option value="USD">USD</option>
                         <option value="CAD">CAD</option>
@@ -653,7 +752,11 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
                           <Upload className="w-8 h-8 mb-2 text-gray-400" />
                           <p className="mb-2 text-sm text-gray-500">
-                            {file ? file.name : editInvoice?.uploadedFile ? "Replace current file" : "Click to upload or drag and drop"}
+                            {file
+                              ? file.name
+                              : editInvoice?.uploadedFile
+                              ? "Replace current file"
+                              : "Click to upload or drag and drop"}
                           </p>
                         </div>
                         <input
@@ -689,7 +792,11 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
                           <Upload className="w-8 h-8 mb-2 text-gray-400" />
                           <p className="mb-2 text-sm text-gray-500">
-                            {bolFile ? bolFile.name : editInvoice?.bolFile ? "Replace current file" : "Click to upload BOL or drag and drop"}
+                            {bolFile
+                              ? bolFile.name
+                              : editInvoice?.bolFile
+                              ? "Replace current file"
+                              : "Click to upload BOL or drag and drop"}
                           </p>
                         </div>
                         <input

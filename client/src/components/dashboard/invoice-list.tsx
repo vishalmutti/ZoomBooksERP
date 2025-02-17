@@ -10,10 +10,34 @@ import { useToast } from "@/hooks/use-toast";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Trash2, CalendarIcon, Edit, Download } from "lucide-react";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Trash2,
+  CalendarIcon,
+  Edit,
+  Download,
+} from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { InvoiceForm } from "./invoice-form";
@@ -32,10 +56,12 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
+  // Fetch suppliers
   const { data: suppliers = [] } = useQuery<Supplier[]>({
     queryKey: ["/api/suppliers"],
   });
 
+  // Delete invoice mutation
   const deleteInvoiceMutation = useMutation({
     mutationFn: async (id: number) => {
       await apiRequest("DELETE", `/api/invoices/${id}`);
@@ -56,6 +82,7 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
     },
   });
 
+  // Mark as paid mutation
   const markAsPaidMutation = useMutation({
     mutationFn: async (id: number) => {
       const res = await apiRequest("PATCH", `/api/invoices/${id}/mark-paid`);
@@ -70,30 +97,41 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
     },
   });
 
-  const filteredInvoices = invoices.filter(invoice => {
-    const supplier = suppliers.find(s => s.id === invoice.supplierId);
-    const searchString = searchTerm.toLowerCase();
+  // Filter & sort invoices
+  const filteredInvoices = invoices
+    .filter((invoice) => {
+      const supplier = suppliers.find((s) => s.id === invoice.supplierId);
+      const searchString = searchTerm.toLowerCase();
 
-    const matchesSearch = searchTerm === "" ||
-      (invoice.invoiceNumber?.toLowerCase().includes(searchString)) ||
-      (supplier?.name.toLowerCase().includes(searchString)) ||
-      invoice.totalAmount.toString().includes(searchString);
+      const matchesSearch =
+        searchTerm === "" ||
+        (invoice.invoiceNumber?.toLowerCase().includes(searchString)) ||
+        (supplier?.name.toLowerCase().includes(searchString)) ||
+        invoice.totalAmount.toString().includes(searchString);
 
-    const matchesDateRange = (!startDate || new Date(invoice.dueDate) >= startDate) &&
-      (!endDate || new Date(invoice.dueDate) <= endDate);
+      const matchesDateRange =
+        (!startDate || new Date(invoice.dueDate) >= startDate) &&
+        (!endDate || new Date(invoice.dueDate) <= endDate);
 
-    const matchesStatus = isPaid === undefined || invoice.isPaid === isPaid;
+      const matchesStatus = isPaid === undefined || invoice.isPaid === isPaid;
 
-    const matchesAmount = (!minAmount || Number(invoice.totalAmount) >= Number(minAmount)) &&
-      (!maxAmount || Number(invoice.totalAmount) <= Number(maxAmount));
+      const matchesAmount =
+        (!minAmount || Number(invoice.totalAmount) >= Number(minAmount)) &&
+        (!maxAmount || Number(invoice.totalAmount) <= Number(maxAmount));
 
-    return matchesSearch && matchesDateRange && matchesStatus && matchesAmount;
-  }).sort((a, b) => {
-    const dateA = new Date(a.dueDate);
-    const dateB = new Date(b.dueDate);
-    return dateB.getTime() - dateA.getTime();
-  });
+      return (
+        matchesSearch &&
+        matchesDateRange &&
+        matchesStatus &&
+        matchesAmount
+      );
+    })
+    .sort(
+      (a, b) =>
+        new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime()
+    );
 
+  // Table columns
   const columns: ColumnDef<Invoice>[] = [
     {
       accessorKey: "invoiceNumber",
@@ -104,7 +142,9 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
       header: "Supplier",
       cell: ({ row }) => {
         const invoice = row.original;
-        const supplier = suppliers.find((s: Supplier) => s.id === invoice.supplierId);
+        const supplier = suppliers.find(
+          (s: Supplier) => s.id === invoice.supplierId
+        );
         return supplier?.name || "N/A";
       },
     },
@@ -119,21 +159,27 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
       id: "totalAmount",
       cell: ({ row }) => {
         const invoice = row.original;
-        const symbol = '$';
-        return `${symbol}${Number(row.getValue("totalAmount")).toFixed(2)} ${invoice.currency}`;
+        // Safely handle missing totalAmount/currency
+        const amount = Number(invoice.totalAmount || 0).toFixed(2);
+        const currency = invoice.amountCurrency || "USD";
+        // e.g. "$100.00 USD"
+        return `$${amount} ${currency}`;
       },
-      sortingFn: (rowA, rowB, columnId) => {
-        return Number(rowB.getValue(columnId)) - Number(rowA.getValue(columnId));
-      },
+      sortingFn: (rowA, rowB, columnId) =>
+        Number(rowB.getValue(columnId)) - Number(rowA.getValue(columnId)),
     },
     {
       accessorKey: "freightCost",
       header: "Freight Cost",
       cell: ({ row }) => {
         const invoice = row.original;
-        if (!invoice.freightCost) return "N/A";
-        const symbol = '$';
-        return `${symbol}${Number(invoice.freightCost).toFixed(2)} ${invoice.currency}`;
+        if (invoice.freightCost == null) {
+          return "N/A";
+        }
+        const cost = Number(invoice.freightCost).toFixed(2);
+        const currency = invoice.freightCostCurrency || "USD";
+        // e.g. "$10.00 CAD"
+        return `$${cost} ${currency}`;
       },
     },
     {
@@ -142,7 +188,6 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
       cell: ({ row }) => {
         const invoice = row.original;
         if (!invoice.freightInvoiceFile) return null;
-
         return (
           <a
             href={`/uploads/${encodeURIComponent(invoice.freightInvoiceFile)}`}
@@ -159,16 +204,20 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
     {
       accessorKey: "dueDate",
       header: "Due Date",
-      cell: ({ row }) => format(new Date(row.getValue("dueDate")), "MM/dd/yyyy"),
+      cell: ({ row }) =>
+        format(new Date(row.getValue("dueDate")), "MM/dd/yyyy"),
     },
     {
       accessorKey: "isPaid",
       header: "Status",
-      cell: ({ row }) => (
-        <Badge variant={row.getValue("isPaid") ? "default" : "secondary"}>
-          {row.getValue("isPaid") ? "Paid" : "Unpaid"}
-        </Badge>
-      ),
+      cell: ({ row }) => {
+        const paid = row.getValue("isPaid") as boolean;
+        return (
+          <Badge variant={paid ? "default" : "secondary"}>
+            {paid ? "Paid" : "Unpaid"}
+          </Badge>
+        );
+      },
     },
     {
       accessorKey: "uploadedFile",
@@ -176,7 +225,6 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
       cell: ({ row }) => {
         const invoice = row.original;
         if (!invoice.uploadedFile) return null;
-
         return (
           <a
             href={`/uploads/${invoice.uploadedFile}`}
@@ -205,19 +253,19 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
                 Mark as Paid
               </Button>
             )}
-
             <Button
               variant="outline"
               size="sm"
               onClick={async () => {
-                const response = await fetch(`/api/invoices/${invoice.id}`);
+                const response = await fetch(
+                  `/api/invoices/${invoice.id}`
+                );
                 const fullInvoice = await response.json();
                 setSelectedInvoice(fullInvoice);
               }}
             >
               <Edit className="h-4 w-4" />
             </Button>
-
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button
@@ -232,13 +280,16 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete the invoice.
+                    This action cannot be undone. This will permanently
+                    delete the invoice.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                   <AlertDialogAction
-                    onClick={() => deleteInvoiceMutation.mutate(invoice.id)}
+                    onClick={() =>
+                      deleteInvoiceMutation.mutate(invoice.id)
+                    }
                   >
                     Delete
                   </AlertDialogAction>
@@ -253,7 +304,9 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
 
   return (
     <div className="space-y-4">
+      {/* Filters */}
       <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+        {/* Search field */}
         <div className="col-span-2">
           <Label>Search</Label>
           <Input
@@ -264,6 +317,7 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
           />
         </div>
 
+        {/* Start Date */}
         <div className="space-y-2">
           <Label>Start Date</Label>
           <Popover>
@@ -290,6 +344,7 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
           </Popover>
         </div>
 
+        {/* End Date */}
         <div className="space-y-2">
           <Label>End Date</Label>
           <Popover>
@@ -316,6 +371,7 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
           </Popover>
         </div>
 
+        {/* Status */}
         <div className="space-y-2">
           <Label>Status</Label>
           <select
@@ -332,6 +388,7 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
           </select>
         </div>
 
+        {/* Amount Range */}
         <div className="space-y-2">
           <Label>Amount Range</Label>
           <div className="flex gap-2">
@@ -355,15 +412,14 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
         </div>
       </div>
 
-      <DataTable
-        columns={columns}
-        data={filteredInvoices}
-      />
+      {/* Data Table */}
+      <DataTable columns={columns} data={filteredInvoices} />
 
+      {/* Edit Invoice Dialog */}
       {selectedInvoice && (
-        <InvoiceForm 
-          editInvoice={selectedInvoice} 
-          onComplete={() => setSelectedInvoice(null)} 
+        <InvoiceForm
+          editInvoice={selectedInvoice}
+          onComplete={() => setSelectedInvoice(null)}
         />
       )}
     </div>

@@ -4,12 +4,14 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
+// Users table
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
 });
 
+// Suppliers table
 export const suppliers = pgTable("suppliers", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
@@ -20,6 +22,7 @@ export const suppliers = pgTable("suppliers", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Supplier contacts table
 export const supplierContacts = pgTable("supplier_contacts", {
   id: serial("id").primaryKey(),
   supplierId: integer("supplier_id").references(() => suppliers.id, { onDelete: 'cascade' }).notNull(),
@@ -35,13 +38,14 @@ export const alterSupplierContacts = sql`
   ADD COLUMN IF NOT EXISTS notes text;
 `;
 
-// Update the insert schema to include notes
+// Insert schema for supplier contacts (omitting fields managed by the DB)
 export const insertSupplierContactSchema = createInsertSchema(supplierContacts).omit({
   id: true,
   createdAt: true,
   supplierId: true,
 });
 
+// Insert schema for suppliers, with optional contacts array
 export const insertSupplierSchema = createInsertSchema(suppliers)
   .omit({
     id: true,
@@ -51,6 +55,7 @@ export const insertSupplierSchema = createInsertSchema(suppliers)
     contacts: z.array(insertSupplierContactSchema).optional(),
   });
 
+// Invoices table  
 export const invoices = pgTable("invoices", {
   id: serial("id").primaryKey(),
   supplierId: integer("supplier_id").references(() => suppliers.id),
@@ -58,7 +63,8 @@ export const invoices = pgTable("invoices", {
   invoiceNumber: varchar("invoice_number", { length: 50 }),
   totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
   freightCost: decimal("freight_cost", { precision: 10, scale: 2 }),
-  currency: varchar("currency", { length: 3 }).default('USD').notNull(),
+  // Renamed field: amountCurrency is now used for the invoice's total amount currency
+  amountCurrency: varchar("amount_currency", { length: 3 }).default('USD').notNull(),
   freightCostCurrency: varchar("freight_cost_currency", { length: 3 }).default('USD').notNull(),
   dueDate: date("due_date").notNull(),
   isPaid: boolean("is_paid").default(false).notNull(),
@@ -70,6 +76,7 @@ export const invoices = pgTable("invoices", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Invoice items table
 export const invoiceItems = pgTable("invoice_items", {
   id: serial("id").primaryKey(),
   invoiceId: integer("invoice_id").references(() => invoices.id).notNull(),
@@ -79,6 +86,7 @@ export const invoiceItems = pgTable("invoice_items", {
   totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
 });
 
+// Payments table
 export const payments = pgTable("payments", {
   id: serial("id").primaryKey(),
   invoiceId: integer("invoice_id").references(() => invoices.id).notNull(),
@@ -89,6 +97,7 @@ export const payments = pgTable("payments", {
   notes: text("notes"),
 });
 
+// Incoming loads table
 export const incomingLoads = pgTable("incoming_loads", {
   id: serial("id").primaryKey(),
   loadType: varchar("load_type", { length: 50 }).notNull(),
@@ -115,6 +124,7 @@ export const incomingLoads = pgTable("incoming_loads", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Load status history table
 export const loadStatusHistory = pgTable("load_status_history", {
   id: serial("id").primaryKey(),
   loadId: integer("load_id").references(() => incomingLoads.id).notNull(),
@@ -125,6 +135,7 @@ export const loadStatusHistory = pgTable("load_status_history", {
   updatedBy: varchar("updated_by", { length: 255 }).notNull(),
 });
 
+// Load documents table
 export const loadDocuments = pgTable("load_documents", {
   id: serial("id").primaryKey(),
   loadId: integer("load_id").references(() => incomingLoads.id).notNull(),
@@ -134,6 +145,7 @@ export const loadDocuments = pgTable("load_documents", {
   notes: text("notes"),
 });
 
+// Freight invoices table
 export const freightInvoices = pgTable("freight_invoices", {
   id: serial("id").primaryKey(),
   loadId: integer("load_id").references(() => incomingLoads.id).notNull(),
@@ -144,6 +156,7 @@ export const freightInvoices = pgTable("freight_invoices", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Define relations between tables
 export const invoicesRelations = relations(invoices, ({ one, many }) => ({
   supplier: one(suppliers, {
     fields: [invoices.supplierId],
@@ -178,6 +191,7 @@ export const supplierContactsRelations = relations(supplierContacts, ({ one }) =
   }),
 }));
 
+// Insert schemas for users, suppliers, invoices, payments, etc.
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -232,6 +246,7 @@ export const insertFreightInvoiceSchema = createInsertSchema(freightInvoices)
     createdAt: true,
   });
 
+// Export types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
@@ -280,8 +295,7 @@ export const carrierLoads = pgTable("carrier_loads", {
   status: varchar("status", { length: 10 }).notNull().$type<"PAID" | "UNPAID">(),
 });
 
-// Zod schemas
-
+// Zod schemas for carriers and carrier loads
 export const CarrierSchema = z.object({
   id: z.number(),
   name: z.string(),
