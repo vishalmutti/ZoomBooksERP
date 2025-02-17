@@ -6,6 +6,12 @@ import { PayrollWidget } from "@/components/PayrollWidget";
 
 const widgets = [
   {
+    title: "Payroll",
+    description: "View and manage employee hours for BC and ON",
+    path: "/payroll",
+    icon: "👥"
+  },
+  {
     title: "Accounts Receivable",
     description: "Manage invoices, track payments, and monitor AR aging",
     path: "/dashboard",
@@ -36,9 +42,6 @@ export default function HomePage() {
     <div className="space-y-6">
       {/* Load Management Widget */}
       <LoadManagementWidget />
-
-      {/* Payroll Widget */}
-      <PayrollWidget />
 
       {/* Other Widgets */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

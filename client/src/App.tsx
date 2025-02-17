@@ -12,6 +12,8 @@ import { LoadsPage } from "@/pages/LoadsPage";
 import CarrierPage from "@/pages/carrier-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import { Navbar } from "@/components/dashboard/navbar";
+import PayrollPage from "@/pages/payroll-page"; // Import the new page component
+
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -59,6 +61,7 @@ function Router() {
         </AppLayout>
       </Route>
 
+      <Route path="/payroll" component={PayrollPage} /> {/* Added Payroll Route */}
       <Route component={NotFound} />
     </Switch>
   );
