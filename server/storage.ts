@@ -260,16 +260,17 @@ export class DatabaseStorage implements IStorage {
       conditions.push(eq(invoices.supplierId, filters.supplierId));
     }
 
-    const query = conditions.length > 0
-      ? db.select().from(invoices).where(and(...conditions)).orderBy(invoices.createdAt)
-      : db.select().from(invoices).orderBy(invoices.createdAt);
+    const result = await (conditions.length > 0
+      ? db.select({
+          ...invoices,
+          currency: invoices.amountCurrency
+        }).from(invoices).where(and(...conditions)).orderBy(invoices.createdAt)
+      : db.select({
+          ...invoices,
+          currency: invoices.amountCurrency
+        }).from(invoices).orderBy(invoices.createdAt));
 
-    const result = await query;
-    // Map old currency field to new amountCurrency field for backward compatibility
-    return result.map(invoice => ({
-      ...invoice,
-      currency: invoice.amountCurrency
-    }));
+    return result;
   }
 
   async createInvoice(invoice: InsertInvoice): Promise<Invoice> {
