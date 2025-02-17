@@ -38,7 +38,10 @@ export function SupplierList({ suppliers }: SupplierListProps) {
       header: "Total Revenue",
       cell: ({ row }) => {
         const invoices = row.original.invoices || [];
-        const total = invoices.reduce((sum, inv) => sum + Number(inv.totalAmount), 0);
+        const total = invoices.reduce((sum, inv) => {
+          const amount = Number(inv.totalAmount) || 0;
+          return sum + amount;
+        }, 0);
         return (
           <Badge variant="secondary">
             ${total.toFixed(2)}
