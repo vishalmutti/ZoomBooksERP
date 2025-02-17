@@ -63,8 +63,8 @@ export default function InvoiceTable({ invoices: initialInvoices }: { invoices: 
           <TableRow key={invoice.id}>
             <TableCell>{invoice.clientName}</TableCell>
             <TableCell>{invoice.carrier || 'N/A'}</TableCell>
-            <TableCell>{invoice.currency === 'CAD' ? 'C' : '$'}{invoice.totalAmount.toString()}</TableCell>
-            <TableCell>{invoice.freightCost ? `${invoice.freightCostCurrency === 'CAD' ? 'C' : '$'}${invoice.freightCost}` : 'N/A'}</TableCell>
+            <TableCell>{invoice.currency === 'CAD' ? 'C$' : '$'}{invoice.totalAmount.toString()}</TableCell>
+            <TableCell>{invoice.freightCost ? `${invoice.freightCostCurrency === 'CAD' ? 'C$' : '$'}${invoice.freightCost}` : 'N/A'}</TableCell>
             <TableCell>
               {invoice.freightInvoiceFile ? (
                 <a
