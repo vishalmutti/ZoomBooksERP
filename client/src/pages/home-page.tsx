@@ -17,11 +17,33 @@ const widgets = [
     icon: "🚛"
   },
   {
-    title: "Payroll",
-    description: "Coming soon - Process payroll and manage employee benefits",
-    path: "/payroll",
-    icon: "👥"
-  },
+    title: "Inventory",
+    description: "Coming soon - Track inventory levels and manage stock",
+    path: "/inventory",
+    icon: "📦"
+  }
+];
+
+// Import PayrollWidget at the top of the file
+import { PayrollWidget } from "@/components/PayrollWidget";
+
+export default function HomePage() {
+  const { user } = useAuth();
+
+  if (!user) {
+    return <div>Loading...</div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Load Management Widget */}
+      <LoadManagementWidget />
+
+      {/* Payroll Widget */}
+      <PayrollWidget />
+
+      {/* Other Widgets */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
   {
     title: "Inventory",
     description: "Coming soon - Track inventory levels and manage stock",
