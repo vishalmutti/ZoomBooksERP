@@ -527,7 +527,39 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
               </div>
               <div>
                 <Label htmlFor="carrier">Carrier</Label>
-                <Input {...form.register("carrier")} />
+                <FormField
+                  control={form.control}
+                  name="carrier"
+                  render={({ field }) => {
+                    const { data: carriers = [], isLoading } = useQuery({
+                      queryKey: ["/api/carriers"],
+                      queryFn: async () => {
+                        const response = await fetch("/api/carriers");
+                        if (!response.ok) throw new Error("Failed to fetch carriers");
+                        return response.json();
+                      },
+                    });
+
+                    if (isLoading) return <div>Loading carriers...</div>;
+
+                    return (
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a carrier" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {carriers.map((carrier) => (
+                            <SelectItem key={carrier.id} value={carrier.name}>
+                              {carrier.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    );
+                  }}
+                />
               </div>
               <div>
                 <Label htmlFor="dueDate">Due Date</Label>
