@@ -14,6 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { useState, useMemo } from 'react';
 
 interface SupplierViewProps {
   supplier: Supplier & { outstandingAmount: string };
@@ -90,6 +91,24 @@ export function SupplierView({ supplier, open, onOpenChange }: SupplierViewProps
       return res.json();
     },
   });
+
+  const [revenueFilter, setRevenueFilter] = useState<'14' | '30' | '90' | 'all'>('all');
+
+  const filteredRevenue = useMemo(() => {
+    const now = new Date();
+    const filterDays = revenueFilter === 'all' ? Infinity : Number(revenueFilter);
+
+    return invoices.reduce((total, invoice) => {
+      const dueDate = new Date(invoice.dueDate);
+      const daysDiff = Math.floor((now.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (daysDiff <= filterDays) {
+        return total + Number(invoice.totalAmount);
+      }
+      return total;
+    }, 0);
+  }, [invoices, revenueFilter]);
+
 
   const unpaidInvoices = invoices.filter(invoice => !invoice.isPaid);
   const paidInvoices = invoices.filter(invoice => invoice.isPaid);
@@ -176,6 +195,17 @@ export function SupplierView({ supplier, open, onOpenChange }: SupplierViewProps
             <Separator className="my-4" />
 
             <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Revenue</h3>
+              <div>
+                <select value={revenueFilter} onChange={e => setRevenueFilter(e.target.value as '14' | '30' | '90' | 'all')}>
+                  <option value="all">All Time</option>
+                  <option value="90">Last 90 Days</option>
+                  <option value="30">Last 30 Days</option>
+                  <option value="14">Last 14 Days</option>
+                </select>
+                <p>Total Revenue (filtered): ${filteredRevenue.toFixed(2)} {currency}</p>
+              </div>
+
               <h3 className="text-lg font-semibold">Invoice History</h3>
               <ScrollArea className="h-[400px] pr-4">
                 {unpaidInvoices.length > 0 && (

@@ -34,6 +34,19 @@ export function SupplierList({ suppliers }: SupplierListProps) {
       header: "Address",
     },
     {
+      accessorKey: "totalRevenue",
+      header: "Total Revenue",
+      cell: ({ row }) => {
+        const invoices = row.original.invoices || [];
+        const total = invoices.reduce((sum, inv) => sum + Number(inv.totalAmount), 0);
+        return (
+          <Badge variant="secondary">
+            ${total.toFixed(2)}
+          </Badge>
+        );
+      },
+    },
+    {
       accessorKey: "outstandingAmount",
       header: "Outstanding Amount",
       cell: ({ row }) => {
