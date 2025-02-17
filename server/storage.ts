@@ -260,17 +260,14 @@ export class DatabaseStorage implements IStorage {
       conditions.push(eq(invoices.supplierId, filters.supplierId));
     }
 
-    const result = await (conditions.length > 0
-      ? db.select({
-          ...invoices,
-          currency: invoices.amountCurrency
-        }).from(invoices).where(and(...conditions)).orderBy(invoices.createdAt)
-      : db.select({
-          ...invoices,
-          currency: invoices.amountCurrency
-        }).from(invoices).orderBy(invoices.createdAt));
-
-    return result;
+    return await (conditions.length > 0
+      ? db.select()
+        .from(invoices)
+        .where(and(...conditions))
+        .orderBy(invoices.createdAt)
+      : db.select()
+        .from(invoices)
+        .orderBy(invoices.createdAt));
   }
 
   async createInvoice(invoice: InsertInvoice): Promise<Invoice> {
