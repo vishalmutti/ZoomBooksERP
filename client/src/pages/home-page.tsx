@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 import { LoadManagementWidget } from "@/components/LoadManagementWidget";
+import { PayrollWidget } from "@/components/PayrollWidget";
 
 const widgets = [
   {
@@ -24,9 +25,6 @@ const widgets = [
   }
 ];
 
-// Import PayrollWidget at the top of the file
-import { PayrollWidget } from "@/components/PayrollWidget";
-
 export default function HomePage() {
   const { user } = useAuth();
 
@@ -41,28 +39,6 @@ export default function HomePage() {
 
       {/* Payroll Widget */}
       <PayrollWidget />
-
-      {/* Other Widgets */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-  {
-    title: "Inventory",
-    description: "Coming soon - Track inventory levels and manage stock",
-    path: "/inventory",
-    icon: "📦"
-  }
-];
-
-export default function HomePage() {
-  const { user } = useAuth();
-
-  if (!user) {
-    return <div>Loading...</div>;
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* Load Management Widget */}
-      <LoadManagementWidget />
 
       {/* Other Widgets */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
