@@ -159,6 +159,11 @@ export async function generateAccountStatementPDF(supplier: Supplier, invoices: 
   // Filter for unpaid invoices only
   const outstandingInvoices = invoices.filter(inv => !inv.isPaid);
 
+  // Use currency from the first outstanding invoice or default to USD
+  const currency = outstandingInvoices.length > 0 
+    ? outstandingInvoices[0].amountCurrency || "USD" 
+    : "USD";
+
   // Company and Statement Title
   doc.fontSize(20)
      .text('OUTSTANDING BALANCE STATEMENT', { align: 'center' });
@@ -186,11 +191,11 @@ export async function generateAccountStatementPDF(supplier: Supplier, invoices: 
      .text(`Contact: ${supplier.contactPerson || ''}`, 40, 155)
      .text(`Email: ${supplier.email || ''}`, 40, 170); 
 
-  // Outstanding balance
+  // Outstanding balance with currency
   const totalOutstanding = outstandingInvoices.reduce((sum, inv) => sum + Number(inv.totalAmount), 0);
   doc.fontSize(12)
      .font('Helvetica-Bold')  
-     .text(`Total Outstanding Balance: $${totalOutstanding.toFixed(2)}`, 40, 185)
+     .text(`Total Outstanding Balance: $${totalOutstanding.toFixed(2)} ${currency}`, 40, 185)
      .font('Helvetica');
 
   if (outstandingInvoices.length > 0) {
@@ -215,7 +220,7 @@ export async function generateAccountStatementPDF(supplier: Supplier, invoices: 
 
       doc.text(invoice.invoiceNumber || `#${invoice.id}`, 40, position)
          .text(dueDate.toLocaleDateString(), 160, position)
-         .text(`$${Number(invoice.totalAmount).toFixed(2)} ${invoice.currency}`, 280, position)
+         .text(`$${Number(invoice.totalAmount).toFixed(2)} ${invoice.amountCurrency || currency}`, 280, position)
          .text(daysOverdue.toString(), 400, position);
       position += 30; 
     });

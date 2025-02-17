@@ -98,6 +98,9 @@ export function SupplierView({ supplier, open, onOpenChange }: SupplierViewProps
     updateSupplierMutation.mutate(data);
   });
 
+  // Use the currency from the first invoice if available, otherwise default to "USD"
+  const currency = invoices.length > 0 ? invoices[0].amountCurrency || "USD" : "USD";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh]">
@@ -105,7 +108,7 @@ export function SupplierView({ supplier, open, onOpenChange }: SupplierViewProps
           <DialogTitle className="flex justify-between items-center">
             <span>{supplier.name}</span>
             <Badge variant={Number(supplier.outstandingAmount) > 0 ? "destructive" : "default"}>
-              Total Outstanding: ${Number(supplier.outstandingAmount).toFixed(2)}
+              Total Outstanding: ${Number(supplier.outstandingAmount).toFixed(2)} {currency}
             </Badge>
           </DialogTitle>
         </DialogHeader>
@@ -118,38 +121,29 @@ export function SupplierView({ supplier, open, onOpenChange }: SupplierViewProps
                 <Label htmlFor="name">Name</Label>
                 <Input {...form.register("name")} />
               </div>
-
               <div>
                 <Label htmlFor="contactPerson">Contact Person</Label>
                 <Input {...form.register("contactPerson")} />
               </div>
-
               <div>
                 <Label htmlFor="email">Email</Label>
                 <Input type="email" {...form.register("email")} />
               </div>
-
               <div>
                 <Label htmlFor="phone">Phone</Label>
                 <Input {...form.register("phone")} />
               </div>
-
               <div>
                 <Label htmlFor="address">Address</Label>
                 <Input {...form.register("address")} />
               </div>
-
               <div className="space-y-4">
-                <Button
-                  type="submit"
-                  disabled={updateSupplierMutation.isPending}
-                >
+                <Button type="submit" disabled={updateSupplierMutation.isPending}>
                   {updateSupplierMutation.isPending && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
                   Save Changes
                 </Button>
-
                 <Button
                   type="button"
                   variant="secondary"
@@ -157,9 +151,9 @@ export function SupplierView({ supplier, open, onOpenChange }: SupplierViewProps
                   disabled={generateStatementMutation.isPending}
                   onClick={() => generateStatementMutation.mutate(supplier.id)}
                 >
-                  {generateStatementMutation.isPending ? (
+                  {generateStatementMutation.isPending && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : null}
+                  )}
                   Generate Account Statement
                 </Button>
               </div>
@@ -170,8 +164,12 @@ export function SupplierView({ supplier, open, onOpenChange }: SupplierViewProps
             <div className="mb-4">
               <h3 className="text-lg font-semibold">Invoice Summary</h3>
               <div className="mt-2 space-y-1">
-                <p><span className="font-medium">Unpaid Invoices:</span> {unpaidInvoices.length}</p>
-                <p><span className="font-medium">Paid Invoices:</span> {paidInvoices.length}</p>
+                <p>
+                  <span className="font-medium">Unpaid Invoices:</span> {unpaidInvoices.length}
+                </p>
+                <p>
+                  <span className="font-medium">Paid Invoices:</span> {paidInvoices.length}
+                </p>
               </div>
             </div>
 
@@ -201,7 +199,7 @@ export function SupplierView({ supplier, open, onOpenChange }: SupplierViewProps
                           </div>
                           <div className="text-right">
                             <Badge variant="destructive" className="mb-1">
-                              ${Number(invoice.totalAmount).toFixed(2)}
+                              {`$${Number(invoice.totalAmount).toFixed(2)} ${invoice.amountCurrency}`}
                             </Badge>
                             {invoice.uploadedFile && (
                               <a
@@ -242,7 +240,7 @@ export function SupplierView({ supplier, open, onOpenChange }: SupplierViewProps
                           </div>
                           <div className="text-right">
                             <Badge variant="default" className="mb-1">
-                              ${Number(invoice.totalAmount).toFixed(2)}
+                              {`$${Number(invoice.totalAmount).toFixed(2)} ${invoice.amountCurrency}`}
                             </Badge>
                             {invoice.uploadedFile && (
                               <a
@@ -269,3 +267,5 @@ export function SupplierView({ supplier, open, onOpenChange }: SupplierViewProps
     </Dialog>
   );
 }
+
+export default SupplierView;

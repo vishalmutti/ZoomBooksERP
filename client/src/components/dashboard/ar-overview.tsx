@@ -9,8 +9,8 @@ interface AROverviewProps {
 
 export function AROverview({ invoices }: AROverviewProps) {
   const groupedInvoices = {
-    USD: invoices.filter(inv => inv.currency === 'USD'),
-    CAD: invoices.filter(inv => inv.currency === 'CAD')
+    USD: invoices.filter(inv => inv.amountCurrency === 'USD'),
+    CAD: invoices.filter(inv => inv.amountCurrency === 'CAD')
   };
 
   const totals = {
