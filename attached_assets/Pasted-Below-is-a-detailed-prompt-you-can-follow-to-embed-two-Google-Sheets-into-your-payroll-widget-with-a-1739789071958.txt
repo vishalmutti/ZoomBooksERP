@@ -1,0 +1,119 @@
+Below is a detailed prompt you can follow to embed two Google Sheets into your payroll widget with a toggle button that switches between the two:
+
+---
+
+### Detailed Prompt for Embedding Two Google Sheets with a Toggle Button
+
+**Objective:**  
+Embed two Google Sheets (one for BC employee hours and one for ON employee hours) into your payroll widget. At the top of the widget, include a toggle button (or set of buttons) that lets the user switch between viewing the BC sheet and the ON sheet.
+
+**Steps:**
+
+1. **Prepare the Google Sheets for Embedding:**
+
+   - Open each Google Sheet (one for BC and one for ON).
+   - Click on **File > Publish to the web**.
+   - Choose the sheet you want to publish, and select the **Embed** option.
+   - Copy the provided iframe embed link for each sheet.
+   - You should end up with two URLs (for example, `https://docs.google.com/spreadsheets/d/yourSheetId/pubhtml` for BC and another URL for ON).
+
+2. **Set Up the Payroll Widget Component:**
+
+   - Create a new component (for example, `PayrollWidget.tsx`).
+   - Import React and useState from React.
+   - In this component, define a state variable (e.g., `selectedSheet`) to track which sheet is currently visible. You might initialize it with a value like `"BC"`.
+
+3. **Create the Toggle Button:**
+
+   - At the top of your component, include a toggle or two buttons labeled "BC" and "ON".
+   - When the user clicks one of these buttons, update the state variable accordingly.
+
+4. **Embed the Google Sheets Using iframes:**
+
+   - Use conditional rendering based on the `selectedSheet` state.
+   - For example, if `selectedSheet` is `"BC"`, render the iframe for the BC Google Sheet. If it's `"ON"`, render the ON sheet.
+   - Style the iframes to have a consistent width and height (for example, width: 100%, height: 500px).
+
+5. **Example Code Snippet:**
+
+Below is an example React component that implements these steps:
+
+```tsx
+import React, { useState } from 'react';
+
+const PayrollWidget: React.FC = () => {
+  // State to track the selected sheet (BC or ON)
+  const [selectedSheet, setSelectedSheet] = useState<'BC' | 'ON'>('BC');
+
+  // Google Sheets embed URLs (replace with your actual URLs)
+  const bcSheetUrl = "https://docs.google.com/spreadsheets/d/YOUR_BC_SHEET_ID/pubhtml?widget=true&amp;headers=false";
+  const onSheetUrl = "https://docs.google.com/spreadsheets/d/YOUR_ON_SHEET_ID/pubhtml?widget=true&amp;headers=false";
+
+  return (
+    <div className="payroll-widget">
+      <div className="toggle-buttons" style={{ marginBottom: '1rem' }}>
+        <button
+          onClick={() => setSelectedSheet('BC')}
+          style={{
+            padding: '0.5rem 1rem',
+            marginRight: '0.5rem',
+            backgroundColor: selectedSheet === 'BC' ? '#2563eb' : '#e5e7eb',
+            color: selectedSheet === 'BC' ? '#fff' : '#000',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          Employee Hours - BC
+        </button>
+        <button
+          onClick={() => setSelectedSheet('ON')}
+          style={{
+            padding: '0.5rem 1rem',
+            backgroundColor: selectedSheet === 'ON' ? '#2563eb' : '#e5e7eb',
+            color: selectedSheet === 'ON' ? '#fff' : '#000',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          Employee Hours - ON
+        </button>
+      </div>
+
+      <div className="sheet-embed" style={{ border: '1px solid #ccc', borderRadius: '4px', overflow: 'hidden' }}>
+        {selectedSheet === 'BC' ? (
+          <iframe
+            src={bcSheetUrl}
+            style={{ width: '100%', height: '500px', border: 'none' }}
+            title="Employee Hours - BC"
+          ></iframe>
+        ) : (
+          <iframe
+            src={onSheetUrl}
+            style={{ width: '100%', height: '500px', border: 'none' }}
+            title="Employee Hours - ON"
+          ></iframe>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default PayrollWidget;
+```
+
+**6. Integration:**
+
+- Import the `PayrollWidget` component into your homepage (or wherever your payroll widget is displayed).
+- Ensure your CSS styles (or Tailwind classes, if using Tailwind) match your application design.
+- Test the toggle functionality to confirm that clicking each button correctly switches the embedded Google Sheet.
+
+**7. Final Touches:**
+
+- Verify that the embedded sheets are responsive and adjust the height/width as necessary.
+- You may add additional styling or animations to improve the user experience.
+
+---
+
+This detailed prompt, along with the example code snippet, should help you embed two Google Sheets in your payroll widget with a toggle button for switching between them.
