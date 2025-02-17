@@ -192,12 +192,22 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
 
     formData.append('carrierData', JSON.stringify(carrierLoadData));
 
-    // Add files if they exist
-    if (invoice.freightInvoiceFile) {
-      formData.append('freightInvoice', invoice.freightInvoiceFile);
+    // Get the actual file objects from the form
+    if (freightInvoiceFile) {
+      formData.append('freightInvoice', freightInvoiceFile);
+    } else if (invoice.freightInvoiceFile) {
+      // Create a fetch request to get the existing file
+      const fileResponse = await fetch(`/uploads/${invoice.freightInvoiceFile}`);
+      const blob = await fileResponse.blob();
+      formData.append('freightInvoice', blob, invoice.freightInvoiceFile);
     }
-    if (invoice.uploadedFile) {
-      formData.append('pod', invoice.uploadedFile);
+
+    if (file) {
+      formData.append('pod', file);
+    } else if (invoice.uploadedFile) {
+      const fileResponse = await fetch(`/uploads/${invoice.uploadedFile}`);
+      const blob = await fileResponse.blob();
+      formData.append('pod', blob, invoice.uploadedFile);
     }
 
     const res = await fetch("/api/carrier-loads", {
