@@ -159,10 +159,13 @@ export async function generateAccountStatementPDF(supplier: Supplier, invoices: 
   // Filter for unpaid invoices only
   const outstandingInvoices = invoices.filter(inv => !inv.isPaid);
 
-  // Use currency from the first outstanding invoice or default to USD
-  const currency = outstandingInvoices.length > 0 
-    ? outstandingInvoices[0].amountCurrency || "USD" 
-    : "USD";
+  // Get all unique currencies from outstanding invoices
+  const currencies = [...new Set(outstandingInvoices
+    .map(inv => inv.amountCurrency)
+    .filter(Boolean))];
+  
+  // Use first currency found or default to USD
+  const currency = currencies[0] || "USD";
 
   // Company and Statement Title
   doc.fontSize(20)
@@ -195,7 +198,7 @@ export async function generateAccountStatementPDF(supplier: Supplier, invoices: 
   const totalOutstanding = outstandingInvoices.reduce((sum, inv) => sum + Number(inv.totalAmount), 0);
   doc.fontSize(12)
      .font('Helvetica-Bold')  
-     .text(`Total Outstanding Balance: $${totalOutstanding.toFixed(2)} ${currency}`, 40, 185)
+     .text(`Total Outstanding Balance: $${totalOutstanding.toFixed(2)} ${currency}`, 40, 185, { continued: false })
      .font('Helvetica');
 
   if (outstandingInvoices.length > 0) {
