@@ -17,6 +17,7 @@ import {
   type Invoice,
   type InvoiceItem,
   type Supplier,
+  type Carrier,
 } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -56,15 +57,25 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   const [bolFile, setBolFile] = useState<File | null>(null);
   const [freightInvoiceFile, setFreightInvoiceFile] = useState<File | null>(null);
 
-  // Polling current invoice data when editing
+  // Fetch available carriers from your API (ensure your endpoint returns an array of Carrier objects)
+  const { data: carriers = [] } = useQuery<Carrier[]>({
+    queryKey: ["/api/carriers"],
+    queryFn: async () => {
+      const res = await fetch("/api/carriers");
+      if (!res.ok) throw new Error("Failed to fetch carriers");
+      return res.json();
+    },
+  });
+
+  // Poll current invoice data when editing
   const { data: currentInvoiceData } = useQuery<Invoice & { items?: InvoiceItem[] }>({
     queryKey: [`/api/invoices/${editInvoice?.id}`],
     enabled: !!editInvoice?.id,
     refetchInterval: 2000,
     queryFn: async () => {
-      const response = await fetch(`/api/invoices/${editInvoice?.id}`);
-      if (!response.ok) throw new Error("Failed to fetch invoice");
-      return response.json();
+      const res = await fetch(`/api/invoices/${editInvoice?.id}`);
+      if (!res.ok) throw new Error("Failed to fetch invoice");
+      return res.json();
     },
   });
 
@@ -73,82 +84,43 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     defaultValues: {
       supplierId: currentInvoiceData?.supplierId || editInvoice?.supplierId || 0,
       invoiceNumber: currentInvoiceData?.invoiceNumber || editInvoice?.invoiceNumber || "",
+      // Carrier comes from a dropdown now.
       carrier: currentInvoiceData?.carrier || editInvoice?.carrier || "",
-      dueDate:
-        currentInvoiceData?.dueDate
-          ? new Date(currentInvoiceData.dueDate).toISOString().split("T")[0]
-          : editInvoice?.dueDate
-          ? new Date(editInvoice.dueDate).toISOString().split("T")[0]
-          : "",
+      dueDate: currentInvoiceData?.dueDate
+        ? new Date(currentInvoiceData.dueDate).toISOString().split("T")[0]
+        : editInvoice?.dueDate
+        ? new Date(editInvoice.dueDate).toISOString().split("T")[0]
+        : "",
       totalAmount:
         currentInvoiceData?.totalAmount?.toString() ||
         editInvoice?.totalAmount?.toString() ||
         "0",
-      // Use separate currency fields
       amountCurrency: currentInvoiceData?.amountCurrency || editInvoice?.amountCurrency || "USD",
       freightCost:
         currentInvoiceData?.freightCost?.toString() ||
         editInvoice?.freightCost?.toString() ||
         "0",
       freightCostCurrency:
-        currentInvoiceData?.freightCostCurrency ||
-        editInvoice?.freightCostCurrency ||
-        "CAD",
+        currentInvoiceData?.freightCostCurrency || editInvoice?.freightCostCurrency || "CAD",
       notes: currentInvoiceData?.notes || editInvoice?.notes || "",
       isPaid: currentInvoiceData?.isPaid || editInvoice?.isPaid || false,
-      items:
-        currentInvoiceData?.items?.length
-          ? currentInvoiceData.items.map((item) => ({
-              description: item.description,
-              quantity: item.quantity?.toString() || "0",
-              unitPrice: item.unitPrice?.toString() || "0",
-              totalPrice: item.totalPrice?.toString() || "0",
-              invoiceId: currentInvoiceData.id,
-            }))
-          : editInvoice?.items?.length
-          ? editInvoice.items.map((item) => ({
-              description: item.description,
-              quantity: item.quantity?.toString() || "0",
-              unitPrice: item.unitPrice?.toString() || "0",
-              totalPrice: item.totalPrice?.toString() || "0",
-              invoiceId: editInvoice.id,
-            }))
-          : [
-              {
-                description: "",
-                quantity: "0",
-                unitPrice: "0",
-                totalPrice: "0",
-                invoiceId: 0,
-              },
-            ],
-    },
-  });
-
-  useEffect(() => {
-    if (!dialogOpen && (currentInvoiceData || editInvoice)) {
-      const invoiceData = currentInvoiceData || editInvoice;
-      if (!invoiceData) return;
-
-      setDialogOpen(true);
-      setMode(invoiceData.uploadedFile ? "upload" : "manual");
-
-      form.reset({
-        supplierId: invoiceData.supplierId,
-        invoiceNumber: invoiceData.invoiceNumber,
-        dueDate: new Date(invoiceData.dueDate).toISOString().split("T")[0],
-        totalAmount: invoiceData.totalAmount.toString(),
-        amountCurrency: invoiceData.amountCurrency || "USD",
-        notes: invoiceData.notes || "",
-        isPaid: invoiceData.isPaid,
-        items:
-          invoiceData.items?.map((item) => ({
+      items: currentInvoiceData?.items?.length
+        ? currentInvoiceData.items.map((item) => ({
             description: item.description,
             quantity: item.quantity?.toString() || "0",
             unitPrice: item.unitPrice?.toString() || "0",
             totalPrice: item.totalPrice?.toString() || "0",
-            invoiceId: invoiceData.id,
-          })) || [
+            invoiceId: currentInvoiceData.id,
+          }))
+        : editInvoice?.items?.length
+        ? editInvoice.items.map((item) => ({
+            description: item.description,
+            quantity: item.quantity?.toString() || "0",
+            unitPrice: item.unitPrice?.toString() || "0",
+            totalPrice: item.totalPrice?.toString() || "0",
+            invoiceId: editInvoice.id,
+          }))
+        : [
             {
               description: "",
               quantity: "0",
@@ -157,6 +129,38 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
               invoiceId: 0,
             },
           ],
+    },
+  });
+
+  useEffect(() => {
+    if (!dialogOpen && (currentInvoiceData || editInvoice)) {
+      const invoiceData = currentInvoiceData || editInvoice;
+      if (!invoiceData) return;
+      setDialogOpen(true);
+      setMode(invoiceData.uploadedFile ? "upload" : "manual");
+      form.reset({
+        supplierId: invoiceData.supplierId,
+        invoiceNumber: invoiceData.invoiceNumber,
+        dueDate: new Date(invoiceData.dueDate).toISOString().split("T")[0],
+        totalAmount: invoiceData.totalAmount.toString(),
+        amountCurrency: invoiceData.amountCurrency || "USD",
+        notes: invoiceData.notes || "",
+        isPaid: invoiceData.isPaid,
+        items: invoiceData.items?.map((item) => ({
+          description: item.description,
+          quantity: item.quantity?.toString() || "0",
+          unitPrice: item.unitPrice?.toString() || "0",
+          totalPrice: item.totalPrice?.toString() || "0",
+          invoiceId: invoiceData.id,
+        })) || [
+          {
+            description: "",
+            quantity: "0",
+            unitPrice: "0",
+            totalPrice: "0",
+            invoiceId: 0,
+          },
+        ],
         carrier: invoiceData.carrier || "",
         freightCost: invoiceData.freightCost?.toString() || "0",
         freightCostCurrency: invoiceData.freightCostCurrency || "CAD",
@@ -166,77 +170,67 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   }, [currentInvoiceData, editInvoice, form]);
 
   const { data: suppliers = [] } = useQuery<Supplier[]>({
-    queryKey: ["/api/suppliers", supplierSearch],
+    queryKey: ["/api/suppliers"],
     queryFn: async () => {
-      const url = supplierSearch
-        ? `/api/suppliers?q=${encodeURIComponent(supplierSearch)}`
-        : "/api/suppliers";
-      const res = await fetch(url);
+      const res = await fetch("/api/suppliers");
       if (!res.ok) throw new Error("Failed to fetch suppliers");
       return res.json();
     },
   });
 
+  // Helper: Create a carrier load entry by mapping invoice fields.
+  const createCarrierLoad = async (invoice: Invoice) => {
+    const carrierLoadData = {
+      date: invoice.dueDate || "",
+      referenceNumber: invoice.invoiceNumber || "",
+      carrier: invoice.carrier || "",
+      freightCost: invoice.freightCost || "0",
+      freightCostCurrency: invoice.freightCostCurrency || "USD",
+      freightInvoice: invoice.freightInvoiceFile || "",
+      pod: invoice.uploadedFile || "",
+    };
+    const res = await fetch("/api/carrier-loads", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(carrierLoadData),
+    });
+    if (!res.ok) throw new Error("Failed to create carrier load");
+    return res.json();
+  };
+
   const updateInvoiceMutation = useMutation({
     mutationFn: async (data: InsertInvoice) => {
       const formData = new FormData();
-
-      // Handle invoice file upload
-      if (mode === "upload" && file) {
-        formData.append("file", file);
-      }
-
-      // Always append BOL file if present
-      if (bolFile) {
-        formData.append("bolFile", bolFile);
-      }
-
-      // Always append freight invoice file if present
-      if (freightInvoiceFile) {
-        formData.append("freightInvoiceFile", freightInvoiceFile);
-      }
-
+      if (mode === "upload" && file) formData.append("file", file);
+      if (bolFile) formData.append("bolFile", bolFile);
+      if (freightInvoiceFile) formData.append("freightInvoiceFile", freightInvoiceFile);
       const invoiceData = {
         ...data,
         mode,
         items: mode === "manual" ? data.items : undefined,
         freightInvoiceFile: freightInvoiceFile ? freightInvoiceFile.name : undefined,
       };
-
       if (invoiceData.dueDate) {
         invoiceData.dueDate = new Date(invoiceData.dueDate).toISOString();
       }
-
       formData.append("invoiceData", JSON.stringify(invoiceData));
-
       const res = await apiRequest(
         editInvoice ? "PATCH" : "POST",
         editInvoice ? `/api/invoices/${editInvoice.id}` : "/api/invoices",
         formData
       );
-
-      if (res.status === 500) {
-        return {};
-      }
-
+      if (res.status === 500) return {};
       return res.json();
     },
     onSuccess: async (updatedInvoice) => {
       await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: ["/api/invoices"],
-          refetchType: "all",
-        }),
-        queryClient.invalidateQueries({
-          queryKey: [`/api/invoices/${updatedInvoice.id}`],
-          refetchType: "all",
-        }),
+        queryClient.invalidateQueries({ queryKey: ["/api/invoices"], refetchType: "all" }),
+        queryClient.invalidateQueries({ queryKey: [`/api/invoices/${updatedInvoice.id}`], refetchType: "all" }),
       ]);
-
       if (updatedInvoice) {
         form.reset({
           ...updatedInvoice,
-          items: updatedInvoice.items?.map((item) => ({
+          items: updatedInvoice.items?.map(item => ({
             description: item.description,
             quantity: item.quantity?.toString() || "0",
             unitPrice: item.unitPrice?.toString() || "0",
@@ -244,18 +238,26 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
             invoiceId: updatedInvoice.id,
           })),
         });
+        try {
+          await createCarrierLoad(updatedInvoice);
+          toast({
+            title: "Carrier Load Created",
+            description: "Carrier load entry synced successfully.",
+          });
+        } catch (error: any) {
+          toast({
+            title: "Carrier Load Error",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
       }
-
       toast({
         title: "Success",
         description: `Invoice ${editInvoice ? "updated" : "created"} successfully`,
       });
-
-      if (editInvoice && onComplete) {
-        onComplete();
-      } else {
-        setDialogOpen(false);
-      }
+      if (editInvoice && onComplete) onComplete();
+      else setDialogOpen(false);
       setFile(null);
       setBolFile(null);
       setFreightInvoiceFile(null);
@@ -271,47 +273,31 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     },
   });
 
-  const handleItemChange = (
-    index: number,
-    field: keyof InsertInvoiceItem,
-    value: string
-  ) => {
+  const handleItemChange = (index: number, field: keyof InsertInvoiceItem, value: string) => {
     const items = [...(form.getValues("items") || [])];
     let item = items[index];
-
     if (item) {
       item = { ...item, [field]: value };
       items[index] = item;
-
       if (field === "quantity" || field === "unitPrice") {
         const quantity = parseFloat(item.quantity || "0");
         const unitPrice = parseFloat(item.unitPrice || "0");
-
         if (!isNaN(quantity) && !isNaN(unitPrice)) {
           item.totalPrice = (quantity * unitPrice).toString();
         }
       }
-
       form.setValue("items", items, { shouldDirty: true });
     }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-    }
+    if (e.target.files?.[0]) setFile(e.target.files[0]);
   };
-
   const handleBolFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setBolFile(e.target.files[0]);
-    }
+    if (e.target.files?.[0]) setBolFile(e.target.files[0]);
   };
-
   const handleFreightInvoiceFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFreightInvoiceFile(e.target.files[0]);
-    }
+    if (e.target.files?.[0]) setFreightInvoiceFile(e.target.files[0]);
   };
 
   const handleModeChange = (value: string) => {
@@ -319,138 +305,64 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     const currentValues = form.getValues();
     form.reset({
       ...currentValues,
-      items:
-        value === "manual"
-          ? currentValues.items?.length
-            ? currentValues.items
-            : [
-                {
-                  description: "",
-                  quantity: "0",
-                  unitPrice: "0",
-                  totalPrice: "0",
-                  invoiceId: 0,
-                },
-              ]
-          : currentValues.items,
+      items: value === "manual"
+        ? currentValues.items?.length
+          ? currentValues.items
+          : [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }]
+        : currentValues.items,
     });
   };
 
   const handleSubmit = form.handleSubmit((data) => {
     if (!data.supplierId) {
-      toast({
-        title: "Error",
-        description: "Please select a supplier",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Please select a supplier", variant: "destructive" });
       return;
     }
-
     if (!data.invoiceNumber) {
-      toast({
-        title: "Error",
-        description: "Please enter an invoice number",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Please enter an invoice number", variant: "destructive" });
       return;
     }
-
     if (!data.dueDate) {
-      toast({
-        title: "Error",
-        description: "Please select a due date",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Please select a due date", variant: "destructive" });
       return;
     }
-
     if (mode === "upload") {
       if (!file && !editInvoice?.uploadedFile) {
-        toast({
-          title: "Error",
-          description: "Please upload an invoice file",
-          variant: "destructive",
-        });
+        toast({ title: "Error", description: "Please upload an invoice file", variant: "destructive" });
         return;
       }
-      if (
-        !data.totalAmount ||
-        isNaN(Number(data.totalAmount)) ||
-        Number(data.totalAmount) <= 0
-      ) {
-        toast({
-          title: "Error",
-          description: "Please enter a valid total amount greater than 0",
-          variant: "destructive",
-        });
+      if (!data.totalAmount || isNaN(Number(data.totalAmount)) || Number(data.totalAmount) <= 0) {
+        toast({ title: "Error", description: "Please enter a valid total amount greater than 0", variant: "destructive" });
         return;
       }
     } else {
       if (!data.items || data.items.length === 0) {
-        toast({
-          title: "Error",
-          description: "Please add at least one item",
-          variant: "destructive",
-        });
+        toast({ title: "Error", description: "Please add at least one item", variant: "destructive" });
         return;
       }
-
       for (const item of data.items) {
         if (!item.description) {
-          toast({
-            title: "Error",
-            description: "Please enter a description for all items",
-            variant: "destructive",
-          });
+          toast({ title: "Error", description: "Please enter a description for all items", variant: "destructive" });
           return;
         }
-        if (
-          !item.quantity ||
-          isNaN(Number(item.quantity)) ||
-          Number(item.quantity) <= 0
-        ) {
-          toast({
-            title: "Error",
-            description: "Please enter a valid quantity greater than 0",
-            variant: "destructive",
-          });
+        if (!item.quantity || isNaN(Number(item.quantity)) || Number(item.quantity) <= 0) {
+          toast({ title: "Error", description: "Please enter a valid quantity greater than 0", variant: "destructive" });
           return;
         }
-        if (
-          !item.unitPrice ||
-          isNaN(Number(item.unitPrice)) ||
-          Number(item.unitPrice) <= 0
-        ) {
-          toast({
-            title: "Error",
-            description: "Please enter a valid unit price greater than 0",
-            variant: "destructive",
-          });
+        if (!item.unitPrice || isNaN(Number(item.unitPrice)) || Number(item.unitPrice) <= 0) {
+          toast({ title: "Error", description: "Please enter a valid unit price greater than 0", variant: "destructive" });
           return;
         }
       }
-
       data.totalAmount = data.items
-        .reduce(
-          (sum, item) => sum + Number(item.quantity) * Number(item.unitPrice),
-          0
-        )
+        .reduce((sum, item) => sum + Number(item.quantity) * Number(item.unitPrice), 0)
         .toString();
     }
-
     updateInvoiceMutation.mutate(data);
   });
 
   return (
-    <Dialog
-      open={dialogOpen}
-      onOpenChange={(newOpen) => {
-        setDialogOpen(newOpen);
-        if (!newOpen && onComplete) {
-          onComplete();
-        }
-      }}
-    >
+    <Dialog open={dialogOpen} onOpenChange={(newOpen) => { setDialogOpen(newOpen); if (!newOpen && onComplete) onComplete(); }}>
       {!editInvoice && (
         <DialogTrigger asChild>
           <Button className="w-full text-lg">Create Invoice</Button>
@@ -460,58 +372,34 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         <DialogHeader>
           <DialogTitle>{editInvoice ? "Edit" : "Create New"} Invoice</DialogTitle>
         </DialogHeader>
-
         <Tabs value={mode} className="w-full" onValueChange={handleModeChange}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="manual">Manual Entry</TabsTrigger>
             <TabsTrigger value="upload">Upload Invoice</TabsTrigger>
           </TabsList>
-
           <form onSubmit={handleSubmit} className="space-y-6 mt-4">
             <div className="space-y-4">
               <div>
                 <Label>Supplier</Label>
                 <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
                   <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={comboboxOpen}
-                      className="w-full justify-between"
-                    >
+                    <Button variant="outline" role="combobox" aria-expanded={comboboxOpen} className="w-full justify-between">
                       {form.watch("supplierId")
-                        ? suppliers.find(
-                            (supplier) => supplier.id === form.watch("supplierId")
-                          )?.name
+                        ? suppliers.find(supplier => supplier.id === form.watch("supplierId"))?.name
                         : "Select supplier..."}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-full p-0">
                     <Command>
-                      <CommandInput
-                        placeholder="Search suppliers..."
-                        value={supplierSearch}
-                        onValueChange={setSupplierSearch}
-                      />
+                      <CommandInput placeholder="Search suppliers..." value={supplierSearch} onValueChange={setSupplierSearch} />
                       <CommandEmpty>No suppliers found.</CommandEmpty>
                       <CommandGroup>
-                        {suppliers.map((supplier) => (
-                          <CommandItem
-                            key={supplier.id}
-                            value={supplier.name}
-                            onSelect={() => {
-                              form.setValue("supplierId", supplier.id);
-                              setComboboxOpen(false);
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                form.watch("supplierId") === supplier.id
-                                  ? "opacity-100"
-                                  : "opacity-0"
-                              )}
-                            />
+                        {suppliers.map(supplier => (
+                          <CommandItem key={supplier.id} value={supplier.name} onSelect={() => {
+                            form.setValue("supplierId", supplier.id);
+                            setComboboxOpen(false);
+                          }}>
+                            <Check className={cn("mr-2 h-4 w-4", form.watch("supplierId") === supplier.id ? "opacity-100" : "opacity-0")} />
                             {supplier.name}
                           </CommandItem>
                         ))}
@@ -520,52 +408,27 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                   </PopoverContent>
                 </Popover>
               </div>
-
               <div>
                 <Label htmlFor="invoiceNumber">Invoice Number</Label>
                 <Input {...form.register("invoiceNumber")} />
               </div>
+              {/* Carrier Dropdown */}
               <div>
                 <Label htmlFor="carrier">Carrier</Label>
-                <FormField
-                  control={form.control}
-                  name="carrier"
-                  render={({ field }) => {
-                    const { data: carriers = [], isLoading } = useQuery({
-                      queryKey: ["/api/carriers"],
-                      queryFn: async () => {
-                        const response = await fetch("/api/carriers");
-                        if (!response.ok) throw new Error("Failed to fetch carriers");
-                        return response.json();
-                      },
-                    });
-
-                    if (isLoading) return <div>Loading carriers...</div>;
-
-                    return (
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a carrier" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {carriers.map((carrier) => (
-                            <SelectItem key={carrier.id} value={carrier.name}>
-                              {carrier.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    );
-                  }}
-                />
+                <select
+                  {...form.register("carrier")}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                >
+                  <option value="">Select a carrier...</option>
+                  {carriers.map(carrier => (
+                    <option key={carrier.id} value={carrier.name}>{carrier.name}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <Label htmlFor="dueDate">Due Date</Label>
                 <Input type="date" {...form.register("dueDate")} />
               </div>
-
               <TabsContent value="manual">
                 <div>
                   <Label>Items</Label>
@@ -579,59 +442,22 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                     {form.watch("items")?.map((item, index) => (
                       <div key={index} className="grid grid-cols-12 gap-2">
                         <div className="col-span-5">
-                          <Input
-                            placeholder="Description"
-                            defaultValue={item.description}
-                            {...form.register(`items.${index}.description`)}
-                          />
+                          <Input placeholder="Description" defaultValue={item.description} {...form.register(`items.${index}.description`)} />
                         </div>
                         <div className="col-span-2">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            placeholder="Quantity"
-                            defaultValue={item.quantity}
-                            {...form.register(`items.${index}.quantity`)}
-                            onChange={(e) =>
-                              handleItemChange(index, "quantity", e.target.value)
-                            }
-                          />
+                          <Input type="number" step="0.01" placeholder="Quantity" defaultValue={item.quantity} {...form.register(`items.${index}.quantity`)} onChange={(e) => handleItemChange(index, "quantity", e.target.value)} />
                         </div>
                         <div className="col-span-2">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            placeholder="Unit Price"
-                            defaultValue={item.unitPrice}
-                            {...form.register(`items.${index}.unitPrice`)}
-                            onChange={(e) =>
-                              handleItemChange(index, "unitPrice", e.target.value)
-                            }
-                          />
+                          <Input type="number" step="0.01" placeholder="Unit Price" defaultValue={item.unitPrice} {...form.register(`items.${index}.unitPrice`)} onChange={(e) => handleItemChange(index, "unitPrice", e.target.value)} />
                         </div>
                         <div className="col-span-2">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            placeholder="Total"
-                            value={item.totalPrice}
-                            readOnly
-                          />
+                          <Input type="number" step="0.01" placeholder="Total" value={item.totalPrice} readOnly />
                         </div>
                         <div className="col-span-1 flex items-center">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => {
-                              const items = form.getValues("items") || [];
-                              form.setValue(
-                                "items",
-                                items.filter((_, i) => i !== index)
-                              );
-                            }}
-                          >
+                          <Button type="button" variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => {
+                            const items = form.getValues("items") || [];
+                            form.setValue("items", items.filter((_, i) => i !== index));
+                          }}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -640,10 +466,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                     <div className="grid grid-cols-2 gap-4 my-4">
                       <div className="space-y-2">
                         <Label>Total Amount Currency</Label>
-                        <select
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                          {...form.register("amountCurrency")}
-                        >
+                        <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background" {...form.register("amountCurrency")}>
                           <option value="USD">USD</option>
                           <option value="CAD">CAD</option>
                         </select>
@@ -651,16 +474,8 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                       <div className="space-y-2">
                         <Label>Freight Cost</Label>
                         <div className="flex gap-2">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            placeholder="Enter freight cost"
-                            {...form.register("freightCost")}
-                          />
-                          <select
-                            className="flex h-10 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                            {...form.register("freightCostCurrency")}
-                          >
+                          <Input type="number" step="0.01" placeholder="Enter freight cost" {...form.register("freightCost")} />
+                          <select className="flex h-10 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background" {...form.register("freightCostCurrency")}>
                             <option value="USD">USD</option>
                             <option value="CAD">CAD</option>
                           </select>
@@ -681,97 +496,56 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                                 : "Click to upload freight invoice or drag and drop"}
                             </p>
                           </div>
-                          <input
-                            type="file"
-                            className="hidden"
-                            onChange={handleFreightInvoiceFileChange}
-                            accept=".pdf,.png,.jpg,.jpeg"
-                          />
+                          <input type="file" className="hidden" onChange={handleFreightInvoiceFileChange} accept=".pdf,.png,.jpg,.jpeg" />
                         </label>
                       </div>
                       {editInvoice?.freightInvoiceFile && (
                         <div className="mt-4">
                           <Label>Current Freight Invoice File</Label>
                           <div className="flex items-center justify-between p-2 mt-1 border rounded">
-                            <span className="text-sm">
-                              {editInvoice.freightInvoiceFile}
-                            </span>
-                            <a
-                              href={`/uploads/${editInvoice.freightInvoiceFile}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center text-blue-600 hover:text-blue-800"
-                            >
-                              <Download className="h-4 w-4 mr-1" />
-                              Download
+                            <span className="text-sm">{editInvoice.freightInvoiceFile}</span>
+                            <a href={`/uploads/${editInvoice.freightInvoiceFile}`} target="_blank" rel="noopener noreferrer" className="flex items-center text-blue-600 hover:text-blue-800">
+                              <Download className="h-4 w-4 mr-1" /> Download
                             </a>
                           </div>
                         </div>
                       )}
                     </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        const items = form.getValues("items") || [];
-                        form.setValue("items", [
-                          ...items,
-                          {
-                            description: "",
-                            quantity: "0",
-                            unitPrice: "0",
-                            totalPrice: "0",
-                            invoiceId: 0,
-                          },
-                        ]);
-                      }}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Item
+                    <Button type="button" variant="outline" onClick={() => {
+                      const items = form.getValues("items") || [];
+                      form.setValue("items", [
+                        ...items,
+                        { description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 },
+                      ]);
+                    }}>
+                      <Plus className="h-4 w-4 mr-2" /> Add Item
                     </Button>
                   </div>
                 </div>
               </TabsContent>
-
               <TabsContent value="upload">
                 <div className="space-y-4">
                   <div className="flex gap-2">
                     <div className="flex-1">
                       <Label>Total Amount</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        placeholder="Enter total amount"
-                        {...form.register("totalAmount")}
-                      />
+                      <Input type="number" step="0.01" placeholder="Enter total amount" {...form.register("totalAmount")} />
                     </div>
                     <div className="flex-1">
                       <Label>Freight Cost</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        placeholder="Enter freight cost"
-                        {...form.register("freightCost")}
-                      />
+                      <Input type="number" step="0.01" placeholder="Enter freight cost" {...form.register("freightCost")} />
                     </div>
                   </div>
                   <div className="flex gap-2">
                     <div className="flex-1">
                       <Label>Total Amount Currency</Label>
-                      <select
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                        {...form.register("amountCurrency")}
-                      >
+                      <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background" {...form.register("amountCurrency")}>
                         <option value="USD">USD</option>
                         <option value="CAD">CAD</option>
                       </select>
                     </div>
                     <div className="flex-1">
                       <Label>Freight Cost Currency</Label>
-                      <select
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                        {...form.register("freightCostCurrency")}
-                      >
+                      <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background" {...form.register("freightCostCurrency")}>
                         <option value="USD">USD</option>
                         <option value="CAD">CAD</option>
                       </select>
@@ -784,19 +558,10 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
                           <Upload className="w-8 h-8 mb-2 text-gray-400" />
                           <p className="mb-2 text-sm text-gray-500">
-                            {file
-                              ? file.name
-                              : editInvoice?.uploadedFile
-                              ? "Replace current file"
-                              : "Click to upload or drag and drop"}
+                            {file ? file.name : editInvoice?.uploadedFile ? "Replace current file" : "Click to upload or drag and drop"}
                           </p>
                         </div>
-                        <input
-                          type="file"
-                          className="hidden"
-                          onChange={handleFileChange}
-                          accept=".pdf,.png,.jpg,.jpeg"
-                        />
+                        <input type="file" className="hidden" onChange={handleFileChange} accept=".pdf,.png,.jpg,.jpeg" />
                       </label>
                     </div>
                     {editInvoice?.uploadedFile && (
@@ -804,14 +569,8 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                         <Label>Current File</Label>
                         <div className="flex items-center justify-between p-2 mt-1 border rounded">
                           <span className="text-sm">{editInvoice.uploadedFile}</span>
-                          <a
-                            href={`/uploads/${editInvoice.uploadedFile}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center text-blue-600 hover:text-blue-800"
-                          >
-                            <Download className="h-4 w-4 mr-1" />
-                            Download
+                          <a href={`/uploads/${editInvoice.uploadedFile}`} target="_blank" rel="noopener noreferrer" className="flex items-center text-blue-600 hover:text-blue-800">
+                            <Download className="h-4 w-4 mr-1" /> Download
                           </a>
                         </div>
                       </div>
@@ -824,19 +583,10 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
                           <Upload className="w-8 h-8 mb-2 text-gray-400" />
                           <p className="mb-2 text-sm text-gray-500">
-                            {bolFile
-                              ? bolFile.name
-                              : editInvoice?.bolFile
-                              ? "Replace current file"
-                              : "Click to upload BOL or drag and drop"}
+                            {bolFile ? bolFile.name : editInvoice?.bolFile ? "Replace current file" : "Click to upload BOL or drag and drop"}
                           </p>
                         </div>
-                        <input
-                          type="file"
-                          className="hidden"
-                          onChange={handleBolFileChange}
-                          accept=".pdf,.png,.jpg,.jpeg"
-                        />
+                        <input type="file" className="hidden" onChange={handleBolFileChange} accept=".pdf,.png,.jpg,.jpeg" />
                       </label>
                     </div>
                     {editInvoice?.bolFile && (
@@ -844,14 +594,8 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                         <Label>Current BOL File</Label>
                         <div className="flex items-center justify-between p-2 mt-1 border rounded">
                           <span className="text-sm">{editInvoice.bolFile}</span>
-                          <a
-                            href={`/uploads/${editInvoice.bolFile}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center text-blue-600 hover:text-blue-800"
-                          >
-                            <Download className="h-4 w-4 mr-1" />
-                            Download
+                          <a href={`/uploads/${editInvoice.bolFile}`} target="_blank" rel="noopener noreferrer" className="flex items-center text-blue-600 hover:text-blue-800">
+                            <Download className="h-4 w-4 mr-1" /> Download
                           </a>
                         </div>
                       </div>
@@ -859,21 +603,13 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                   </div>
                 </div>
               </TabsContent>
-
               <div>
                 <Label htmlFor="notes">Notes</Label>
                 <Textarea {...form.register("notes")} />
               </div>
             </div>
-
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={updateInvoiceMutation.isPending}
-            >
-              {updateInvoiceMutation.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
+            <Button type="submit" className="w-full" disabled={updateInvoiceMutation.isPending}>
+              {updateInvoiceMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {editInvoice ? "Update" : "Create"} Invoice
             </Button>
           </form>
@@ -882,3 +618,5 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     </Dialog>
   );
 }
+
+export default InvoiceForm;
