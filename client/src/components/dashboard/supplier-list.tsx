@@ -37,11 +37,11 @@ export function SupplierList({ suppliers }: SupplierListProps) {
       accessorKey: "totalRevenue",
       header: "Total Revenue",
       cell: ({ row }) => {
-        const invoices = row.original.invoices || [];
-        const total = invoices.reduce((sum, inv) => {
-          const amount = Number(inv.totalAmount) || 0;
-          return sum + amount;
-        }, 0);
+        const supplier = row.original;
+        const total = supplier.invoices?.reduce((sum, inv) => {
+          const amount = Number(inv.totalAmount);
+          return !isNaN(amount) ? sum + amount : sum;
+        }, 0) || 0;
         return (
           <Badge variant="secondary">
             ${total.toFixed(2)}
