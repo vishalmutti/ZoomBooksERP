@@ -57,7 +57,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   const [bolFile, setBolFile] = useState<File | null>(null);
   const [freightInvoiceFile, setFreightInvoiceFile] = useState<File | null>(null);
 
-  // Fetch available carriers from your API (ensure your endpoint returns an array of Carrier objects)
+  // Fetch available carriers from your API
   const { data: carriers = [] } = useQuery<Carrier[]>({
     queryKey: ["/api/carriers"],
     queryFn: async () => {
@@ -84,7 +84,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     defaultValues: {
       supplierId: currentInvoiceData?.supplierId || editInvoice?.supplierId || 0,
       invoiceNumber: currentInvoiceData?.invoiceNumber || editInvoice?.invoiceNumber || "",
-      // Carrier comes from a dropdown now.
+      // Carrier comes from a dropdown
       carrier: currentInvoiceData?.carrier || editInvoice?.carrier || "",
       dueDate: currentInvoiceData?.dueDate
         ? new Date(currentInvoiceData.dueDate).toISOString().split("T")[0]
@@ -178,45 +178,65 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     },
   });
 
-  // Create a carrier load entry by mapping invoice fields.
-  const createCarrierLoad = async (invoice: Invoice) => {
-    const formData = new FormData();
+  // Helper: Synchronize the carrier load entry for the invoice.
+  // Instead of creating a new carrier load entry, we update the existing entry with the same reference number.
+  const syncCarrierLoad = async (invoice: Invoice) => {
+    // Map invoice fields to carrier load fields.
     const carrierLoadData = {
-      date: invoice.dueDate || new Date().toISOString().split('T')[0],
+      date: invoice.dueDate || new Date().toISOString().split("T")[0],
       referenceNumber: invoice.invoiceNumber || "",
       carrier: invoice.carrier || "",
       freightCost: invoice.freightCost || "0",
       freightCostCurrency: invoice.freightCostCurrency || "USD",
-      status: "UNPAID"
+      status: "UNPAID",
     };
 
-    formData.append('carrierData', JSON.stringify(carrierLoadData));
+    // Prepare FormData to handle file uploads.
+    const formData = new FormData();
+    formData.append("carrierData", JSON.stringify(carrierLoadData));
 
-    // Get the actual file objects from the form
+    // Append freight invoice file
     if (freightInvoiceFile) {
-      formData.append('freightInvoice', freightInvoiceFile);
+      formData.append("freightInvoice", freightInvoiceFile);
     } else if (invoice.freightInvoiceFile) {
-      // Create a fetch request to get the existing file
-      const fileResponse = await fetch(`/uploads/${invoice.freightInvoiceFile}`);
-      const blob = await fileResponse.blob();
-      formData.append('freightInvoice', blob, invoice.freightInvoiceFile);
+      const res = await fetch(`/uploads/${invoice.freightInvoiceFile}`);
+      const blob = await res.blob();
+      formData.append("freightInvoice", blob, invoice.freightInvoiceFile);
     }
 
+    // Append POD file
     if (file) {
-      formData.append('pod', file);
+      formData.append("pod", file);
     } else if (invoice.uploadedFile) {
-      const fileResponse = await fetch(`/uploads/${invoice.uploadedFile}`);
-      const blob = await fileResponse.blob();
-      formData.append('pod', blob, invoice.uploadedFile);
+      const res = await fetch(`/uploads/${invoice.uploadedFile}`);
+      const blob = await res.blob();
+      formData.append("pod", blob, invoice.uploadedFile);
     }
 
-    const res = await fetch("/api/carrier-loads", {
-      method: "POST",
-      body: formData
-    });
-
-    if (!res.ok) throw new Error("Failed to create carrier load");
-    return res.json();
+    // First, check if a carrier load entry with the same reference number exists.
+    const getRes = await fetch(
+      `/api/carrier-loads?referenceNumber=${encodeURIComponent(carrierLoadData.referenceNumber)}`
+    );
+    if (!getRes.ok) throw new Error("Failed to query existing carrier load");
+    const existingLoads = await getRes.json();
+    if (existingLoads && existingLoads.length > 0) {
+      // Update the existing carrier load entry.
+      const existingLoad = existingLoads[0];
+      const patchRes = await fetch(`/api/carrier-loads/${existingLoad.id}`, {
+        method: "PATCH",
+        body: formData,
+      });
+      if (!patchRes.ok) throw new Error("Failed to update carrier load");
+      return patchRes.json();
+    } else {
+      // If no existing entry, create a new one.
+      const postRes = await fetch("/api/carrier-loads", {
+        method: "POST",
+        body: formData,
+      });
+      if (!postRes.ok) throw new Error("Failed to create carrier load");
+      return postRes.json();
+    }
   };
 
   const updateInvoiceMutation = useMutation({
@@ -260,10 +280,11 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
           })),
         });
         try {
-          await createCarrierLoad(updatedInvoice);
+          // Instead of creating a new entry, update the carrier load with the same reference number.
+          await syncCarrierLoad(updatedInvoice);
           toast({
-            title: "Carrier Load Created",
-            description: "Carrier load entry synced successfully.",
+            title: "Carrier Load Synced",
+            description: "Carrier load entry updated successfully.",
           });
         } catch (error: any) {
           toast({
