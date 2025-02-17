@@ -5,9 +5,8 @@ import { Card } from "@/components/ui/card";
 export function PayrollWidget() {
   const [selectedSheet, setSelectedSheet] = useState<'BC' | 'ON'>('BC');
 
-  // Replace these URLs with your actual published Google Sheet URLs
-  const bcSheetUrl = "https://docs.google.com/spreadsheets/d/YOUR_BC_SHEET_ID/pubhtml?widget=true&amp;headers=false";
-  const onSheetUrl = "https://docs.google.com/spreadsheets/d/YOUR_ON_SHEET_ID/pubhtml?widget=true&amp;headers=false";
+  const bcSheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTPQtCvfHlUj-vu6uf6ylyQhPnAmf7omaTFte32lb2cZg9JucGNlS-yZXgGpPvnyVe_BcpyT2nxDKGu/pubhtml?widget=true&amp;headers=false";
+  const onSheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTukWeICJPpuJmbpsokmkto2XDs7cp4bj_-MzDeJ6Ko_qSwF_HlK9C9ZPTcOEdcs5vHYOw1ScfvVhBi/pubhtml?widget=true&amp;headers=false";
 
   return (
     <Card className="p-6 hover:shadow-lg transition-shadow">
