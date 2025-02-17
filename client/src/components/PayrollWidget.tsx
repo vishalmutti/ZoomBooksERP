@@ -1,12 +1,11 @@
-
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 
 export function PayrollWidget() {
   const [selectedSheet, setSelectedSheet] = useState<'BC' | 'ON'>('BC');
 
-  const bcSheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTPQtCvfHlUj-vu6uf6ylyQhPnAmf7omaTFte32lb2cZg9JucGNlS-yZXgGpPvnyVe_BcpyT2nxDKGu/edit?embedded=true";
-  const onSheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTukWeICJPpuJmbpsokmkto2XDs7cp4bj_-MzDeJ6Ko_qSwF_HlK9C9ZPTcOEdcs5vHYOw1ScfvVhBi/edit?embedded=true";
+  const bcSheetUrl = "https://docs.google.com/spreadsheets/d/10urhqRqF_Opmdj_MeTKxxXNYGjUuiUlnFY9qAowK4eU/edit?usp=sharing&embedded=true";
+  const onSheetUrl = "https://docs.google.com/spreadsheets/d/1baasY58BNibdrI45ciXeZehU8IjzBOlKux5xUXFYYX0/edit?usp=sharing&embedded=true";
 
   return (
     <Card className="p-6 hover:shadow-lg transition-shadow">
