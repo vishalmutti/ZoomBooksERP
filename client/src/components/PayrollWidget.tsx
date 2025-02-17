@@ -8,7 +8,7 @@ export function PayrollWidget() {
   const onSheetUrl = "https://docs.google.com/spreadsheets/d/1baasY58BNibdrI45ciXeZehU8IjzBOlKux5xUXFYYX0/edit?usp=sharing&embedded=true";
 
   return (
-    <Card className="p-6 hover:shadow-lg transition-shadow">
+    <Card className="p-4 hover:shadow-lg transition-shadow w-full max-w-[1400px] mx-auto">
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <button
@@ -36,7 +36,7 @@ export function PayrollWidget() {
         <div className="border rounded-md overflow-hidden bg-white">
           <iframe
             src={selectedSheet === 'BC' ? bcSheetUrl : onSheetUrl}
-            className="w-full h-[500px] border-none"
+            className="w-full h-[800px] border-none"
             title={`Employee Hours - ${selectedSheet}`}
           />
         </div>
