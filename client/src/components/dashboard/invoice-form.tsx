@@ -178,22 +178,33 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     },
   });
 
-  // Helper: Create a carrier load entry by mapping invoice fields.
+  // Create a carrier load entry by mapping invoice fields.
   const createCarrierLoad = async (invoice: Invoice) => {
+    const formData = new FormData();
     const carrierLoadData = {
-      date: invoice.dueDate || "",
+      date: invoice.dueDate || new Date().toISOString().split('T')[0],
       referenceNumber: invoice.invoiceNumber || "",
       carrier: invoice.carrier || "",
       freightCost: invoice.freightCost || "0",
       freightCostCurrency: invoice.freightCostCurrency || "USD",
-      freightInvoice: invoice.freightInvoiceFile || "",
-      pod: invoice.uploadedFile || "",
+      status: "UNPAID"
     };
+
+    formData.append('carrierData', JSON.stringify(carrierLoadData));
+
+    // Add files if they exist
+    if (invoice.freightInvoiceFile) {
+      formData.append('freightInvoice', invoice.freightInvoiceFile);
+    }
+    if (invoice.uploadedFile) {
+      formData.append('pod', invoice.uploadedFile);
+    }
+
     const res = await fetch("/api/carrier-loads", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(carrierLoadData),
+      body: formData
     });
+
     if (!res.ok) throw new Error("Failed to create carrier load");
     return res.json();
   };
