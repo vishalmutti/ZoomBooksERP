@@ -69,7 +69,10 @@ export function EmployeeList() {
             <DialogHeader>
               <DialogTitle>Add New Employee</DialogTitle>
             </DialogHeader>
-            <EmployeeForm onSubmit={(data) => createEmployee.mutate(data)} departments={departments || []} />
+            <EmployeeForm 
+              onSubmit={(data) => createEmployee.mutate(data as Employee)} 
+              departments={departments || []} 
+            />
           </DialogContent>
         </Dialog>
       </div>

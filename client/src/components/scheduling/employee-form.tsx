@@ -32,7 +32,7 @@ export function EmployeeForm({ onSubmit, initialData, departments }: EmployeeFor
       name: "",
       email: "",
       phone: "",
-      departmentId: 0,
+      departmentId: undefined,
       position: "",
       skills: [],
     },
@@ -48,7 +48,7 @@ export function EmployeeForm({ onSubmit, initialData, departments }: EmployeeFor
             <FormItem>
               <FormLabel>Employee Name</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} value={field.value || ""} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -62,7 +62,7 @@ export function EmployeeForm({ onSubmit, initialData, departments }: EmployeeFor
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input type="email" {...field} />
+                <Input type="email" {...field} value={field.value || ""} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -76,7 +76,7 @@ export function EmployeeForm({ onSubmit, initialData, departments }: EmployeeFor
             <FormItem>
               <FormLabel>Phone</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} value={field.value || ""} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -91,7 +91,7 @@ export function EmployeeForm({ onSubmit, initialData, departments }: EmployeeFor
               <FormLabel>Department</FormLabel>
               <Select 
                 onValueChange={(value) => field.onChange(parseInt(value))}
-                value={field.value?.toString()}
+                value={field.value?.toString() || ""}
               >
                 <FormControl>
                   <SelectTrigger>
@@ -100,11 +100,9 @@ export function EmployeeForm({ onSubmit, initialData, departments }: EmployeeFor
                 </FormControl>
                 <SelectContent>
                   {departments?.map((dept) => (
-                    dept.id ? (
-                      <SelectItem key={dept.id} value={dept.id.toString()}>
-                        {dept.name}
-                      </SelectItem>
-                    ) : null
+                    <SelectItem key={dept.id} value={dept.id.toString()}>
+                      {dept.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -120,7 +118,7 @@ export function EmployeeForm({ onSubmit, initialData, departments }: EmployeeFor
             <FormItem>
               <FormLabel>Position</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} value={field.value || ""} />
               </FormControl>
               <FormMessage />
             </FormItem>
