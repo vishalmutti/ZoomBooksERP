@@ -235,30 +235,6 @@ export function CarrierTable() {
           <h2 className="text-2xl font-bold">Carrier Loads</h2>
           <CarrierForm />
         </div>
-        <div className="flex items-center gap-4">
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="h-8 px-2 py-1 bg-background border border-input rounded-md text-sm"
-          />
-          <span>to</span>
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="h-8 px-2 py-1 bg-background border border-input rounded-md text-sm"
-          />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as "ALL" | "PAID" | "UNPAID")}
-            className="h-8 px-2 py-1 bg-background border border-input rounded-md text-sm"
-          >
-            <option value="ALL">All Status</option>
-            <option value="PAID">Paid</option>
-            <option value="UNPAID">Unpaid</option>
-          </select>
-        </div>
       </div>
       {editingCarrier && (
         <CarrierForm
@@ -271,6 +247,21 @@ export function CarrierTable() {
         columns={columns}
         data={data}
         searchKey="referenceNumber"
+        dateFilter={{
+          startDate,
+          endDate,
+          onStartDateChange: (e) => setStartDate(e.target.value),
+          onEndDateChange: (e) => setEndDate(e.target.value)
+        }}
+        statusFilter={{
+          value: statusFilter,
+          onChange: (e) => setStatusFilter(e.target.value as "ALL" | "PAID" | "UNPAID"),
+          options: [
+            { value: "ALL", label: "All Status" },
+            { value: "PAID", label: "Paid" },
+            { value: "UNPAID", label: "Unpaid" }
+          ]
+        }}
       />
     </div>
   );

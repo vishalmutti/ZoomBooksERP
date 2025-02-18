@@ -27,6 +27,17 @@ interface DataTableProps<TData, TValue> {
   searchKey?: string
   defaultSort?: SortingState
   onRowClick?: (row: Row<TData>) => void
+  dateFilter?: {
+    startDate: string;
+    endDate: string;
+    onStartDateChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+    onEndDateChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  };
+  statusFilter?: {
+    value: string;
+    onChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+    options: { value: string; label: string }[];
+  };
 }
 
 export function DataTable<TData, TValue>({
@@ -35,6 +46,8 @@ export function DataTable<TData, TValue>({
   searchKey,
   defaultSort,
   onRowClick,
+  dateFilter,
+  statusFilter,
 }: DataTableProps<TData, TValue>) {
   const [filtering, setFiltering] = useState("")
   const [sorting, setSorting] = useState<SortingState>(defaultSort || [])
@@ -57,16 +70,46 @@ export function DataTable<TData, TValue>({
 
   return (
     <div>
-      {searchKey && (
-        <div className="flex items-center py-4">
+      <div className="flex items-center gap-4 py-4">
+        {searchKey && (
           <Input
-            placeholder="Search..."
-            value={filtering}
-            onChange={(event) => setFiltering(event.target.value)}
+            placeholder={`Search ${searchKey}...`}
+            value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ""}
+            onChange={(event) =>
+              table.getColumn(searchKey)?.setFilterValue(event.target.value)
+            }
             className="max-w-sm"
           />
-        </div>
-      )}
+        )}
+        {dateFilter && (
+          <>
+            <input
+              type="date"
+              value={dateFilter.startDate}
+              onChange={dateFilter.onStartDateChange}
+              className="h-10 px-3 py-2 bg-background border border-input rounded-md text-sm"
+            />
+            <span>to</span>
+            <input
+              type="date"
+              value={dateFilter.endDate}
+              onChange={dateFilter.onEndDateChange}
+              className="h-10 px-3 py-2 bg-background border border-input rounded-md text-sm"
+            />
+          </>
+        )}
+        {statusFilter && (
+          <select
+            value={statusFilter.value}
+            onChange={statusFilter.onChange}
+            className="h-10 px-3 py-2 bg-background border border-input rounded-md text-sm"
+          >
+            {statusFilter.options.map(option => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+        )}
+      </div>
       <div className="rounded-md border">
         <Table>
           <TableHeader>
