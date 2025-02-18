@@ -210,14 +210,33 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       carrierFormData.append("pod", blob, invoice.uploadedFile);
     }
 
-    const carrierResponse = await fetch("/api/carrier-loads", {
-      method: "POST",
-      body: carrierFormData,
-    });
-    if (!carrierResponse.ok) {
-      throw new Error("Failed to create carrier load");
+    // Check if carrier load with reference number already exists
+    const checkResponse = await fetch(`/api/carrier-loads?referenceNumber=${encodeURIComponent(invoice.invoiceNumber || '')}`);
+    const existingLoads = await checkResponse.json();
+
+    if (existingLoads && existingLoads.length > 0) {
+      // Update existing carrier load
+      const carrierResponse = await fetch(`/api/carrier-loads/${existingLoads[0].id}`, {
+        method: "PATCH",
+        body: carrierFormData,
+      });
+      if (!carrierResponse.ok) {
+        throw new Error("Failed to update carrier load");
+      }
+      await queryClient.invalidateQueries({ queryKey: ["carrier-loads"] });
+      return carrierResponse.json();
+    } else {
+      // Create new carrier load
+      const carrierResponse = await fetch("/api/carrier-loads", {
+        method: "POST",
+        body: carrierFormData,
+      });
+      if (!carrierResponse.ok) {
+        throw new Error("Failed to create carrier load");
+      }
+      await queryClient.invalidateQueries({ queryKey: ["carrier-loads"] });
+      return carrierResponse.json();
     }
-    return carrierResponse.json();
   };
 
   const updateInvoiceMutation = useMutation({
