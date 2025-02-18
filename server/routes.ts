@@ -7,7 +7,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import express, { Router } from "express";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "./db";
 import { carriers, carrierLoads } from "@shared/schema";
 import { insertInvoiceSchema, insertPaymentSchema, insertSupplierSchema, invoiceItems } from "@shared/schema";
@@ -762,10 +762,10 @@ export function registerRoutes(app: Express): Server {
       let query = db.select().from(carrierLoads);
       
       if (startDate) {
-        query = query.where(sql`DATE(date) >= DATE(${startDate})`);
+        query = query.where(sql`${carrierLoads.date} >= ${startDate}`);
       }
       if (endDate) {
-        query = query.where(sql`DATE(date) <= DATE(${endDate})`);
+        query = query.where(sql`${carrierLoads.date} <= ${endDate}`);
       }
       if (status) {
         query = query.where(eq(carrierLoads.status, status as string));
