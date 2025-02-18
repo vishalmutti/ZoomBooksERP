@@ -13,7 +13,6 @@ import CarrierPage from "@/pages/carrier-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import { Navbar } from "@/components/dashboard/navbar";
 import PayrollPage from "@/pages/payroll-page";
-import SchedulingPage from "@/pages/scheduling-page";
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -52,12 +51,6 @@ function Router() {
       <Route path="/carrier">
         <AppLayout>
           <ProtectedRoute path="/carrier" component={CarrierPage} />
-        </AppLayout>
-      </Route>
-
-      <Route path="/scheduling">
-        <AppLayout>
-          <ProtectedRoute path="/scheduling" component={SchedulingPage} />
         </AppLayout>
       </Route>
 

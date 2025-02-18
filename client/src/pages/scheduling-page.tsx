@@ -4,7 +4,7 @@ import { DepartmentList } from "@/components/scheduling/department-list";
 import { EmployeeList } from "@/components/scheduling/employee-list";
 import { ScheduleCalendar } from "@/components/scheduling/schedule-calendar";
 
-export default function SchedulingPage() {
+export function SchedulingPage() {
   return (
     <div className="space-y-4">
       <Card>
@@ -36,3 +36,5 @@ export default function SchedulingPage() {
     </div>
   );
 }
+
+export default SchedulingPage;
