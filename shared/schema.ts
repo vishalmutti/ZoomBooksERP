@@ -4,14 +4,18 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
+// ===================
 // Users table
+// ===================
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
 });
 
+// ===================
 // Suppliers table
+// ===================
 export const suppliers = pgTable("suppliers", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
@@ -22,10 +26,12 @@ export const suppliers = pgTable("suppliers", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// ===================
 // Supplier contacts table
+// ===================
 export const supplierContacts = pgTable("supplier_contacts", {
   id: serial("id").primaryKey(),
-  supplierId: integer("supplier_id").references(() => suppliers.id, { onDelete: 'cascade' }).notNull(),
+  supplierId: integer("supplier_id").references(() => suppliers.id, { onDelete: "cascade" }).notNull(),
   name: varchar("name", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }),
   phone: varchar("phone", { length: 50 }),
@@ -33,19 +39,20 @@ export const supplierContacts = pgTable("supplier_contacts", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// For updating the table with new columns
 export const alterSupplierContacts = sql`
-  ALTER TABLE supplier_contacts 
+  ALTER TABLE supplier_contacts
   ADD COLUMN IF NOT EXISTS notes text;
 `;
 
-// Insert schema for supplier contacts (omitting fields managed by the DB)
+// Insert schema for supplier contacts
 export const insertSupplierContactSchema = createInsertSchema(supplierContacts).omit({
   id: true,
   createdAt: true,
   supplierId: true,
 });
 
-// Insert schema for suppliers, with optional contacts array
+// Insert schema for suppliers (with optional contacts array)
 export const insertSupplierSchema = createInsertSchema(suppliers)
   .omit({
     id: true,
@@ -55,7 +62,9 @@ export const insertSupplierSchema = createInsertSchema(suppliers)
     contacts: z.array(insertSupplierContactSchema).optional(),
   });
 
-// Invoices table  
+// ===================
+// Invoices table
+// ===================
 export const invoices = pgTable("invoices", {
   id: serial("id").primaryKey(),
   supplierId: integer("supplier_id").references(() => suppliers.id),
@@ -63,9 +72,8 @@ export const invoices = pgTable("invoices", {
   invoiceNumber: varchar("invoice_number", { length: 50 }),
   totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
   freightCost: decimal("freight_cost", { precision: 10, scale: 2 }),
-  // Renamed field: amountCurrency is now used for the invoice's total amount currency
-  amountCurrency: varchar("amount_currency", { length: 3 }).default('USD').notNull(),
-  freightCostCurrency: varchar("freight_cost_currency", { length: 3 }).default('USD').notNull(),
+  amountCurrency: varchar("amount_currency", { length: 3 }).default("USD").notNull(),
+  freightCostCurrency: varchar("freight_cost_currency", { length: 3 }).default("USD").notNull(),
   dueDate: date("due_date").notNull(),
   isPaid: boolean("is_paid").default(false).notNull(),
   paymentDate: date("payment_date"),
@@ -76,7 +84,9 @@ export const invoices = pgTable("invoices", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// ===================
 // Invoice items table
+// ===================
 export const invoiceItems = pgTable("invoice_items", {
   id: serial("id").primaryKey(),
   invoiceId: integer("invoice_id").references(() => invoices.id).notNull(),
@@ -86,7 +96,9 @@ export const invoiceItems = pgTable("invoice_items", {
   totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
 });
 
+// ===================
 // Payments table
+// ===================
 export const payments = pgTable("payments", {
   id: serial("id").primaryKey(),
   invoiceId: integer("invoice_id").references(() => invoices.id).notNull(),
@@ -97,34 +109,44 @@ export const payments = pgTable("payments", {
   notes: text("notes"),
 });
 
+// ===================
 // Incoming loads table
+// ===================
 export const incomingLoads = pgTable("incoming_loads", {
   id: serial("id").primaryKey(),
   loadType: varchar("load_type", { length: 50 }).notNull(),
   supplierId: varchar("supplier_id", { length: 255 }).notNull(),
   referenceNumber: varchar("reference_number", { length: 50 }).notNull(),
-  location: varchar("location", { length: 50 }).notNull().$type<'British Columbia' | 'Ontario'>(),
+  location: varchar("location", { length: 50 }).notNull().$type<"British Columbia" | "Ontario">(),
   pickupLocation: varchar("pickup_location", { length: 255 }),
   deliveryLocation: varchar("delivery_location", { length: 255 }),
   scheduledPickup: date("scheduled_pickup"),
   scheduledDelivery: date("scheduled_delivery"),
-  status: varchar("status", { length: 50 }).default('Pending').notNull(),
+  status: varchar("status", { length: 50 }).default("Pending").notNull(),
   carrier: varchar("carrier", { length: 100 }),
   notes: text("notes"),
   loadCost: decimal("load_cost", { precision: 10, scale: 2 }).notNull(),
   freightCost: decimal("freight_cost", { precision: 10, scale: 2 }).notNull(),
-  freightCostCurrency: varchar("freight_cost_currency", { length: 3 }).default('USD').notNull(),
+  freightCostCurrency: varchar("freight_cost_currency", { length: 3 }).default("USD").notNull(),
   profitRoi: decimal("profit_roi", { precision: 10, scale: 2 }).notNull(),
   bolFile: text("bol_file"),
   materialInvoiceFile: text("material_invoice_file"),
   freightInvoiceFile: text("freight_invoice_file"),
   loadPerformanceFile: text("load_performance_file"),
-  materialInvoiceStatus: varchar("material_invoice_status", { length: 10 }).default('UNPAID').notNull().$type<'PAID' | 'UNPAID'>(),
-  freightInvoiceStatus: varchar("freight_invoice_status", { length: 10 }).default('UNPAID').notNull().$type<'PAID' | 'UNPAID'>(),
+  materialInvoiceStatus: varchar("material_invoice_status", { length: 10 })
+    .default("UNPAID")
+    .notNull()
+    .$type<"PAID" | "UNPAID">(),
+  freightInvoiceStatus: varchar("freight_invoice_status", { length: 10 })
+    .default("UNPAID")
+    .notNull()
+    .$type<"PAID" | "UNPAID">(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// ===================
 // Load status history table
+// ===================
 export const loadStatusHistory = pgTable("load_status_history", {
   id: serial("id").primaryKey(),
   loadId: integer("load_id").references(() => incomingLoads.id).notNull(),
@@ -135,17 +157,23 @@ export const loadStatusHistory = pgTable("load_status_history", {
   updatedBy: varchar("updated_by", { length: 255 }).notNull(),
 });
 
+// ===================
 // Load documents table
+// ===================
 export const loadDocuments = pgTable("load_documents", {
   id: serial("id").primaryKey(),
   loadId: integer("load_id").references(() => incomingLoads.id).notNull(),
-  documentType: varchar("document_type", { length: 50 }).notNull().$type<'BOL' | 'Invoice' | 'POD' | 'Other'>(),
+  documentType: varchar("document_type", { length: 50 })
+    .notNull()
+    .$type<"BOL" | "Invoice" | "POD" | "Other">(),
   fileName: text("file_name").notNull(),
   uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
   notes: text("notes"),
 });
 
+// ===================
 // Freight invoices table
+// ===================
 export const freightInvoices = pgTable("freight_invoices", {
   id: serial("id").primaryKey(),
   loadId: integer("load_id").references(() => incomingLoads.id).notNull(),
@@ -156,7 +184,9 @@ export const freightInvoices = pgTable("freight_invoices", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Define relations between tables
+// ===================
+// Table relations
+// ===================
 export const invoicesRelations = relations(invoices, ({ one, many }) => ({
   supplier: one(suppliers, {
     fields: [invoices.supplierId],
@@ -191,16 +221,22 @@ export const supplierContactsRelations = relations(supplierContacts, ({ one }) =
   }),
 }));
 
-// Insert schemas for users, suppliers, invoices, payments, etc.
+// ===================
+// Insert schemas
+// ===================
+
+// Users
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
 });
 
+// Invoice Items
 export const insertInvoiceItemSchema = createInsertSchema(invoiceItems).omit({
   id: true,
 });
 
+// Invoices
 export const insertInvoiceSchema = createInsertSchema(invoices)
   .omit({
     id: true,
@@ -211,12 +247,12 @@ export const insertInvoiceSchema = createInsertSchema(invoices)
     items: z.array(insertInvoiceItemSchema).optional(),
   });
 
-export const insertPaymentSchema = createInsertSchema(payments)
-  .omit({
-    id: true,
-  });
+// Payments
+export const insertPaymentSchema = createInsertSchema(payments).omit({
+  id: true,
+});
 
-// Update the insertLoadSchema definition to properly handle date fields
+// Loads
 export const insertLoadSchema = createInsertSchema(incomingLoads)
   .omit({
     id: true,
@@ -229,24 +265,26 @@ export const insertLoadSchema = createInsertSchema(incomingLoads)
 
 export const insertIncomingLoadSchema = insertLoadSchema;
 
-export const insertLoadStatusHistorySchema = createInsertSchema(loadStatusHistory)
-  .omit({
-    id: true,
-  });
+// Load status history
+export const insertLoadStatusHistorySchema = createInsertSchema(loadStatusHistory).omit({
+  id: true,
+});
 
-export const insertLoadDocumentSchema = createInsertSchema(loadDocuments)
-  .omit({
-    id: true,
-    uploadedAt: true,
-  });
+// Load documents
+export const insertLoadDocumentSchema = createInsertSchema(loadDocuments).omit({
+  id: true,
+  uploadedAt: true,
+});
 
-export const insertFreightInvoiceSchema = createInsertSchema(freightInvoices)
-  .omit({
-    id: true,
-    createdAt: true,
-  });
+// Freight invoices
+export const insertFreightInvoiceSchema = createInsertSchema(freightInvoices).omit({
+  id: true,
+  createdAt: true,
+});
 
-// Export types
+// ===================
+// Types
+// ===================
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
@@ -273,7 +311,9 @@ export type FreightInvoice = typeof freightInvoices.$inferSelect;
 export type InsertSupplierContact = z.infer<typeof insertSupplierContactSchema>;
 export type SupplierContact = typeof supplierContacts.$inferSelect;
 
-// Carrier and CarrierLoad tables
+// ===================
+// Carriers table
+// ===================
 export const carriers = pgTable("carriers", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
@@ -283,19 +323,23 @@ export const carriers = pgTable("carriers", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// ===================
+// Carrier loads table
+// ===================
 export const carrierLoads = pgTable("carrier_loads", {
   id: serial("id").primaryKey(),
   date: date("date").notNull(),
   referenceNumber: varchar("reference_number", { length: 255 }).notNull(),
   carrier: varchar("carrier", { length: 255 }).notNull(),
   freightCost: decimal("freight_cost", { precision: 10, scale: 2 }).notNull(),
-  freightCostCurrency: varchar("freight_cost_currency", { length: 3 }).default('CAD').notNull(),
+  freightCostCurrency: varchar("freight_cost_currency", { length: 3 }).default("CAD").notNull(),
   freightInvoice: text("freight_invoice"),
   pod: text("pod"),
+  // Important: "status" must accept "PAID" or "UNPAID"
   status: varchar("status", { length: 10 }).notNull().$type<"PAID" | "UNPAID">(),
 });
 
-// Zod schemas for carriers and carrier loads
+// Zod schema for carriers
 export const CarrierSchema = z.object({
   id: z.number(),
   name: z.string(),
@@ -304,6 +348,7 @@ export const CarrierSchema = z.object({
   phone: z.string(),
 });
 
+// Zod schema for carrier loads
 export const CarrierLoadSchema = z.object({
   id: z.number(),
   date: z.string(),
@@ -312,8 +357,10 @@ export const CarrierLoadSchema = z.object({
   freightCost: z.number(),
   freightInvoice: z.string().optional(),
   pod: z.string().optional(),
+  // Ensure we only accept "PAID" or "UNPAID"
   status: z.enum(["PAID", "UNPAID"]),
 });
 
+// Export types for carriers and loads
 export type Carrier = z.infer<typeof CarrierSchema>;
 export type CarrierLoad = z.infer<typeof CarrierLoadSchema>;

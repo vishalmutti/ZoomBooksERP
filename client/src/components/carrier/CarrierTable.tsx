@@ -1,11 +1,15 @@
 import { DataTable } from "@/components/ui/data-table";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { LuFileText } from "react-icons/lu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { CarrierForm } from "./CarrierForm";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 
 interface CarrierLoad {
   id: number;
@@ -16,9 +20,9 @@ interface CarrierLoad {
   freightInvoice?: string;
   pod?: string;
   status: "PAID" | "UNPAID";
+  // Added for currency display
+  freightCostCurrency?: string;
 }
-
-import { CarrierForm } from "./CarrierForm";
 
 const FileLink = ({ file }: { file?: string }) => {
   if (!file) return null;
@@ -39,6 +43,11 @@ export function CarrierTable() {
   const queryClient = useQueryClient();
   const [editingCarrier, setEditingCarrier] = useState<CarrierLoad | null>(null);
 
+  // Filtering state: date range and status
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [filterStatus, setFilterStatus] = useState<"PAID" | "UNPAID" | "ALL">("ALL");
+
   const { data = [], isLoading } = useQuery({
     queryKey: ['carrier-loads'],
     queryFn: async () => {
@@ -50,6 +59,7 @@ export function CarrierTable() {
     }
   });
 
+  // Mutation for editing a carrier load
   const editMutation = useMutation({
     mutationFn: async (data: Partial<CarrierLoad>) => {
       const response = await fetch(`/api/carrier-loads/${data.id}`, {
@@ -77,7 +87,8 @@ export function CarrierTable() {
       });
     },
   });
-  
+
+  // Mutation for updating status
   const updateStatusMutation = useMutation({
     mutationFn: async ({ loadId, newStatus }: { loadId: number; newStatus: "PAID" | "UNPAID" }) => {
       const response = await fetch(`/api/carrier-loads/${loadId}/status`, {
@@ -87,7 +98,6 @@ export function CarrierTable() {
         },
         body: JSON.stringify({ status: newStatus }),
       });
-
       if (!response.ok) {
         throw new Error('Failed to update status');
       }
@@ -109,6 +119,7 @@ export function CarrierTable() {
     },
   });
 
+  // Define columns for the DataTable
   const columns: ColumnDef<CarrierLoad>[] = [
     {
       accessorKey: "date",
@@ -127,7 +138,7 @@ export function CarrierTable() {
       header: "Freight Cost",
       cell: ({ row }) => {
         const value = row.getValue<string | number>("freightCost");
-        const currency = row.original.freightCostCurrency;
+        const currency = row.original.freightCostCurrency || "USD";
         const numericValue = typeof value === 'string' ? parseFloat(value) : value;
         return `$${numericValue.toFixed(2)} ${currency}`;
       },
@@ -208,28 +219,64 @@ export function CarrierTable() {
     },
   ];
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
+  // Apply filters: date range and status
+  const filteredData = (data as CarrierLoad[]).filter(load => {
+    const loadDate = new Date(load.date);
+    const dateMatch =
+      (!startDate || loadDate >= startDate) &&
+      (!endDate || loadDate <= endDate);
+    const statusMatch = filterStatus === "ALL" || load.status === filterStatus;
+    return dateMatch && statusMatch;
+  });
 
   return (
     <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Carrier Loads</h2>
-        <CarrierForm />
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
+        <h2 className="text-2xl font-bold mb-4 md:mb-0">Carrier Loads</h2>
+        <div className="flex flex-wrap gap-4">
+          <div>
+            <Label>Start Date</Label>
+            <Input
+              type="date"
+              onChange={(e) => setStartDate(e.target.value ? new Date(e.target.value) : null)}
+            />
+          </div>
+          <div>
+            <Label>End Date</Label>
+            <Input
+              type="date"
+              onChange={(e) => setEndDate(e.target.value ? new Date(e.target.value) : null)}
+            />
+          </div>
+          <div>
+            <Label>Status</Label>
+            <select
+              onChange={(e) => setFilterStatus(e.target.value as "PAID" | "UNPAID" | "ALL")}
+              className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+            >
+              <option value="ALL">All</option>
+              <option value="PAID">Paid</option>
+              <option value="UNPAID">Unpaid</option>
+            </select>
+          </div>
+        </div>
       </div>
-      {editingCarrier && (
-        <CarrierForm
-          initialData={editingCarrier}
-          open={!!editingCarrier}
-          onOpenChange={(open) => !open && setEditingCarrier(null)}
-        />
+      {isLoading ? (
+        <div>Loading...</div>
+      ) : (
+        <>
+          {editingCarrier && (
+            <CarrierForm
+              initialData={editingCarrier}
+              open={!!editingCarrier}
+              onOpenChange={(open) => !open && setEditingCarrier(null)}
+            />
+          )}
+          <DataTable columns={columns} data={filteredData} searchKey="referenceNumber" />
+        </>
       )}
-      <DataTable
-        columns={columns}
-        data={data}
-        searchKey="referenceNumber"
-      />
     </div>
   );
 }
+
+export default CarrierTable;
