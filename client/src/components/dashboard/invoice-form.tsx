@@ -188,11 +188,11 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       }
 
       // Query carrier loads with specific reference number
-      const response = await fetch(`/api/carrier-loads?referenceNumber=${encodeURIComponent(invoice.invoiceNumber)}`);
-      if (!response.ok) {
+      const loadsResponse = await fetch(`/api/carrier-loads?referenceNumber=${encodeURIComponent(invoice.invoiceNumber)}`);
+      if (!loadsResponse.ok) {
         throw new Error('Failed to fetch carrier loads');
       }
-      const carrierLoads = await response.json();
+      const carrierLoads = await loadsResponse.json();
       const existingLoad = carrierLoads[0]; // Get first matching load if any
 
       const formData = new FormData();
@@ -246,7 +246,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         method: existingLoad ? "PATCH" : "POST"
       });
 
-      const response = await fetch(endpoint, {
+      const syncResponse = await fetch(endpoint, {
         method: existingLoad ? "PATCH" : "POST",
         body: formData
       });
