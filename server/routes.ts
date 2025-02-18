@@ -756,8 +756,27 @@ export function registerRoutes(app: Express): Server {
 
   router.get("/api/carrier-loads", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    const loads = await db.query.carrierLoads.findMany();
-    return res.json(loads);
+    try {
+      const { startDate, endDate, status } = req.query;
+      
+      let query = db.select().from(carrierLoads);
+      
+      if (startDate) {
+        query = query.where(sql`date >= ${startDate}`);
+      }
+      if (endDate) {
+        query = query.where(sql`date <= ${endDate}`);
+      }
+      if (status) {
+        query = query.where(eq(carrierLoads.status, status as string));
+      }
+      
+      const loads = await query;
+      return res.json(loads);
+    } catch (error) {
+      console.error('Error fetching carrier loads:', error);
+      return res.status(500).json({ message: 'Failed to fetch carrier loads' });
+    }
   });
 
   router.post("/api/carrier-loads", upload, async (req, res) => {

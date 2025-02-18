@@ -38,11 +38,19 @@ export function CarrierTable() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [editingCarrier, setEditingCarrier] = useState<CarrierLoad | null>(null);
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "PAID" | "UNPAID">("ALL");
 
   const { data = [], isLoading } = useQuery({
-    queryKey: ['carrier-loads'],
+    queryKey: ['carrier-loads', startDate, endDate, statusFilter],
     queryFn: async () => {
-      const response = await fetch('/api/carrier-loads');
+      const params = new URLSearchParams();
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+      if (statusFilter !== "ALL") params.append('status', statusFilter);
+      
+      const response = await fetch(`/api/carrier-loads?${params.toString()}`);
       if (!response.ok) {
         throw new Error('Failed to fetch carrier loads');
       }
@@ -217,7 +225,33 @@ export function CarrierTable() {
     <div className="container mx-auto py-8">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Carrier Loads</h2>
-        <CarrierForm />
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="h-8 px-2 py-1 bg-background border border-input rounded-md text-sm"
+            />
+            <span>to</span>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="h-8 px-2 py-1 bg-background border border-input rounded-md text-sm"
+            />
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as "ALL" | "PAID" | "UNPAID")}
+              className="h-8 px-2 py-1 bg-background border border-input rounded-md text-sm"
+            >
+              <option value="ALL">All Status</option>
+              <option value="PAID">Paid</option>
+              <option value="UNPAID">Unpaid</option>
+            </select>
+          </div>
+          <CarrierForm />
+        </div>
       </div>
       {editingCarrier && (
         <CarrierForm
