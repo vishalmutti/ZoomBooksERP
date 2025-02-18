@@ -8,8 +8,7 @@ import { LuFileText } from "react-icons/lu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CarrierForm } from "./CarrierForm";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
+import { format } from "date-fns";
 
 interface CarrierLoad {
   id: number;
@@ -20,7 +19,6 @@ interface CarrierLoad {
   freightInvoice?: string;
   pod?: string;
   status: "PAID" | "UNPAID";
-  // Added for currency display
   freightCostCurrency?: string;
 }
 
@@ -43,37 +41,39 @@ export function CarrierTable() {
   const queryClient = useQueryClient();
   const [editingCarrier, setEditingCarrier] = useState<CarrierLoad | null>(null);
 
-  // Filtering state: date range and status
+  // Filtering state: search, date range, and status
+  const [searchTerm, setSearchTerm] = useState("");
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [filterStatus, setFilterStatus] = useState<"PAID" | "UNPAID" | "ALL">("ALL");
 
+  // Fetch data
   const { data = [], isLoading } = useQuery({
-    queryKey: ['carrier-loads'],
+    queryKey: ["carrier-loads"],
     queryFn: async () => {
-      const response = await fetch('/api/carrier-loads');
+      const response = await fetch("/api/carrier-loads");
       if (!response.ok) {
-        throw new Error('Failed to fetch carrier loads');
+        throw new Error("Failed to fetch carrier loads");
       }
       return response.json();
-    }
+    },
   });
 
   // Mutation for editing a carrier load
   const editMutation = useMutation({
     mutationFn: async (data: Partial<CarrierLoad>) => {
       const response = await fetch(`/api/carrier-loads/${data.id}`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error('Failed to update carrier load');
+      if (!response.ok) throw new Error("Failed to update carrier load");
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['carrier-loads'] });
+      queryClient.invalidateQueries({ queryKey: ["carrier-loads"] });
       toast({
         title: "Success",
         description: "Carrier load updated successfully",
@@ -92,9 +92,9 @@ export function CarrierTable() {
   const updateStatusMutation = useMutation({
     mutationFn: async ({ loadId, newStatus }: { loadId: number; newStatus: "PAID" | "UNPAID" }) => {
       const response = await fetch(`/api/carrier-loads/${loadId}/status`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ status: newStatus }),
       });
@@ -102,13 +102,12 @@ export function CarrierTable() {
         const text = await response.text();
         try {
           const error = JSON.parse(text);
-          throw new Error(error.message || 'Failed to update status');
+          throw new Error(error.message || "Failed to update status");
         } catch {
-          throw new Error('Failed to update status: Invalid server response');
+          throw new Error("Failed to update status: Invalid server response");
         }
       }
-      const result = await response.json();
-      return result;
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["carrier-loads"] });
@@ -131,6 +130,10 @@ export function CarrierTable() {
     {
       accessorKey: "date",
       header: "Date",
+      cell: ({ row }) => {
+        const dateValue = new Date(row.getValue("date"));
+        return format(dateValue, "MM/dd/yyyy");
+      },
     },
     {
       accessorKey: "referenceNumber",
@@ -146,7 +149,7 @@ export function CarrierTable() {
       cell: ({ row }) => {
         const value = row.getValue<string | number>("freightCost");
         const currency = row.original.freightCostCurrency || "USD";
-        const numericValue = typeof value === 'string' ? parseFloat(value) : value;
+        const numericValue = typeof value === "string" ? parseFloat(value) : value;
         return `$${numericValue.toFixed(2)} ${currency}`;
       },
     },
@@ -199,12 +202,12 @@ export function CarrierTable() {
               if (confirm("Are you sure you want to delete this carrier load?")) {
                 try {
                   const response = await fetch(`/api/carrier-loads/${row.original.id}`, {
-                    method: 'DELETE',
+                    method: "DELETE",
                   });
                   if (!response.ok) {
-                    throw new Error('Failed to delete carrier load');
+                    throw new Error("Failed to delete carrier load");
                   }
-                  await queryClient.invalidateQueries({ queryKey: ['carrier-loads'] });
+                  await queryClient.invalidateQueries({ queryKey: ["carrier-loads"] });
                   toast({
                     title: "Success",
                     description: "Carrier load deleted successfully",
@@ -226,46 +229,59 @@ export function CarrierTable() {
     },
   ];
 
-  // Apply filters: date range and status
-  const filteredData = (data as CarrierLoad[]).filter(load => {
+  // Filter data: apply search, date range, and status filters
+  const filteredData = (data as CarrierLoad[]).filter((load) => {
     const loadDate = new Date(load.date);
-    const dateMatch =
-      (!startDate || loadDate >= startDate) &&
-      (!endDate || loadDate <= endDate);
+    const dateMatch = (!startDate || loadDate >= startDate) && (!endDate || loadDate <= endDate);
     const statusMatch = filterStatus === "ALL" || load.status === filterStatus;
-    return dateMatch && statusMatch;
+    const term = searchTerm.toLowerCase();
+    const searchMatch =
+      load.referenceNumber.toLowerCase().includes(term) ||
+      load.carrier.toLowerCase().includes(term);
+    return dateMatch && statusMatch && searchMatch;
   });
 
   return (
     <div className="container mx-auto py-8">
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
-        <h2 className="text-2xl font-bold mb-4 md:mb-0">Carrier Loads</h2>
-        <div className="flex flex-wrap gap-4">
-          <div>
-            <Label>Start Date</Label>
-            <Input
-              type="date"
-              onChange={(e) => setStartDate(e.target.value ? new Date(e.target.value) : null)}
-            />
-          </div>
-          <div>
-            <Label>End Date</Label>
-            <Input
-              type="date"
-              onChange={(e) => setEndDate(e.target.value ? new Date(e.target.value) : null)}
-            />
-          </div>
-          <div>
-            <Label>Status</Label>
-            <select
-              onChange={(e) => setFilterStatus(e.target.value as "PAID" | "UNPAID" | "ALL")}
-              className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-            >
-              <option value="ALL">All</option>
-              <option value="PAID">Paid</option>
-              <option value="UNPAID">Unpaid</option>
-            </select>
-          </div>
+      {/* Title row */}
+      <div className="mb-4">
+        <h2 className="text-2xl font-bold">Carrier Loads</h2>
+      </div>
+      {/* Row with search bar and filters */}
+      <div className="flex flex-wrap gap-4 items-end mb-6">
+        <div className="flex flex-col">
+          <Label htmlFor="search">Search</Label>
+          <Input
+            id="search"
+            placeholder="Search reference or carrier..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="flex flex-col">
+          <Label>Start Date</Label>
+          <Input
+            type="date"
+            onChange={(e) => setStartDate(e.target.value ? new Date(e.target.value) : null)}
+          />
+        </div>
+        <div className="flex flex-col">
+          <Label>End Date</Label>
+          <Input
+            type="date"
+            onChange={(e) => setEndDate(e.target.value ? new Date(e.target.value) : null)}
+          />
+        </div>
+        <div className="flex flex-col">
+          <Label>Status</Label>
+          <select
+            onChange={(e) => setFilterStatus(e.target.value as "PAID" | "UNPAID" | "ALL")}
+            className="h-10 w-40 rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="ALL">All</option>
+            <option value="PAID">Paid</option>
+            <option value="UNPAID">Unpaid</option>
+          </select>
         </div>
       </div>
       {isLoading ? (
@@ -279,7 +295,7 @@ export function CarrierTable() {
               onOpenChange={(open) => !open && setEditingCarrier(null)}
             />
           )}
-          <DataTable columns={columns} data={filteredData} searchKey="referenceNumber" />
+          <DataTable columns={columns} data={filteredData} />
         </>
       )}
     </div>
