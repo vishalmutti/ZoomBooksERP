@@ -89,7 +89,8 @@ export function CarrierTable() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update status');
+        const errorText = await response.text();
+        throw new Error(`Failed to update status: ${errorText}`);
       }
       return response.json();
     },

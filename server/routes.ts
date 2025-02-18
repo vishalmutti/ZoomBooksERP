@@ -779,6 +779,24 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  router.patch("/api/carrier-loads/:id/status", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const id = parseInt(req.params.id);
+      const { status } = req.body;
+      
+      const result = await db.update(carrierLoads)
+        .set({ status })
+        .where(eq(carrierLoads.id, id))
+        .returning();
+
+      return res.json(result[0]);
+    } catch (error) {
+      console.error('Error updating carrier load status:', error);
+      res.status(500).json({ message: 'Failed to update status' });
+    }
+  });
+
   router.patch("/api/carrier-loads/:id", upload, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
