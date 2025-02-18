@@ -239,42 +239,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     }
   };
 
-  const syncCarrierLoad = async (invoice: any) => {
-    const carrierFormData = new FormData();
-    const carrierData = {
-      date: invoice.dueDate || new Date().toISOString().split('T')[0],
-      referenceNumber: invoice.invoiceNumber || '',
-      carrier: invoice.carrier || '',
-      freightCost: invoice.freightCost || '0',
-      freightCostCurrency: invoice.freightCostCurrency || 'USD',
-      status: "UNPAID"
-    };
-    carrierFormData.append('carrierData', JSON.stringify(carrierData));
-
-    if (freightInvoiceFile) {
-      carrierFormData.append('freightInvoice', freightInvoiceFile);
-    }
-    if (bolFile) {
-      carrierFormData.append('pod', bolFile);
-    }
-
-    // Check if carrier load exists
-    const checkResponse = await fetch(`/api/carrier-loads?referenceNumber=${encodeURIComponent(invoice.invoiceNumber || '')}`);
-    const existingLoads = await checkResponse.json();
-
-    if (existingLoads && existingLoads.length > 0) {
-      await fetch(`/api/carrier-loads/${existingLoads[0].id}`, {
-        method: "PATCH",
-        body: carrierFormData
-      });
-    } else {
-      await fetch("/api/carrier-loads", {
-        method: "POST",
-        body: carrierFormData
-      });
-    }
-    await queryClient.invalidateQueries({ queryKey: ["carrier-loads"] });
-  };
+  
 
   const updateInvoiceMutation = useMutation({
     mutationFn: async (data: InsertInvoice) => {
