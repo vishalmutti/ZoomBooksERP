@@ -187,11 +187,19 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         return;
       }
 
-      const checkResponse = await fetch(`/api/carrier-loads?referenceNumber=${encodeURIComponent(invoice.invoiceNumber)}`);
-      if (!checkResponse.ok) {
-        throw new Error('Failed to check existing carrier loads');
-      }
-      const existingLoads = await checkResponse.json();
+      // Query carrier loads to find matching reference number
+      const { data: carrierLoads = [] } = await queryClient.fetchQuery({
+        queryKey: ['carrier-loads'],
+        queryFn: async () => {
+          const response = await fetch('/api/carrier-loads');
+          if (!response.ok) throw new Error('Failed to fetch carrier loads');
+          return response.json();
+        }
+      });
+
+      const existingLoad = carrierLoads.find(load => 
+        load.referenceNumber.toLowerCase() === invoice.invoiceNumber.toLowerCase()
+      );
 
       const formData = new FormData();
       const carrierData = {
@@ -234,12 +242,12 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         }
       }
 
-      const endpoint = existingLoads?.length > 0 
-        ? `/api/carrier-loads/${existingLoads[0].id}`
+      const endpoint = existingLoad 
+        ? `/api/carrier-loads/${existingLoad.id}`
         : "/api/carrier-loads";
       
       const response = await fetch(endpoint, {
-        method: existingLoads?.length > 0 ? "PATCH" : "POST",
+        method: existingLoad ? "PATCH" : "POST",
         body: formData
       });
 
