@@ -317,3 +317,114 @@ export const CarrierLoadSchema = z.object({
 
 export type Carrier = z.infer<typeof CarrierSchema>;
 export type CarrierLoad = z.infer<typeof CarrierLoadSchema>;
+
+
+// Employee Scheduling Tables
+export const departments = pgTable("departments", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  targetHours: decimal("target_hours", { precision: 10, scale: 2 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const employees = pgTable("employees", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 50 }),
+  departmentId: integer("department_id").references(() => departments.id).notNull(),
+  position: varchar("position", { length: 100 }).notNull(),
+  skills: text("skills").array(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const employeeAvailability = pgTable("employee_availability", {
+  id: serial("id").primaryKey(),
+  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  dayOfWeek: integer("day_of_week").notNull(), // 0-6 for Sunday-Saturday
+  startTime: varchar("start_time", { length: 5 }).notNull(), // Format: "HH:mm"
+  endTime: varchar("end_time", { length: 5 }).notNull(), // Format: "HH:mm"
+  isPreferred: boolean("is_preferred").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const timeOffRequests = pgTable("time_off_requests", {
+  id: serial("id").primaryKey(),
+  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  type: varchar("type", { length: 20 }).notNull().$type<'vacation' | 'sick' | 'personal'>(),
+  status: varchar("status", { length: 20 }).default('pending').notNull().$type<'pending' | 'approved' | 'rejected'>(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const shifts = pgTable("shifts", {
+  id: serial("id").primaryKey(),
+  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  departmentId: integer("department_id").references(() => departments.id).notNull(),
+  date: date("date").notNull(),
+  startTime: varchar("start_time", { length: 5 }).notNull(), // Format: "HH:mm"
+  endTime: varchar("end_time", { length: 5 }).notNull(), // Format: "HH:mm"
+  status: varchar("status", { length: 20 }).default('scheduled').notNull().$type<'scheduled' | 'completed' | 'cancelled'>(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Relations for scheduling tables
+export const departmentRelations = relations(departments, ({ many }) => ({
+  employees: many(employees),
+  shifts: many(shifts),
+}));
+
+export const employeeRelations = relations(employees, ({ one, many }) => ({
+  department: one(departments, {
+    fields: [employees.departmentId],
+    references: [departments.id],
+  }),
+  availability: many(employeeAvailability),
+  timeOffRequests: many(timeOffRequests),
+  shifts: many(shifts),
+}));
+
+// Insert schemas for scheduling tables
+export const insertDepartmentSchema = createInsertSchema(departments).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertEmployeeSchema = createInsertSchema(employees).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertEmployeeAvailabilitySchema = createInsertSchema(employeeAvailability).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertTimeOffRequestSchema = createInsertSchema(timeOffRequests).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertShiftSchema = createInsertSchema(shifts).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Export types for scheduling tables
+export type Department = typeof departments.$inferSelect;
+export type InsertDepartment = z.infer<typeof insertDepartmentSchema>;
+
+export type Employee = typeof employees.$inferSelect;
+export type InsertEmployee = z.infer<typeof insertEmployeeSchema>;
+
+export type EmployeeAvailability = typeof employeeAvailability.$inferSelect;
+export type InsertEmployeeAvailability = z.infer<typeof insertEmployeeAvailabilitySchema>;
+
+export type TimeOffRequest = typeof timeOffRequests.$inferSelect;
+export type InsertTimeOffRequest = z.infer<typeof insertTimeOffRequestSchema>;
+
+export type Shift = typeof shifts.$inferSelect;
+export type InsertShift = z.infer<typeof insertShiftSchema>;

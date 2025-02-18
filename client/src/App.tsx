@@ -12,8 +12,8 @@ import { LoadsPage } from "@/pages/LoadsPage";
 import CarrierPage from "@/pages/carrier-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import { Navbar } from "@/components/dashboard/navbar";
-import PayrollPage from "@/pages/payroll-page"; // Import the new page component
-
+import PayrollPage from "@/pages/payroll-page";
+import SchedulingPage from "@/pages/scheduling-page";
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -55,9 +55,9 @@ function Router() {
         </AppLayout>
       </Route>
 
-      <Route path="/">
+      <Route path="/scheduling">
         <AppLayout>
-          <ProtectedRoute path="/" component={HomePage} />
+          <ProtectedRoute path="/scheduling" component={SchedulingPage} />
         </AppLayout>
       </Route>
 
@@ -66,6 +66,13 @@ function Router() {
           <ProtectedRoute path="/payroll" component={PayrollPage} />
         </AppLayout>
       </Route>
+
+      <Route path="/">
+        <AppLayout>
+          <ProtectedRoute path="/" component={HomePage} />
+        </AppLayout>
+      </Route>
+
       <Route component={NotFound} />
     </Switch>
   );
