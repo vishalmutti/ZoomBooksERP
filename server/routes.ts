@@ -523,5 +523,11 @@ export function registerRoutes(app: Express): Server {
     res.json(carrierLoads);
   });
 
+  app.get("/api/carriers", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const result = await db.select().from(carriers);
+    res.json(result);
+  });
+
   return createServer(app);
 }
