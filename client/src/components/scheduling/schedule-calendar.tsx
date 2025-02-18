@@ -13,7 +13,7 @@ import { Department, Employee, Shift } from "@shared/schema";
 
 export function ScheduleCalendar() {
   const [date, setDate] = useState<Date>(new Date());
-  const [selectedDepartment, setSelectedDepartment] = useState<string>("");
+  const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
 
   const { data: departments } = useQuery<Department[]>({
     queryKey: ['/api/departments'],
@@ -42,7 +42,7 @@ export function ScheduleCalendar() {
             <SelectValue placeholder="Select department" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Departments</SelectItem>
+            <SelectItem value="all">All Departments</SelectItem>
             {departments?.map((dept) => (
               <SelectItem key={dept.id} value={dept.id.toString()}>
                 {dept.name}
@@ -73,7 +73,11 @@ export function ScheduleCalendar() {
               {shifts?.map((shift) => {
                 const employee = employees?.find(e => e.id === shift.employeeId);
                 const department = departments?.find(d => d.id === shift.departmentId);
-                
+
+                if (selectedDepartment !== "all" && shift.departmentId.toString() !== selectedDepartment) {
+                  return null;
+                }
+
                 return (
                   <div
                     key={shift.id}
@@ -89,7 +93,7 @@ export function ScheduleCalendar() {
                   </div>
                 );
               })}
-              {!shifts?.length && (
+              {(!shifts?.length || shifts.filter(s => selectedDepartment === "all" || s.departmentId.toString() === selectedDepartment).length === 0) && (
                 <p className="text-muted-foreground">No shifts scheduled</p>
               )}
             </div>
