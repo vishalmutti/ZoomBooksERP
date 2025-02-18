@@ -99,9 +99,16 @@ export function CarrierTable() {
         body: JSON.stringify({ status: newStatus }),
       });
       if (!response.ok) {
-        throw new Error('Failed to update status');
+        const text = await response.text();
+        try {
+          const error = JSON.parse(text);
+          throw new Error(error.message || 'Failed to update status');
+        } catch {
+          throw new Error('Failed to update status: Invalid server response');
+        }
       }
-      return response.json();
+      const result = await response.json();
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["carrier-loads"] });
