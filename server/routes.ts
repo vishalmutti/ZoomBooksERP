@@ -762,10 +762,10 @@ export function registerRoutes(app: Express): Server {
       let query = db.select().from(carrierLoads);
       
       if (startDate) {
-        query = query.where(sql`date >= ${startDate}`);
+        query = query.where(sql`DATE(date) >= DATE(${startDate})`);
       }
       if (endDate) {
-        query = query.where(sql`date <= ${endDate}`);
+        query = query.where(sql`DATE(date) <= DATE(${endDate})`);
       }
       if (status) {
         query = query.where(eq(carrierLoads.status, status as string));

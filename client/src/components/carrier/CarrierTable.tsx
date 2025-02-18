@@ -236,14 +236,6 @@ export function CarrierTable() {
           <CarrierForm />
         </div>
         <div className="flex items-center gap-4">
-          <div className="flex-1">
-            <input
-              type="text"
-              placeholder="Search reference number..."
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-8 px-2 py-1 bg-background border border-input rounded-md text-sm"
-            />
-          </div>
           <input
             type="date"
             value={startDate}
