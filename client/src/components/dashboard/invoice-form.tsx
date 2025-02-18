@@ -246,13 +246,19 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         ? `/api/carrier-loads/${existingLoad.id}`
         : "/api/carrier-loads";
       
+      console.log('Syncing carrier load:', {
+        existingLoad,
+        endpoint,
+        method: existingLoad ? "PATCH" : "POST"
+      });
+
       const response = await fetch(endpoint, {
         method: existingLoad ? "PATCH" : "POST",
         body: formData
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to ${existingLoads?.length > 0 ? 'update' : 'create'} carrier load`);
+        throw new Error(`Failed to ${existingLoad ? 'update' : 'create'} carrier load`);
       }
 
       await queryClient.invalidateQueries({ queryKey: ["carrier-loads"] });
