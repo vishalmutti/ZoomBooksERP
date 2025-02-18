@@ -57,7 +57,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   const [bolFile, setBolFile] = useState<File | null>(null);
   const [freightInvoiceFile, setFreightInvoiceFile] = useState<File | null>(null);
 
-  // Fetch available carriers for the dropdown.
+  // Fetch available carriers from your API
   const { data: carriers = [] } = useQuery<Carrier[]>({
     queryKey: ["/api/carriers"],
     queryFn: async () => {
@@ -67,7 +67,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     },
   });
 
-  // Poll current invoice data when editing.
+  // Poll current invoice data when editing
   const { data: currentInvoiceData } = useQuery<Invoice & { items?: InvoiceItem[] }>({
     queryKey: [`/api/invoices/${editInvoice?.id}`],
     enabled: !!editInvoice?.id,
@@ -79,13 +79,12 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     },
   });
 
-  // Initialize form defaults.
   const form = useForm<InsertInvoice>({
     resolver: zodResolver(insertInvoiceSchema),
     defaultValues: {
       supplierId: currentInvoiceData?.supplierId || editInvoice?.supplierId || 0,
-      invoiceNumber:
-        currentInvoiceData?.invoiceNumber || editInvoice?.invoiceNumber || "",
+      invoiceNumber: currentInvoiceData?.invoiceNumber || editInvoice?.invoiceNumber || "",
+      // Carrier comes from a dropdown
       carrier: currentInvoiceData?.carrier || editInvoice?.carrier || "",
       dueDate: currentInvoiceData?.dueDate
         ? new Date(currentInvoiceData.dueDate).toISOString().split("T")[0]
@@ -96,16 +95,13 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         currentInvoiceData?.totalAmount?.toString() ||
         editInvoice?.totalAmount?.toString() ||
         "0",
-      amountCurrency:
-        currentInvoiceData?.amountCurrency || editInvoice?.amountCurrency || "USD",
+      amountCurrency: currentInvoiceData?.amountCurrency || editInvoice?.amountCurrency || "USD",
       freightCost:
         currentInvoiceData?.freightCost?.toString() ||
         editInvoice?.freightCost?.toString() ||
         "0",
       freightCostCurrency:
-        currentInvoiceData?.freightCostCurrency ||
-        editInvoice?.freightCostCurrency ||
-        "CAD",
+        currentInvoiceData?.freightCostCurrency || editInvoice?.freightCostCurrency || "CAD",
       notes: currentInvoiceData?.notes || editInvoice?.notes || "",
       isPaid: currentInvoiceData?.isPaid || editInvoice?.isPaid || false,
       items: currentInvoiceData?.items?.length
@@ -136,7 +132,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     },
   });
 
-  // When editing, reset form with invoice data.
   useEffect(() => {
     if (!dialogOpen && (currentInvoiceData || editInvoice)) {
       const invoiceData = currentInvoiceData || editInvoice;
@@ -183,86 +178,79 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     },
   });
 
-  // Helper: Sync invoice data to the carrier loads table.
-  // When editing, use the original invoice number to update the existing carrier load entry.
+  // Helper: Synchronize the carrier load entry for the invoice.
+  // Instead of creating a new carrier load entry, we update the existing entry with the same reference number.
   const syncCarrierLoad = async (invoice: Invoice) => {
     try {
-      // Use original invoice number if editing, else the current invoice number.
-      const referenceNumber = editInvoice ? editInvoice.invoiceNumber : invoice.invoiceNumber;
-      if (!referenceNumber || !invoice.carrier) {
-        console.log("Skipping carrier load sync - missing invoice number or carrier");
+      if (!invoice.invoiceNumber || !invoice.carrier) {
+        console.log('Skipping carrier load sync - missing invoice number or carrier');
         return;
       }
-      const checkResponse = await fetch(
-        `/api/carrier-loads?referenceNumber=${encodeURIComponent(referenceNumber)}`
-      );
+
+      const checkResponse = await fetch(`/api/carrier-loads?referenceNumber=${encodeURIComponent(invoice.invoiceNumber)}`);
       if (!checkResponse.ok) {
-        throw new Error("Failed to check existing carrier loads");
+        throw new Error('Failed to check existing carrier loads');
       }
       const existingLoads = await checkResponse.json();
 
       const formData = new FormData();
       const carrierData = {
-        date: invoice.dueDate || new Date().toISOString().split("T")[0],
+        date: invoice.dueDate || new Date().toISOString().split('T')[0],
         referenceNumber: invoice.invoiceNumber,
         carrier: invoice.carrier,
-        freightCost: invoice.freightCost || "0",
-        freightCostCurrency: invoice.freightCostCurrency || "USD",
-        status: invoice.isPaid ? "PAID" : "UNPAID",
+        freightCost: invoice.freightCost || '0',
+        freightCostCurrency: invoice.freightCostCurrency || 'USD',
+        status: invoice.isPaid ? "PAID" : "UNPAID"
       };
-      formData.append("carrierData", JSON.stringify(carrierData));
+      formData.append('carrierData', JSON.stringify(carrierData));
 
-      // Map freight invoice file (if provided)
+      // Handle freight invoice file
       if (freightInvoiceFile) {
-        formData.append("freightInvoice", freightInvoiceFile);
+        formData.append('freightInvoice', freightInvoiceFile);
       } else if (invoice.freightInvoiceFile) {
         try {
           const fileResponse = await fetch(`/uploads/${invoice.freightInvoiceFile}`);
           if (fileResponse.ok) {
             const blob = await fileResponse.blob();
-            formData.append("freightInvoice", blob, invoice.freightInvoiceFile);
+            formData.append('freightInvoice', blob, invoice.freightInvoiceFile);
           }
         } catch (error) {
-          console.error("Error fetching existing freight invoice:", error);
+          console.error('Error fetching existing freight invoice:', error);
         }
       }
-      // Map POD file: use file (generated PDF) or existing uploaded file
+
+      // Handle POD/BOL file
       if (file) {
-        formData.append("pod", file);
+        formData.append('pod', file);
       } else if (invoice.uploadedFile) {
         try {
           const fileResponse = await fetch(`/uploads/${invoice.uploadedFile}`);
           if (fileResponse.ok) {
             const blob = await fileResponse.blob();
-            formData.append("pod", blob, invoice.uploadedFile);
+            formData.append('pod', blob, invoice.uploadedFile);
           }
         } catch (error) {
-          console.error("Error fetching existing POD:", error);
+          console.error('Error fetching existing POD:', error);
         }
       }
 
-      const endpoint =
-        existingLoads && existingLoads.length > 0
-          ? `/api/carrier-loads/${existingLoads[0].id}`
-          : "/api/carrier-loads";
-      const method = existingLoads && existingLoads.length > 0 ? "PATCH" : "POST";
-
+      const endpoint = existingLoads?.length > 0 
+        ? `/api/carrier-loads/${existingLoads[0].id}`
+        : "/api/carrier-loads";
+      
       const response = await fetch(endpoint, {
-        method,
-        body: formData,
+        method: existingLoads?.length > 0 ? "PATCH" : "POST",
+        body: formData
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `Failed to ${existingLoads && existingLoads.length > 0 ? "update" : "create"} carrier load: ${errorText}`
-        );
+        throw new Error(`Failed to ${existingLoads?.length > 0 ? 'update' : 'create'} carrier load`);
       }
 
       await queryClient.invalidateQueries({ queryKey: ["carrier-loads"] });
       return response.json();
     } catch (error) {
-      console.error("Error syncing carrier load:", error);
+      console.error('Error syncing carrier load:', error);
       throw error;
     }
   };
@@ -299,7 +287,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       if (updatedInvoice) {
         form.reset({
           ...updatedInvoice,
-          items: updatedInvoice.items?.map((item) => ({
+          items: updatedInvoice.items?.map(item => ({
             description: item.description,
             quantity: item.quantity?.toString() || "0",
             unitPrice: item.unitPrice?.toString() || "0",
@@ -308,7 +296,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
           })),
         });
         try {
-          // Instead of creating a new entry, update the existing carrier load based on the original invoice number.
+          // Instead of creating a new entry, update the carrier load with the same reference number.
           await syncCarrierLoad(updatedInvoice);
           toast({
             title: "Carrier Load Synced",
@@ -375,12 +363,11 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
     const currentValues = form.getValues();
     form.reset({
       ...currentValues,
-      items:
-        value === "manual"
-          ? currentValues.items?.length
-            ? currentValues.items
-            : [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }]
-          : currentValues.items,
+      items: value === "manual"
+        ? currentValues.items?.length
+          ? currentValues.items
+          : [{ description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 }]
+        : currentValues.items,
     });
   };
 
@@ -433,13 +420,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   });
 
   return (
-    <Dialog
-      open={dialogOpen}
-      onOpenChange={(newOpen) => {
-        setDialogOpen(newOpen);
-        if (!newOpen && onComplete) onComplete();
-      }}
-    >
+    <Dialog open={dialogOpen} onOpenChange={(newOpen) => { setDialogOpen(newOpen); if (!newOpen && onComplete) onComplete(); }}>
       {!editInvoice && (
         <DialogTrigger asChild>
           <Button className="w-full text-lg">Create Invoice</Button>
@@ -454,18 +435,13 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
             <TabsTrigger value="manual">Manual Entry</TabsTrigger>
             <TabsTrigger value="upload">Upload Invoice</TabsTrigger>
           </TabsList>
-            <form onSubmit={handleSubmit} className="space-y-6 mt-4">
-              <div className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+            <div className="space-y-4">
               <div>
                 <Label>Supplier</Label>
                 <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
                   <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={comboboxOpen}
-                      className="w-full justify-between"
-                    >
+                    <Button variant="outline" role="combobox" aria-expanded={comboboxOpen} className="w-full justify-between">
                       {form.watch("supplierId")
                         ? suppliers.find(supplier => supplier.id === form.watch("supplierId"))?.name
                         : "Select supplier..."}
@@ -473,30 +449,15 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                   </PopoverTrigger>
                   <PopoverContent className="w-full p-0">
                     <Command>
-                      <CommandInput
-                        placeholder="Search suppliers..."
-                        value={supplierSearch}
-                        onValueChange={setSupplierSearch}
-                      />
+                      <CommandInput placeholder="Search suppliers..." value={supplierSearch} onValueChange={setSupplierSearch} />
                       <CommandEmpty>No suppliers found.</CommandEmpty>
                       <CommandGroup>
                         {suppliers.map(supplier => (
-                          <CommandItem
-                            key={supplier.id}
-                            value={supplier.name}
-                            onSelect={() => {
-                              form.setValue("supplierId", supplier.id);
-                              setComboboxOpen(false);
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                form.watch("supplierId") === supplier.id
-                                  ? "opacity-100"
-                                  : "opacity-0"
-                              )}
-                            />
+                          <CommandItem key={supplier.id} value={supplier.name} onSelect={() => {
+                            form.setValue("supplierId", supplier.id);
+                            setComboboxOpen(false);
+                          }}>
+                            <Check className={cn("mr-2 h-4 w-4", form.watch("supplierId") === supplier.id ? "opacity-100" : "opacity-0")} />
                             {supplier.name}
                           </CommandItem>
                         ))}
@@ -518,9 +479,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                 >
                   <option value="">Select a carrier...</option>
                   {carriers.map(carrier => (
-                    <option key={carrier.id} value={carrier.name}>
-                      {carrier.name}
-                    </option>
+                    <option key={carrier.id} value={carrier.name}>{carrier.name}</option>
                   ))}
                 </select>
               </div>
@@ -541,59 +500,22 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                     {form.watch("items")?.map((item, index) => (
                       <div key={index} className="grid grid-cols-12 gap-2">
                         <div className="col-span-5">
-                          <Input
-                            placeholder="Description"
-                            defaultValue={item.description}
-                            {...form.register(`items.${index}.description`)}
-                          />
+                          <Input placeholder="Description" defaultValue={item.description} {...form.register(`items.${index}.description`)} />
                         </div>
                         <div className="col-span-2">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            placeholder="Quantity"
-                            defaultValue={item.quantity}
-                            {...form.register(`items.${index}.quantity`)}
-                            onChange={(e) =>
-                              handleItemChange(index, "quantity", e.target.value)
-                            }
-                          />
+                          <Input type="number" step="0.01" placeholder="Quantity" defaultValue={item.quantity} {...form.register(`items.${index}.quantity`)} onChange={(e) => handleItemChange(index, "quantity", e.target.value)} />
                         </div>
                         <div className="col-span-2">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            placeholder="Unit Price"
-                            defaultValue={item.unitPrice}
-                            {...form.register(`items.${index}.unitPrice`)}
-                            onChange={(e) =>
-                              handleItemChange(index, "unitPrice", e.target.value)
-                            }
-                          />
+                          <Input type="number" step="0.01" placeholder="Unit Price" defaultValue={item.unitPrice} {...form.register(`items.${index}.unitPrice`)} onChange={(e) => handleItemChange(index, "unitPrice", e.target.value)} />
                         </div>
                         <div className="col-span-2">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            placeholder="Total"
-                            value={item.totalPrice}
-                            readOnly
-                          />
+                          <Input type="number" step="0.01" placeholder="Total" value={item.totalPrice} readOnly />
                         </div>
                         <div className="col-span-1 flex items-center">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => {
-                              const items = form.getValues("items") || [];
-                              form.setValue(
-                                "items",
-                                items.filter((_, i) => i !== index)
-                              );
-                            }}
-                          >
+                          <Button type="button" variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => {
+                            const items = form.getValues("items") || [];
+                            form.setValue("items", items.filter((_, i) => i !== index));
+                          }}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -602,10 +524,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                     <div className="grid grid-cols-2 gap-4 my-4">
                       <div className="space-y-2">
                         <Label>Total Amount Currency</Label>
-                        <select
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                          {...form.register("amountCurrency")}
-                        >
+                        <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background" {...form.register("amountCurrency")}>
                           <option value="USD">USD</option>
                           <option value="CAD">CAD</option>
                         </select>
@@ -613,16 +532,8 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                       <div className="space-y-2">
                         <Label>Freight Cost</Label>
                         <div className="flex gap-2">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            placeholder="Enter freight cost"
-                            {...form.register("freightCost")}
-                          />
-                          <select
-                            className="flex h-10 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                            {...form.register("freightCostCurrency")}
-                          >
+                          <Input type="number" step="0.01" placeholder="Enter freight cost" {...form.register("freightCost")} />
+                          <select className="flex h-10 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background" {...form.register("freightCostCurrency")}>
                             <option value="USD">USD</option>
                             <option value="CAD">CAD</option>
                           </select>
@@ -643,12 +554,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                                 : "Click to upload freight invoice or drag and drop"}
                             </p>
                           </div>
-                          <input
-                            type="file"
-                            className="hidden"
-                            onChange={handleFreightInvoiceFileChange}
-                            accept=".pdf,.png,.jpg,.jpeg"
-                          />
+                          <input type="file" className="hidden" onChange={handleFreightInvoiceFileChange} accept=".pdf,.png,.jpg,.jpeg" />
                         </label>
                       </div>
                       {editInvoice?.freightInvoiceFile && (
@@ -656,29 +562,20 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                           <Label>Current Freight Invoice File</Label>
                           <div className="flex items-center justify-between p-2 mt-1 border rounded">
                             <span className="text-sm">{editInvoice.freightInvoiceFile}</span>
-                            <a
-                              href={`/uploads/${editInvoice.freightInvoiceFile}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center text-blue-600 hover:text-blue-800"
-                            >
+                            <a href={`/uploads/${editInvoice.freightInvoiceFile}`} target="_blank" rel="noopener noreferrer" className="flex items-center text-blue-600 hover:text-blue-800">
                               <Download className="h-4 w-4 mr-1" /> Download
                             </a>
                           </div>
                         </div>
                       )}
                     </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        const items = form.getValues("items") || [];
-                        form.setValue("items", [
-                          ...items,
-                          { description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 },
-                        ]);
-                      }}
-                    >
+                    <Button type="button" variant="outline" onClick={() => {
+                      const items = form.getValues("items") || [];
+                      form.setValue("items", [
+                        ...items,
+                        { description: "", quantity: "0", unitPrice: "0", totalPrice: "0", invoiceId: 0 },
+                      ]);
+                    }}>
                       <Plus className="h-4 w-4 mr-2" /> Add Item
                     </Button>
                   </div>
@@ -699,20 +596,14 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                   <div className="flex gap-2">
                     <div className="flex-1">
                       <Label>Total Amount Currency</Label>
-                      <select
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                        {...form.register("amountCurrency")}
-                      >
+                      <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background" {...form.register("amountCurrency")}>
                         <option value="USD">USD</option>
                         <option value="CAD">CAD</option>
                       </select>
                     </div>
                     <div className="flex-1">
                       <Label>Freight Cost Currency</Label>
-                      <select
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                        {...form.register("freightCostCurrency")}
-                      >
+                      <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background" {...form.register("freightCostCurrency")}>
                         <option value="USD">USD</option>
                         <option value="CAD">CAD</option>
                       </select>
@@ -725,19 +616,10 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
                           <Upload className="w-8 h-8 mb-2 text-gray-400" />
                           <p className="mb-2 text-sm text-gray-500">
-                            {file
-                              ? file.name
-                              : editInvoice?.uploadedFile
-                              ? "Replace current file"
-                              : "Click to upload or drag and drop"}
+                            {file ? file.name : editInvoice?.uploadedFile ? "Replace current file" : "Click to upload or drag and drop"}
                           </p>
                         </div>
-                        <input
-                          type="file"
-                          className="hidden"
-                          onChange={handleFileChange}
-                          accept=".pdf,.png,.jpg,.jpeg"
-                        />
+                        <input type="file" className="hidden" onChange={handleFileChange} accept=".pdf,.png,.jpg,.jpeg" />
                       </label>
                     </div>
                     {editInvoice?.uploadedFile && (
@@ -745,30 +627,50 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                         <Label>Current File</Label>
                         <div className="flex items-center justify-between p-2 mt-1 border rounded">
                           <span className="text-sm">{editInvoice.uploadedFile}</span>
-                          <a
-                            href={`/uploads/${editInvoice.uploadedFile}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center text-blue-600 hover:text-blue-800"
-                          >
+                          <a href={`/uploads/${editInvoice.uploadedFile}`} target="_blank" rel="noopener noreferrer" className="flex items-center text-blue-600 hover:text-blue-800">
                             <Download className="h-4 w-4 mr-1" /> Download
                           </a>
                         </div>
                       </div>
                     )}
                   </div>
-                </TabsContent>
-                <div>
-                  <Label htmlFor="notes">Notes</Label>
+                  <div>
+                    <Label>Upload BOL</Label>
+                    <div className="mt-2">
+                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <Upload className="w-8 h-8 mb-2 text-gray-400" />
+                          <p className="mb-2 text-sm text-gray-500">
+                            {bolFile ? bolFile.name : editInvoice?.bolFile ? "Replace current file" : "Click to upload BOL or drag and drop"}
+                          </p>
+                        </div>
+                        <input type="file" className="hidden" onChange={handleBolFileChange} accept=".pdf,.png,.jpg,.jpeg" />
+                      </label>
+                    </div>
+                    {editInvoice?.bolFile && (
+                      <div className="mt-4">
+                        <Label>Current BOL File</Label>
+                        <div className="flex items-center justify-between p-2 mt-1 border rounded">
+                          <span className="text-sm">{editInvoice.bolFile}</span>
+                          <a href={`/uploads/${editInvoice.bolFile}`} target="_blank" rel="noopener noreferrer" className="flex items-center text-blue-600 hover:text-blue-800">
+                            <Download className="h-4 w-4 mr-1" /> Download
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </TabsContent>
+              <div>
+                <Label htmlFor="notes">Notes</Label>
                 <Textarea {...form.register("notes")} />
               </div>
             </div>
-              <Button type="submit" className="w-full" disabled={updateInvoiceMutation.isPending}>
-                {updateInvoiceMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {editInvoice ? "Update" : "Create"} Invoice
-              </Button>
-            </form>
-          </div>
+            <Button type="submit" className="w-full" disabled={updateInvoiceMutation.isPending}>
+              {updateInvoiceMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {editInvoice ? "Update" : "Create"} Invoice
+            </Button>
+          </form>
         </Tabs>
       </DialogContent>
     </Dialog>
