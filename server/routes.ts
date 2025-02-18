@@ -529,5 +529,28 @@ export function registerRoutes(app: Express): Server {
     res.json(result);
   });
 
+  app.patch("/api/carrier-loads/:id/status", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const id = parseInt(req.params.id);
+      const { status } = req.body;
+      
+      if (!status || !['PAID', 'UNPAID'].includes(status)) {
+        return res.status(400).json({ message: 'Invalid status value' });
+      }
+
+      const load = await storage.getLoad(id);
+      if (!load) {
+        return res.status(404).json({ message: 'Load not found' });
+      }
+
+      const updatedLoad = await storage.updateLoad(id, { freightInvoiceStatus: status });
+      res.json(updatedLoad);
+    } catch (error) {
+      console.error('Error updating carrier load status:', error);
+      res.status(500).json({ message: 'Failed to update status' });
+    }
+  });
+
   return createServer(app);
 }
