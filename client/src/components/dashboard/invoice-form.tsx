@@ -182,20 +182,17 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   // Instead of creating a new carrier load entry, we update the existing entry with the same reference number.
   const syncCarrierLoad = async (invoice: Invoice) => {
     try {
-      // Check for required fields
       if (!invoice.invoiceNumber || !invoice.carrier) {
         console.log('Skipping carrier load sync - missing invoice number or carrier');
         return;
       }
 
-      // First, check if a carrier load entry with the same reference number exists
       const checkResponse = await fetch(`/api/carrier-loads?referenceNumber=${encodeURIComponent(invoice.invoiceNumber)}`);
       if (!checkResponse.ok) {
         throw new Error('Failed to check existing carrier loads');
       }
       const existingLoads = await checkResponse.json();
 
-      // Prepare the form data
       const formData = new FormData();
       const carrierData = {
         date: invoice.dueDate || new Date().toISOString().split('T')[0],
@@ -203,36 +200,51 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         carrier: invoice.carrier,
         freightCost: invoice.freightCost || '0',
         freightCostCurrency: invoice.freightCostCurrency || 'USD',
-        status: "UNPAID"
+        status: invoice.isPaid ? "PAID" : "UNPAID"
       };
       formData.append('carrierData', JSON.stringify(carrierData));
 
-      // Add files if present
+      // Handle freight invoice file
       if (freightInvoiceFile) {
         formData.append('freightInvoice', freightInvoiceFile);
+      } else if (invoice.freightInvoiceFile) {
+        try {
+          const fileResponse = await fetch(`/uploads/${invoice.freightInvoiceFile}`);
+          if (fileResponse.ok) {
+            const blob = await fileResponse.blob();
+            formData.append('freightInvoice', blob, invoice.freightInvoiceFile);
+          }
+        } catch (error) {
+          console.error('Error fetching existing freight invoice:', error);
+        }
       }
+
+      // Handle POD/BOL file
       if (file) {
         formData.append('pod', file);
+      } else if (invoice.uploadedFile) {
+        try {
+          const fileResponse = await fetch(`/uploads/${invoice.uploadedFile}`);
+          if (fileResponse.ok) {
+            const blob = await fileResponse.blob();
+            formData.append('pod', blob, invoice.uploadedFile);
+          }
+        } catch (error) {
+          console.error('Error fetching existing POD:', error);
+        }
       }
 
-      let response;
-      if (existingLoads && existingLoads.length > 0) {
-        // Update existing carrier load
-        response = await fetch(`/api/carrier-loads/${existingLoads[0].id}`, {
-          method: "PATCH",
-          body: formData
-        });
-      } else {
-        // Create new carrier load
-        response = await fetch("/api/carrier-loads", {
-          method: "POST",
-          body: formData
-        });
-      }
+      const endpoint = existingLoads?.length > 0 
+        ? `/api/carrier-loads/${existingLoads[0].id}`
+        : "/api/carrier-loads";
+      
+      const response = await fetch(endpoint, {
+        method: existingLoads?.length > 0 ? "PATCH" : "POST",
+        body: formData
+      });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to ${existingLoads.length > 0 ? 'update' : 'create'} carrier load: ${errorText}`);
+        throw new Error(`Failed to ${existingLoads?.length > 0 ? 'update' : 'create'} carrier load`);
       }
 
       await queryClient.invalidateQueries({ queryKey: ["carrier-loads"] });
