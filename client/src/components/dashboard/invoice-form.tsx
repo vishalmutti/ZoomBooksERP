@@ -454,8 +454,8 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
             <TabsTrigger value="manual">Manual Entry</TabsTrigger>
             <TabsTrigger value="upload">Upload Invoice</TabsTrigger>
           </TabsList>
-          <div className="space-y-4">
             <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+              <div className="space-y-4">
               <div>
                 <Label>Supplier</Label>
                 <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
@@ -758,9 +758,8 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                     )}
                   </div>
                 </TabsContent>
-              </div>
-              <div>
-                <Label htmlFor="notes">Notes</Label>
+                <div>
+                  <Label htmlFor="notes">Notes</Label>
                 <Textarea {...form.register("notes")} />
               </div>
             </div>
