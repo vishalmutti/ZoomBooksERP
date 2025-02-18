@@ -504,7 +504,24 @@ export function registerRoutes(app: Express): Server {
     const loadId = parseInt(req.params.loadId);
     const freightInvoices = await storage.getLoadFreightInvoices(loadId);
     res.json(freightInvoices);
-});
+  });
+
+  app.get("/api/carrier-loads", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const loads = await storage.getLoads();
+    const carrierLoads = loads.map(load => ({
+      id: load.id,
+      date: load.createdAt,
+      referenceNumber: load.referenceNumber,
+      carrier: load.carrier,
+      freightCost: load.freightCost,
+      freightCostCurrency: load.freightCostCurrency,
+      freightInvoice: load.freightInvoiceFile,
+      pod: load.bolFile,
+      status: load.freightInvoiceStatus
+    }));
+    res.json(carrierLoads);
+  });
 
   return createServer(app);
 }
