@@ -503,4 +503,8 @@ export function registerRoutes(app: Express): Server {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const loadId = parseInt(req.params.loadId);
     const freightInvoices = await storage.getLoadFreightInvoices(loadId);
-    res.json(fr
+    res.json(freightInvoices);
+});
+
+  return createServer(app);
+}
