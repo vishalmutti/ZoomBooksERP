@@ -770,6 +770,9 @@ export function registerRoutes(app: Express): Server {
       if (status) {
         query = query.where(eq(carrierLoads.status, status as string));
       }
+      if (req.query.referenceNumber) {
+        query = query.where(sql`LOWER(${carrierLoads.referenceNumber}) = LOWER(${req.query.referenceNumber})`);
+      }
       
       const loads = await query;
       return res.json(loads);

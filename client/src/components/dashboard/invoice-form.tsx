@@ -187,19 +187,13 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         return;
       }
 
-      // Query carrier loads to find matching reference number
-      const { data: carrierLoads = [] } = await queryClient.fetchQuery({
-        queryKey: ['carrier-loads'],
-        queryFn: async () => {
-          const response = await fetch('/api/carrier-loads');
-          if (!response.ok) throw new Error('Failed to fetch carrier loads');
-          return response.json();
-        }
-      });
-
-      const existingLoad = carrierLoads.find(load => 
-        load.referenceNumber.toLowerCase() === invoice.invoiceNumber.toLowerCase()
-      );
+      // Query carrier loads with specific reference number
+      const response = await fetch(`/api/carrier-loads?referenceNumber=${encodeURIComponent(invoice.invoiceNumber)}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch carrier loads');
+      }
+      const carrierLoads = await response.json();
+      const existingLoad = carrierLoads[0]; // Get first matching load if any
 
       const formData = new FormData();
       const carrierData = {
