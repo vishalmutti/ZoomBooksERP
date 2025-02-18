@@ -99,10 +99,12 @@ export function EmployeeForm({ onSubmit, initialData, departments }: EmployeeFor
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {departments.map((dept) => (
-                    <SelectItem key={dept.id} value={dept.id.toString()}>
-                      {dept.name}
-                    </SelectItem>
+                  {departments?.map((dept) => (
+                    dept.id ? (
+                      <SelectItem key={dept.id} value={dept.id.toString()}>
+                        {dept.name}
+                      </SelectItem>
+                    ) : null
                   ))}
                 </SelectContent>
               </Select>
