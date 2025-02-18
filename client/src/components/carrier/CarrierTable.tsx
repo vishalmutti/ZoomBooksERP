@@ -46,8 +46,15 @@ export function CarrierTable() {
     queryKey: ['carrier-loads', startDate, endDate, statusFilter],
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (startDate) params.append('startDate', startDate);
-      if (endDate) params.append('endDate', endDate);
+      // Format dates to match SQL date format
+      if (startDate) {
+        const formattedStartDate = new Date(startDate).toISOString().split('T')[0];
+        params.append('startDate', formattedStartDate);
+      }
+      if (endDate) {
+        const formattedEndDate = new Date(endDate).toISOString().split('T')[0];
+        params.append('endDate', formattedEndDate);
+      }
       if (statusFilter !== "ALL") params.append('status', statusFilter);
       
       const response = await fetch(`/api/carrier-loads?${params.toString()}`);
@@ -223,34 +230,42 @@ export function CarrierTable() {
 
   return (
     <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Carrier Loads</h2>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="h-8 px-2 py-1 bg-background border border-input rounded-md text-sm"
-            />
-            <span>to</span>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="h-8 px-2 py-1 bg-background border border-input rounded-md text-sm"
-            />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as "ALL" | "PAID" | "UNPAID")}
-              className="h-8 px-2 py-1 bg-background border border-input rounded-md text-sm"
-            >
-              <option value="ALL">All Status</option>
-              <option value="PAID">Paid</option>
-              <option value="UNPAID">Unpaid</option>
-            </select>
-          </div>
+      <div className="flex flex-col gap-4 mb-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold">Carrier Loads</h2>
           <CarrierForm />
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="flex-1">
+            <input
+              type="text"
+              placeholder="Search reference number..."
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-8 px-2 py-1 bg-background border border-input rounded-md text-sm"
+            />
+          </div>
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="h-8 px-2 py-1 bg-background border border-input rounded-md text-sm"
+          />
+          <span>to</span>
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="h-8 px-2 py-1 bg-background border border-input rounded-md text-sm"
+          />
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as "ALL" | "PAID" | "UNPAID")}
+            className="h-8 px-2 py-1 bg-background border border-input rounded-md text-sm"
+          >
+            <option value="ALL">All Status</option>
+            <option value="PAID">Paid</option>
+            <option value="UNPAID">Unpaid</option>
+          </select>
         </div>
       </div>
       {editingCarrier && (
