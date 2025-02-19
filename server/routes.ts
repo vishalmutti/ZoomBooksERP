@@ -902,6 +902,7 @@ export function registerRoutes(app: Express): Server {
           COUNT(*) as load_count,
           AVG(CASE WHEN CAST(il.profit_roi AS DECIMAL) > 0 
               THEN CAST(il.profit_roi AS DECIMAL) 
+              ELSE NULL
               END) as avg_roi
         FROM incoming_loads il
         JOIN suppliers s ON s.id = CAST(il.supplier_id AS INTEGER)
