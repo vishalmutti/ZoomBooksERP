@@ -855,7 +855,7 @@ export function registerRoutes(app: Express): Server {
       let dateFilter = sql`TRUE`;
       
       if (days !== 'all') {
-        dateFilter = sql`date >= NOW() - INTERVAL '${days} days'`;
+        dateFilter = sql`date >= CURRENT_DATE - MAKE_INTERVAL(days => ${days}::integer)`;
       }
 
       const metrics = await db.select({
