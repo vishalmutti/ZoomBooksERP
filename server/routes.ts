@@ -903,7 +903,11 @@ export function registerRoutes(app: Express): Server {
           AVG(CASE WHEN CAST(il.profit_roi AS DECIMAL) > 0 
               THEN CAST(il.profit_roi AS DECIMAL) 
               ELSE NULL
-              END) as avg_roi
+              END) as avg_roi,
+          AVG(CASE WHEN CAST(il.load_cost AS DECIMAL) > 0 AND CAST(il.freight_cost AS DECIMAL) > 0
+              THEN CAST(il.load_cost AS DECIMAL) + CAST(il.freight_cost AS DECIMAL)
+              ELSE NULL
+              END) as avg_cost_per_load
         FROM incoming_loads il
         JOIN suppliers s ON s.id = CAST(il.supplier_id AS INTEGER)
         WHERE ${dateFilter}
