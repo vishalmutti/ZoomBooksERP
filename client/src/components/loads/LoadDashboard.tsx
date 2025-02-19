@@ -8,6 +8,8 @@ import { LoadSupplierForm } from "./LoadSupplierForm";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { LuPlus } from "react-icons/lu";
+import { SupplierMetrics } from "./SupplierMetrics"; // Added import
+
 
 export function LoadDashboard() {
   const [showAddSupplier, setShowAddSupplier] = useState(false);
@@ -94,6 +96,7 @@ export function LoadDashboard() {
         </div>
 
         <LoadSupplierList suppliers={suppliers} />
+        <SupplierMetrics /> {/* Added SupplierMetrics component */}
 
         <LoadSupplierForm
           open={showAddSupplier}

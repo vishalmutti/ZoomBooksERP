@@ -848,6 +848,40 @@ export function registerRoutes(app: Express): Server {
     return res.json({ success: true });
   });
 
+  // Supplier metrics endpoint
+  router.get("/api/supplier-metrics", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const { days, loadCount } = req.query;
+      let dateFilter = sql`TRUE`;
+      
+      if (days !== 'all') {
+        dateFilter = sql`scheduled_pickup >= CURRENT_DATE - MAKE_INTERVAL(days => ${days}::integer)`;
+      }
+
+      let limitClause = '';
+      if (loadCount !== 'all') {
+        limitClause = `LIMIT ${loadCount}`;
+      }
+
+      const metrics = await db.execute(sql`
+        SELECT 
+          supplier_id,
+          COUNT(*) as load_count,
+          AVG(CAST(profit_roi AS DECIMAL)) as avg_roi
+        FROM incoming_loads
+        WHERE ${dateFilter}
+        GROUP BY supplier_id
+        ${sql.raw(limitClause)}
+      `);
+
+      return res.json(metrics);
+    } catch (error) {
+      console.error('Error fetching supplier metrics:', error);
+      return res.status(500).json({ message: 'Failed to fetch supplier metrics' });
+    }
+  });
+
   router.get("/api/carrier-metrics", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
