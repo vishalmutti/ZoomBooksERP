@@ -895,61 +895,32 @@ export function registerRoutes(app: Express): Server {
           ORDER BY avg_roi DESC`;
 
       // For load count with date filter
-      const costQuery = loadCount !== 'all' 
-        ? sql`
-          WITH RankedLoads AS (
-            SELECT 
-              il.*,
-              ROW_NUMBER() OVER (PARTITION BY il.supplier_id 
-                                ORDER BY scheduled_delivery DESC) as rn
-            FROM incoming_loads il
-            WHERE CAST(il.load_cost AS DECIMAL) > 0 
-            AND CAST(il.freight_cost AS DECIMAL) > 0
-            AND load_type = 'Incoming'
-          )
-          SELECT 
-            s.name as supplier_name,
-            rl.supplier_id,
-            COUNT(*) as load_count,
-            AVG(CASE WHEN CAST(rl.profit_roi AS DECIMAL) > 0 
-                THEN CAST(rl.profit_roi AS DECIMAL) 
-                ELSE NULL
-                END) as avg_roi,
-            AVG(CAST(rl.load_cost AS DECIMAL) + 
-                CASE WHEN rl.freight_cost_currency = 'USD' 
-                     THEN CAST(rl.freight_cost AS DECIMAL) * 1.35
-                     ELSE CAST(rl.freight_cost AS DECIMAL)
-                END) as avg_cost_per_load
-          FROM RankedLoads rl
-          JOIN suppliers s ON s.id = CAST(rl.supplier_id AS INTEGER)
-          WHERE rn <= ${loadCount}
-          GROUP BY rl.supplier_id, s.name
-          ORDER BY avg_cost_per_load DESC`
-        : sql`
-          SELECT 
-            s.name as supplier_name,
-            il.supplier_id,
-            COUNT(*) as load_count,
-            AVG(CASE WHEN CAST(il.profit_roi AS DECIMAL) > 0 
-                THEN CAST(il.profit_roi AS DECIMAL) 
-                ELSE NULL
-                END) as avg_roi,
-            AVG(CASE 
-                WHEN CAST(il.load_cost AS DECIMAL) > 0 AND CAST(il.freight_cost AS DECIMAL) > 0
-                THEN CAST(il.load_cost AS DECIMAL) + 
-                     CASE WHEN il.freight_cost_currency = 'USD' 
-                          THEN CAST(il.freight_cost AS DECIMAL) * 1.35
-                          ELSE CAST(il.freight_cost AS DECIMAL)
-                     END
-                ELSE NULL
-                END) as avg_cost_per_load
-          FROM incoming_loads il
-          JOIN suppliers s ON s.id = CAST(il.supplier_id AS INTEGER)
-          WHERE load_type = 'Incoming'
-          GROUP BY il.supplier_id, s.name
-          ORDER BY avg_cost_per_load DESC`;
+      const loadCountQuery = sql`
+        SELECT 
+          s.name as supplier_name,
+          il.supplier_id,
+          COUNT(*) as load_count,
+          AVG(CASE WHEN CAST(il.profit_roi AS DECIMAL) > 0 
+              THEN CAST(il.profit_roi AS DECIMAL) 
+              ELSE NULL
+              END) as avg_roi,
+          AVG(CASE 
+              WHEN CAST(il.load_cost AS DECIMAL) > 0 AND CAST(il.freight_cost AS DECIMAL) > 0
+              THEN CAST(il.load_cost AS DECIMAL) + 
+                   CASE WHEN il.freight_cost_currency = 'USD' 
+                        THEN CAST(il.freight_cost AS DECIMAL) * 1.35 -- Using 1.35 as current USD/CAD rate
+                        ELSE CAST(il.freight_cost AS DECIMAL)
+                   END
+              ELSE NULL
+              END) as avg_cost_per_load
+        FROM incoming_loads il
+        JOIN suppliers s ON s.id = CAST(il.supplier_id AS INTEGER)
+        WHERE ${dateFilter}
+        AND load_type = 'Incoming'
+        GROUP BY il.supplier_id, s.name
+        ORDER BY load_count DESC`;
 
-      const metrics = loadCount !== 'all' ? await db.execute(costQuery) : await db.execute(loadCountQuery);
+      const metrics = loadCount !== 'all' ? await db.execute(roiQuery) : await db.execute(loadCountQuery);
 
       return res.json(metrics);
     } catch (error) {
