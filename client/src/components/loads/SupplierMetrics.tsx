@@ -137,7 +137,7 @@ export function SupplierMetrics() {
               {sortedByCost.slice(0, 5).map((supplier) => (
                 <div key={supplier.supplier_id} className="flex justify-between items-center">
                   <span>{supplier.supplier_name}</span>
-                  <span>${supplier.avg_cost_per_load ? Number(supplier.avg_cost_per_load).toFixed(2) : 'N/A'}</span>
+                  <span>CAD ${supplier.avg_cost_per_load ? Number(supplier.avg_cost_per_load).toFixed(2) : 'N/A'}</span>
                 </div>
               ))}
             </div>

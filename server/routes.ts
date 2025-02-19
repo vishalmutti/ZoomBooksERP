@@ -904,8 +904,13 @@ export function registerRoutes(app: Express): Server {
               THEN CAST(il.profit_roi AS DECIMAL) 
               ELSE NULL
               END) as avg_roi,
-          AVG(CASE WHEN CAST(il.load_cost AS DECIMAL) > 0 AND CAST(il.freight_cost AS DECIMAL) > 0
-              THEN CAST(il.load_cost AS DECIMAL) + CAST(il.freight_cost AS DECIMAL)
+          AVG(CASE 
+              WHEN CAST(il.load_cost AS DECIMAL) > 0 AND CAST(il.freight_cost AS DECIMAL) > 0
+              THEN CAST(il.load_cost AS DECIMAL) + 
+                   CASE WHEN il.freight_cost_currency = 'USD' 
+                        THEN CAST(il.freight_cost AS DECIMAL) * 1.35 -- Using 1.35 as current USD/CAD rate
+                        ELSE CAST(il.freight_cost AS DECIMAL)
+                   END
               ELSE NULL
               END) as avg_cost_per_load
         FROM incoming_loads il
