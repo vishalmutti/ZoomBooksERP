@@ -24,9 +24,12 @@ import { useState } from "react"
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
-  searchKey?: string
-  defaultSort?: SortingState
-  onRowClick?: (row: Row<TData>) => void
+  searchKey: string
+  carrierFilter?: {
+    value: string
+    onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void
+    options: { value: string; label: string }[]
+  }
   dateFilter?: {
     startDate: string;
     endDate: string;
@@ -48,6 +51,7 @@ export function DataTable<TData, TValue>({
   onRowClick,
   dateFilter,
   statusFilter,
+  carrierFilter,
 }: DataTableProps<TData, TValue>) {
   const [filtering, setFiltering] = useState("")
   const [sorting, setSorting] = useState<SortingState>(defaultSort || [])
@@ -80,6 +84,19 @@ export function DataTable<TData, TValue>({
             }
             className="max-w-sm"
           />
+        )}
+        {carrierFilter && (
+          <select
+            value={carrierFilter.value}
+            onChange={carrierFilter.onChange}
+            className="h-8 w-[200px] rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background"
+          >
+            {carrierFilter.options.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         )}
         {dateFilter && (
           <>

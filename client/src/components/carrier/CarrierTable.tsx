@@ -228,12 +228,48 @@ export function CarrierTable() {
     return <div>Loading...</div>;
   }
 
+  const exportToCSV = () => {
+    const csvContent = [
+      ["Date", "Reference Number", "Carrier", "Freight Cost", "Status"],
+      ...data.map(row => [
+        row.date,
+        row.referenceNumber,
+        row.carrier,
+        `${row.freightCost}`,
+        row.status
+      ])
+    ].map(row => row.join(",")).join("\n");
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `carrier-loads-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
+
+  // Get unique carriers
+  const uniqueCarriers = Array.from(new Set(data.map(row => row.carrier))).sort();
+  const [carrierFilter, setCarrierFilter] = useState<string>("ALL");
+
+  const filteredData = data.filter(row => 
+    carrierFilter === "ALL" || row.carrier === carrierFilter
+  );
+
   return (
     <div className="container mx-auto py-8">
       <div className="flex flex-col gap-4 mb-6">
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold">Carrier Loads</h2>
-          <CarrierForm />
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={exportToCSV}>
+              Export CSV
+            </Button>
+            <CarrierForm />
+          </div>
         </div>
       </div>
       {editingCarrier && (
@@ -245,8 +281,19 @@ export function CarrierTable() {
       )}
       <DataTable
         columns={columns}
-        data={data}
+        data={filteredData}
         searchKey="referenceNumber"
+        carrierFilter={{
+          value: carrierFilter,
+          onChange: (e) => setCarrierFilter(e.target.value),
+          options: [
+            { value: "ALL", label: "All Carriers" },
+            ...uniqueCarriers.map(carrier => ({
+              value: carrier,
+              label: carrier
+            }))
+          ]
+        }}
         dateFilter={{
           startDate,
           endDate,
