@@ -1,8 +1,9 @@
 
-import { useQuery } from "@tanstack/react-query";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface SupplierMetric {
   supplier_id: string;
@@ -19,14 +20,22 @@ export function SupplierMetrics() {
     queryFn: async () => {
       const response = await fetch(`/api/supplier-metrics?days=${timeRange}&loadCount=${roiRange}`);
       if (!response.ok) throw new Error('Failed to fetch supplier metrics');
-      return response.json();
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
     }
   });
+
+  if (isLoading) {
+    return <div className="grid grid-cols-2 gap-4">
+      <Skeleton className="h-[120px] w-full" />
+      <Skeleton className="h-[120px] w-full" />
+    </div>;
+  }
 
   const sortedByRoi = metricsData ? [...metricsData].sort((a, b) => b.avg_roi - a.avg_roi) : [];
 
   return (
-    <div className="space-y-4 mt-4">
+    <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Supplier Metrics</h2>
         <div className="flex gap-2">
