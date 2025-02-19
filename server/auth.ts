@@ -58,13 +58,17 @@ export function setupAuth(app: Express) {
   passport.serializeUser((user, done) => done(null, user.id));
   passport.deserializeUser(async (id: number, done) => {
     try {
+      if (typeof id !== 'number') {
+        return done(new Error('Invalid user ID'), null);
+      }
       const user = await storage.getUser(id);
       if (!user) {
         return done(null, false);
       }
-      done(null, user);
+      return done(null, user);
     } catch (err) {
-      done(err);
+      console.error('User deserialization error:', err);
+      return done(err, null);
     }
   });
 
