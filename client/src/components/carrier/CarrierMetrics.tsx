@@ -64,7 +64,7 @@ export function CarrierMetrics() {
               {sortedBySpend.slice(0, 5).map((carrier, index) => (
                 <div key={carrier.carrier} className="flex justify-between items-center">
                   <span>{index + 1}. {carrier.carrier}</span>
-                  <span>${carrier.totalSpend.toFixed(2)}</span>
+                  <span>${Number(carrier.totalSpend).toFixed(2)}</span>
                 </div>
               ))}
             </div>
