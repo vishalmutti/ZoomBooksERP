@@ -859,12 +859,41 @@ export function registerRoutes(app: Express): Server {
         dateFilter = sql`il.created_at >= CURRENT_DATE - MAKE_INTERVAL(days => ${days}::integer)`;
       }
 
-      let limitClause = '';
-      if (loadCount !== 'all') {
-        limitClause = `LIMIT ${loadCount}`;
-      }
+      // For ROI calculation with most recent loads by delivery date
+      const roiQuery = loadCount !== 'all' 
+        ? sql`
+          WITH RankedLoads AS (
+            SELECT 
+              il.*,
+              ROW_NUMBER() OVER (PARTITION BY il.supplier_id 
+                                ORDER BY scheduled_delivery DESC) as rn
+            FROM incoming_loads il
+            WHERE CAST(il.profit_roi AS DECIMAL) > 0
+          )
+          SELECT 
+            s.name as supplier_name,
+            rl.supplier_id,
+            COUNT(*) as load_count,
+            AVG(CAST(rl.profit_roi AS DECIMAL)) as avg_roi
+          FROM RankedLoads rl
+          JOIN suppliers s ON s.id = CAST(rl.supplier_id AS INTEGER)
+          WHERE rn <= ${loadCount}
+          GROUP BY rl.supplier_id, s.name
+          ORDER BY avg_roi DESC`
+        : sql`
+          SELECT 
+            s.name as supplier_name,
+            il.supplier_id,
+            COUNT(*) as load_count,
+            AVG(CAST(il.profit_roi AS DECIMAL)) as avg_roi
+          FROM incoming_loads il
+          JOIN suppliers s ON s.id = CAST(il.supplier_id AS INTEGER)
+          WHERE CAST(il.profit_roi AS DECIMAL) > 0
+          GROUP BY il.supplier_id, s.name
+          ORDER BY avg_roi DESC`;
 
-      const metrics = await db.execute(sql`
+      // For load count with date filter
+      const loadCountQuery = sql`
         SELECT 
           s.name as supplier_name,
           il.supplier_id,
@@ -876,12 +905,9 @@ export function registerRoutes(app: Express): Server {
         JOIN suppliers s ON s.id = CAST(il.supplier_id AS INTEGER)
         WHERE ${dateFilter}
         GROUP BY il.supplier_id, s.name
-        HAVING AVG(CASE WHEN CAST(il.profit_roi AS DECIMAL) > 0 
-                  THEN CAST(il.profit_roi AS DECIMAL) 
-                  END) IS NOT NULL
-        ORDER BY avg_roi DESC
-        ${sql.raw(limitClause)}
-      `);
+        ORDER BY load_count DESC`;
+
+      const metrics = loadCount ? await db.execute(roiQuery) : await db.execute(loadCountQuery);
 
       return res.json(metrics);
     } catch (error) {
