@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,34 +7,44 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 interface SupplierMetric {
   supplier_id: string;
-  supplier_name: string; // Added supplier_name
+  supplier_name: string;
   load_count: number;
   avg_roi: number;
 }
 
 export function SupplierMetrics() {
-  const [timeRange, setTimeRange] = useState<'14'|'30'|'90'|'all'>('30');
+  const [loadCountTimeRange, setLoadCountTimeRange] = useState<'14'|'30'|'90'|'all'>('30');
   const [roiRange, setRoiRange] = useState<'2'|'4'|'10'|'all'>('all');
 
-  const { data: metricsData, isLoading } = useQuery<SupplierMetric[]>({
-    queryKey: ['supplier-metrics', timeRange, roiRange],
+  const { data: roiMetrics, isLoading: isLoadingRoi } = useQuery<SupplierMetric[]>({
+    queryKey: ['supplier-metrics-roi', roiRange],
     queryFn: async () => {
-      const response = await fetch(`/api/supplier-metrics?days=${timeRange}&loadCount=${roiRange}`);
-      if (!response.ok) throw new Error('Failed to fetch supplier metrics');
+      const response = await fetch(`/api/supplier-metrics?days=all&loadCount=${roiRange}`);
+      if (!response.ok) throw new Error('Failed to fetch supplier ROI metrics');
       const data = await response.json();
       return data.rows || [];
     }
   });
 
-  if (isLoading) {
+  const { data: loadCountMetrics, isLoading: isLoadingLoadCount } = useQuery<SupplierMetric[]>({
+    queryKey: ['supplier-metrics-loadcount', loadCountTimeRange],
+    queryFn: async () => {
+      const response = await fetch(`/api/supplier-metrics?days=${loadCountTimeRange}&loadCount=all`);
+      if (!response.ok) throw new Error('Failed to fetch supplier load count metrics');
+      const data = await response.json();
+      return data.rows || [];
+    }
+  });
+
+  if (isLoadingRoi || isLoadingLoadCount) {
     return <div className="grid grid-cols-2 gap-4">
       <Skeleton className="h-[120px] w-full" />
       <Skeleton className="h-[120px] w-full" />
     </div>;
   }
 
-  const sortedByRoi = metricsData ? [...metricsData].sort((a, b) => b.avg_roi - a.avg_roi) : [];
-  const sortedByLoadCount = metricsData ? [...metricsData].sort((a, b) => b.load_count - a.load_count) : [];
+  const sortedByRoi = roiMetrics ? [...roiMetrics].sort((a, b) => b.avg_roi - a.avg_roi) : [];
+  const sortedByLoadCount = loadCountMetrics ? [...loadCountMetrics].sort((a, b) => b.load_count - a.load_count) : [];
 
   return (
     <div className="space-y-4">
@@ -57,7 +68,7 @@ export function SupplierMetrics() {
             <div className="space-y-2">
               {sortedByRoi.slice(0, 5).map((supplier) => (
                 <div key={supplier.supplier_id} className="flex justify-between items-center">
-                  <span>{supplier.supplier_name}</span> {/* Changed to supplier.supplier_name */}
+                  <span>{supplier.supplier_name}</span>
                   <span>{Number(supplier.avg_roi).toFixed(2)}%</span>
                 </div>
               ))}
@@ -68,7 +79,7 @@ export function SupplierMetrics() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Load Counts</CardTitle>
-            <Select value={timeRange} onValueChange={(value) => setTimeRange(value as typeof timeRange)}>
+            <Select value={loadCountTimeRange} onValueChange={(value) => setLoadCountTimeRange(value as typeof loadCountTimeRange)}>
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="Select period" />
               </SelectTrigger>
@@ -84,7 +95,7 @@ export function SupplierMetrics() {
             <div className="space-y-2">
               {sortedByLoadCount.slice(0, 5).map((supplier) => (
                 <div key={supplier.supplier_id} className="flex justify-between items-center">
-                  <span>{supplier.supplier_name}</span> {/* Changed to supplier.supplier_name */}
+                  <span>{supplier.supplier_name}</span>
                   <span>{supplier.load_count} loads</span>
                 </div>
               ))}
