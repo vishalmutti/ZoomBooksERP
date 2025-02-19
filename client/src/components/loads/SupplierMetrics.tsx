@@ -14,16 +14,16 @@ export function SupplierMetrics() {
   const [timeRange, setTimeRange] = useState<'14'|'30'|'90'|'all'>('30');
   const [roiRange, setRoiRange] = useState<'2'|'4'|'10'|'all'>('all');
 
-  const { data: metricsData } = useQuery({
+  const { data: metricsData, isLoading } = useQuery<SupplierMetric[]>({
     queryKey: ['supplier-metrics', timeRange, roiRange],
     queryFn: async () => {
       const response = await fetch(`/api/supplier-metrics?days=${timeRange}&loadCount=${roiRange}`);
       if (!response.ok) throw new Error('Failed to fetch supplier metrics');
-      return response.json() as Promise<SupplierMetric[]>;
+      return response.json();
     }
   });
 
-  const sortedByRoi = [...(metricsData || [])].sort((a, b) => b.avg_roi - a.avg_roi);
+  const sortedByRoi = metricsData ? [...metricsData].sort((a, b) => b.avg_roi - a.avg_roi) : [];
 
   return (
     <div className="space-y-4 mt-4">
