@@ -22,8 +22,10 @@ export default function PayrollPage() {
             <PayrollWidget />
           </TabsContent>
 
-          <TabsContent value="scheduling">
-            <SchedulingPage />
+          <TabsContent value="scheduling" className="mt-0">
+            <div className="container mx-auto">
+              <SchedulingPage />
+            </div>
           </TabsContent>
         </Tabs>
       </div>
