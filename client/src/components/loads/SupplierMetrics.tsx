@@ -21,7 +21,7 @@ export function SupplierMetrics() {
   const { data: roiMetrics, isLoading: isLoadingRoi } = useQuery<SupplierMetric[]>({
     queryKey: ['supplier-metrics-roi', roiRange],
     queryFn: async () => {
-      const response = await fetch(`/api/supplier-metrics?days=all&loadCount=${roiRange}`);
+      const response = await fetch(`/api/supplier-metrics?type=roi&roiRange=${roiRange}`);
       if (!response.ok) throw new Error('Failed to fetch supplier ROI metrics');
       const data = await response.json();
       return data.rows || [];
@@ -31,7 +31,7 @@ export function SupplierMetrics() {
   const { data: costMetrics, isLoading: isLoadingCost } = useQuery<SupplierMetric[]>({
     queryKey: ['supplier-metrics-cost', costRange],
     queryFn: async () => {
-      const response = await fetch(`/api/supplier-metrics?days=all&loadCount=${costRange}`);
+      const response = await fetch(`/api/supplier-metrics?type=cost&costRange=${costRange}`);
       if (!response.ok) throw new Error('Failed to fetch supplier cost metrics');
       const data = await response.json();
       return data.rows || [];

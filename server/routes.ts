@@ -852,7 +852,7 @@ export function registerRoutes(app: Express): Server {
   router.get("/api/supplier-metrics", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
-      const { days, loadCount } = req.query;
+      const { days, roiRange, costRange, type } = req.query;
       let dateFilter = sql`TRUE`;
       
       if (days !== 'all') {
@@ -860,59 +860,60 @@ export function registerRoutes(app: Express): Server {
       }
 
       // For ROI calculation with most recent loads by delivery date
-      const roiQuery = loadCount !== 'all' 
-        ? sql`
-          WITH RankedLoads AS (
-            SELECT 
-              il.*,
-              ROW_NUMBER() OVER (PARTITION BY il.supplier_id 
-                                ORDER BY scheduled_delivery DESC) as rn
-            FROM incoming_loads il
-            WHERE CAST(il.profit_roi AS DECIMAL) > 0
-            AND load_type = 'Incoming'
-          )
+      const roiQuery = sql`
+        WITH RankedLoads AS (
           SELECT 
-            s.name as supplier_name,
-            rl.supplier_id,
-            COUNT(*) as load_count,
-            AVG(CAST(rl.profit_roi AS DECIMAL)) as avg_roi
-          FROM RankedLoads rl
-          JOIN suppliers s ON s.id = CAST(rl.supplier_id AS INTEGER)
-          WHERE rn <= ${loadCount}
-          GROUP BY rl.supplier_id, s.name
-          ORDER BY avg_roi DESC`
-        : sql`
-          SELECT 
-            s.name as supplier_name,
-            il.supplier_id,
-            COUNT(*) as load_count,
-            AVG(CAST(il.profit_roi AS DECIMAL)) as avg_roi
+            il.*,
+            ROW_NUMBER() OVER (PARTITION BY il.supplier_id 
+                              ORDER BY scheduled_delivery DESC) as rn
           FROM incoming_loads il
-          JOIN suppliers s ON s.id = CAST(il.supplier_id AS INTEGER)
           WHERE CAST(il.profit_roi AS DECIMAL) > 0
           AND load_type = 'Incoming'
-          GROUP BY il.supplier_id, s.name
-          ORDER BY avg_roi DESC`;
+        )
+        SELECT 
+          s.name as supplier_name,
+          rl.supplier_id,
+          COUNT(*) as load_count,
+          AVG(CAST(rl.profit_roi AS DECIMAL)) as avg_roi
+        FROM RankedLoads rl
+        JOIN suppliers s ON s.id = CAST(rl.supplier_id AS INTEGER)
+        WHERE ${roiRange !== 'all' ? sql`rn <= ${roiRange}` : sql`TRUE`}
+        GROUP BY rl.supplier_id, s.name
+        ORDER BY avg_roi DESC`;
+
+      // For cost calculation with most recent loads by delivery date
+      const costQuery = sql`
+        WITH RankedLoads AS (
+          SELECT 
+            il.*,
+            ROW_NUMBER() OVER (PARTITION BY il.supplier_id 
+                              ORDER BY scheduled_delivery DESC) as rn
+          FROM incoming_loads il
+          WHERE CAST(il.load_cost AS DECIMAL) > 0 
+          AND CAST(il.freight_cost AS DECIMAL) > 0
+          AND load_type = 'Incoming'
+        )
+        SELECT 
+          s.name as supplier_name,
+          rl.supplier_id,
+          COUNT(*) as load_count,
+          AVG(CAST(rl.load_cost AS DECIMAL) + 
+              CASE WHEN rl.freight_cost_currency = 'USD' 
+                   THEN CAST(rl.freight_cost AS DECIMAL) * 1.35
+                   ELSE CAST(rl.freight_cost AS DECIMAL)
+              END) as avg_cost_per_load
+        FROM RankedLoads rl
+        JOIN suppliers s ON s.id = CAST(rl.supplier_id AS INTEGER)
+        WHERE ${costRange !== 'all' ? sql`rn <= ${costRange}` : sql`TRUE`}
+        GROUP BY rl.supplier_id, s.name
+        ORDER BY avg_cost_per_load DESC`;
 
       // For load count with date filter
       const loadCountQuery = sql`
         SELECT 
           s.name as supplier_name,
           il.supplier_id,
-          COUNT(*) as load_count,
-          AVG(CASE WHEN CAST(il.profit_roi AS DECIMAL) > 0 
-              THEN CAST(il.profit_roi AS DECIMAL) 
-              ELSE NULL
-              END) as avg_roi,
-          AVG(CASE 
-              WHEN CAST(il.load_cost AS DECIMAL) > 0 AND CAST(il.freight_cost AS DECIMAL) > 0
-              THEN CAST(il.load_cost AS DECIMAL) + 
-                   CASE WHEN il.freight_cost_currency = 'USD' 
-                        THEN CAST(il.freight_cost AS DECIMAL) * 1.35 -- Using 1.35 as current USD/CAD rate
-                        ELSE CAST(il.freight_cost AS DECIMAL)
-                   END
-              ELSE NULL
-              END) as avg_cost_per_load
+          COUNT(*) as load_count
         FROM incoming_loads il
         JOIN suppliers s ON s.id = CAST(il.supplier_id AS INTEGER)
         WHERE ${dateFilter}
@@ -920,7 +921,11 @@ export function registerRoutes(app: Express): Server {
         GROUP BY il.supplier_id, s.name
         ORDER BY load_count DESC`;
 
-      const metrics = loadCount !== 'all' ? await db.execute(roiQuery) : await db.execute(loadCountQuery);
+      const metrics = req.query.type === 'roi' 
+        ? await db.execute(roiQuery)
+        : req.query.type === 'cost'
+        ? await db.execute(costQuery)
+        : await db.execute(loadCountQuery);
 
       return res.json(metrics);
     } catch (error) {
