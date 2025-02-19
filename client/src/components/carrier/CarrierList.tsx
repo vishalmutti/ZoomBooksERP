@@ -4,6 +4,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { CarrierManagementForm } from "./CarrierManagementForm";
+import { CarrierView } from "./CarrierView";
 
 interface CarrierCompany {
   id: number;
@@ -20,6 +21,7 @@ export function CarrierList() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [editingCarrier, setEditingCarrier] = useState<CarrierCompany | null>(null);
+  const [viewingCarrier, setViewingCarrier] = useState<CarrierCompany | null>(null);
 
   const { data = [], isLoading, isError } = useQuery({
     queryKey: ["carriers"],
@@ -61,6 +63,14 @@ export function CarrierList() {
     {
       accessorKey: "name",
       header: "Carrier",
+      cell: ({ row }) => (
+        <Button
+          variant="link"
+          onClick={() => setViewingCarrier(row.original)}
+        >
+          {row.getValue("name")}
+        </Button>
+      ),
     },
     {
       accessorKey: "contactName",
@@ -120,6 +130,13 @@ export function CarrierList() {
         data={data}
         searchKey="name"
       />
+      {viewingCarrier && (
+        <CarrierView
+          carrier={viewingCarrier}
+          open={!!viewingCarrier}
+          onOpenChange={(open) => !open && setViewingCarrier(null)}
+        />
+      )}
     </div>
   );
 }
