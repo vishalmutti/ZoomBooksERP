@@ -7,6 +7,7 @@ import { LoadSupplierList } from "./LoadSupplierList";
 import { LoadSupplierForm } from "./LoadSupplierForm";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LuPlus } from "react-icons/lu";
 import { SupplierMetrics } from "./SupplierMetrics"; // Added import
 
@@ -58,18 +59,24 @@ export function LoadDashboard() {
         </p>
       </div>
 
-      <div className="space-y-4">
-        <div className="flex justify-end">
-          <LoadForm
-            onClose={() => setShowAddLoad(false)}
-            defaultType="Incoming"
-            show={showAddLoad}
-          >
-            <Button onClick={() => setShowAddLoad(true)}>
-              <LuPlus className="mr-2 h-4 w-4" /> New Load
-            </Button>
-          </LoadForm>
-        </div>
+      <Tabs defaultValue="loads" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="loads">Loads</TabsTrigger>
+          <TabsTrigger value="metrics">Supplier Metrics</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="loads" className="space-y-4">
+          <div className="flex justify-end">
+            <LoadForm
+              onClose={() => setShowAddLoad(false)}
+              defaultType="Incoming"
+              show={showAddLoad}
+            >
+              <Button onClick={() => setShowAddLoad(true)}>
+                <LuPlus className="mr-2 h-4 w-4" /> New Load
+              </Button>
+            </LoadForm>
+          </div>
         <LoadTable 
           loads={filteredLoads} 
           isLoading={isLoading}
@@ -77,7 +84,12 @@ export function LoadDashboard() {
           onDelete={handleDelete}
           suppliers={suppliers}
         />
-      </div>
+      </TabsContent>
+
+        <TabsContent value="metrics">
+          <SupplierMetrics />
+        </TabsContent>
+      </Tabs>
 
       {editingLoad && (
         <LoadForm
@@ -87,7 +99,6 @@ export function LoadDashboard() {
           suppliers={suppliers}
         />
       )}
-
 
       <div className="mt-8">
         <div className="flex justify-between items-center mb-4">
