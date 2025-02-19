@@ -34,9 +34,10 @@ export function CarrierView({ carrier, open, onOpenChange }: CarrierViewProps) {
   const { data: loads = [] } = useQuery({
     queryKey: ['carrier-loads', carrier.name],
     queryFn: async () => {
-      const response = await fetch(`/api/carrier-loads?carrier=${encodeURIComponent(carrier.name)}`);
+      const response = await fetch(`/api/carrier-loads`);
       if (!response.ok) throw new Error('Failed to fetch carrier loads');
-      return response.json();
+      const data = await response.json();
+      return data.filter(load => load.carrier === carrier.name);
     }
   });
 
