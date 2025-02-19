@@ -41,6 +41,7 @@ export function CarrierTable() {
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "PAID" | "UNPAID">("ALL");
+  const [carrierFilter, setCarrierFilter] = useState<string>("ALL");
 
   const { data = [], isLoading } = useQuery({
     queryKey: ['carrier-loads', startDate, endDate, statusFilter],
@@ -253,8 +254,7 @@ export function CarrierTable() {
 
   // Get unique carriers
   const uniqueCarriers = Array.from(new Set(data.map(row => row.carrier))).sort();
-  const [carrierFilter, setCarrierFilter] = useState<string>("ALL");
-
+  
   const filteredData = data.filter(row => 
     carrierFilter === "ALL" || row.carrier === carrierFilter
   );
