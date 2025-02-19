@@ -856,7 +856,7 @@ export function registerRoutes(app: Express): Server {
       let dateFilter = sql`TRUE`;
       
       if (days !== 'all') {
-        dateFilter = sql`created_at >= CURRENT_DATE - MAKE_INTERVAL(days => ${days}::integer)`;
+        dateFilter = sql`il.created_at >= CURRENT_DATE - MAKE_INTERVAL(days => ${days}::integer)`;
       }
 
       let limitClause = '';
