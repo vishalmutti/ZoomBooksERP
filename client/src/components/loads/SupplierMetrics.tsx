@@ -21,7 +21,7 @@ export function SupplierMetrics() {
       const response = await fetch(`/api/supplier-metrics?days=${timeRange}&loadCount=${roiRange}`);
       if (!response.ok) throw new Error('Failed to fetch supplier metrics');
       const data = await response.json();
-      return Array.isArray(data) ? data : [];
+      return data.rows || [];
     }
   });
 
@@ -33,41 +33,25 @@ export function SupplierMetrics() {
   }
 
   const sortedByRoi = metricsData ? [...metricsData].sort((a, b) => b.avg_roi - a.avg_roi) : [];
+  const sortedByLoadCount = metricsData ? [...metricsData].sort((a, b) => b.load_count - a.load_count) : [];
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Supplier Metrics</h2>
-        <div className="flex gap-2">
-          <Select value={roiRange} onValueChange={(value) => setRoiRange(value as typeof roiRange)}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select ROI range" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="2">Last 2 Loads</SelectItem>
-              <SelectItem value="4">Last 4 Loads</SelectItem>
-              <SelectItem value="10">Last 10 Loads</SelectItem>
-              <SelectItem value="all">All Time</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={timeRange} onValueChange={(value) => setTimeRange(value as typeof timeRange)}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select time range" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="14">Last 14 Days</SelectItem>
-              <SelectItem value="30">Last 30 Days</SelectItem>
-              <SelectItem value="90">Last 90 Days</SelectItem>
-              <SelectItem value="all">All Time</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Top Suppliers by ROI</CardTitle>
+            <Select value={roiRange} onValueChange={(value) => setRoiRange(value as typeof roiRange)}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Select loads" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="2">Last 2 Loads</SelectItem>
+                <SelectItem value="4">Last 4 Loads</SelectItem>
+                <SelectItem value="10">Last 10 Loads</SelectItem>
+                <SelectItem value="all">All Time</SelectItem>
+              </SelectContent>
+            </Select>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -82,12 +66,23 @@ export function SupplierMetrics() {
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Load Counts</CardTitle>
+            <Select value={timeRange} onValueChange={(value) => setTimeRange(value as typeof timeRange)}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Select period" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="14">Last 14 Days</SelectItem>
+                <SelectItem value="30">Last 30 Days</SelectItem>
+                <SelectItem value="90">Last 90 Days</SelectItem>
+                <SelectItem value="all">All Time</SelectItem>
+              </SelectContent>
+            </Select>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {sortedByRoi.slice(0, 5).map((supplier) => (
+              {sortedByLoadCount.slice(0, 5).map((supplier) => (
                 <div key={supplier.supplier_id} className="flex justify-between items-center">
                   <span>{supplier.supplier_id}</span>
                   <span>{supplier.load_count} loads</span>
