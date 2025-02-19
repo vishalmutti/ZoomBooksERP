@@ -848,6 +848,32 @@ export function registerRoutes(app: Express): Server {
     return res.json({ success: true });
   });
 
+  router.get("/api/carrier-metrics", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const days = req.query.days as string;
+      let dateFilter = sql`TRUE`;
+      
+      if (days !== 'all') {
+        dateFilter = sql`date >= NOW() - INTERVAL '${days} days'`;
+      }
+
+      const metrics = await db.select({
+        carrier: carrierLoads.carrier,
+        totalSpend: sql<number>`SUM(CAST(${carrierLoads.freightCost} AS DECIMAL))`,
+        loadCount: sql<number>`COUNT(*)`,
+      })
+      .from(carrierLoads)
+      .where(dateFilter)
+      .groupBy(carrierLoads.carrier);
+
+      return res.json(metrics);
+    } catch (error) {
+      console.error('Error fetching carrier metrics:', error);
+      return res.status(500).json({ message: 'Failed to fetch carrier metrics' });
+    }
+  });
+
   app.use(router);
   const httpServer = createServer(app);
   return httpServer;
