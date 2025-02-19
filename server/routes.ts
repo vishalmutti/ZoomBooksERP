@@ -951,8 +951,6 @@ export function registerRoutes(app: Express): Server {
 
       const metrics = loadCount !== 'all' ? await db.execute(costQuery) : await db.execute(loadCountQuery);
 
-      const metrics = loadCount !== 'all' ? await db.execute(roiQuery) : await db.execute(loadCountQuery);
-
       return res.json(metrics);
     } catch (error) {
       console.error('Error fetching supplier metrics:', error);
