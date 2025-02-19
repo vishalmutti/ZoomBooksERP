@@ -911,7 +911,7 @@ export function registerRoutes(app: Express): Server {
         GROUP BY il.supplier_id, s.name
         ORDER BY load_count DESC`;
 
-      const metrics = loadCount ? await db.execute(roiQuery) : await db.execute(loadCountQuery);
+      const metrics = loadCount !== 'all' ? await db.execute(roiQuery) : await db.execute(loadCountQuery);
 
       return res.json(metrics);
     } catch (error) {
