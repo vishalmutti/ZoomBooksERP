@@ -107,8 +107,6 @@ export function LoadDashboard() {
         </div>
 
         <LoadSupplierList suppliers={suppliers} />
-        <SupplierMetrics /> {/* Added SupplierMetrics component */}
-
         <LoadSupplierForm
           open={showAddSupplier}
           onOpenChange={setShowAddSupplier}
