@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 interface SupplierMetric {
   supplier_id: string;
+  supplier_name: string; // Added supplier_name
   load_count: number;
   avg_roi: number;
 }
@@ -57,7 +57,7 @@ export function SupplierMetrics() {
             <div className="space-y-2">
               {sortedByRoi.slice(0, 5).map((supplier) => (
                 <div key={supplier.supplier_id} className="flex justify-between items-center">
-                  <span>{supplier.supplier_id}</span>
+                  <span>{supplier.supplier_name}</span> {/* Changed to supplier.supplier_name */}
                   <span>{Number(supplier.avg_roi).toFixed(2)}%</span>
                 </div>
               ))}
@@ -84,7 +84,7 @@ export function SupplierMetrics() {
             <div className="space-y-2">
               {sortedByLoadCount.slice(0, 5).map((supplier) => (
                 <div key={supplier.supplier_id} className="flex justify-between items-center">
-                  <span>{supplier.supplier_id}</span>
+                  <span>{supplier.supplier_name}</span> {/* Changed to supplier.supplier_name */}
                   <span>{supplier.load_count} loads</span>
                 </div>
               ))}

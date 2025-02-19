@@ -856,7 +856,7 @@ export function registerRoutes(app: Express): Server {
       let dateFilter = sql`TRUE`;
       
       if (days !== 'all') {
-        dateFilter = sql`scheduled_pickup >= CURRENT_DATE - MAKE_INTERVAL(days => ${days}::integer)`;
+        dateFilter = sql`created_at >= CURRENT_DATE - MAKE_INTERVAL(days => ${days}::integer)`;
       }
 
       let limitClause = '';
@@ -866,12 +866,20 @@ export function registerRoutes(app: Express): Server {
 
       const metrics = await db.execute(sql`
         SELECT 
-          supplier_id,
+          s.name as supplier_name,
+          il.supplier_id,
           COUNT(*) as load_count,
-          AVG(CAST(profit_roi AS DECIMAL)) as avg_roi
-        FROM incoming_loads
+          AVG(CASE WHEN CAST(il.profit_roi AS DECIMAL) > 0 
+              THEN CAST(il.profit_roi AS DECIMAL) 
+              END) as avg_roi
+        FROM incoming_loads il
+        JOIN suppliers s ON s.id = CAST(il.supplier_id AS INTEGER)
         WHERE ${dateFilter}
-        GROUP BY supplier_id
+        GROUP BY il.supplier_id, s.name
+        HAVING AVG(CASE WHEN CAST(il.profit_roi AS DECIMAL) > 0 
+                  THEN CAST(il.profit_roi AS DECIMAL) 
+                  END) IS NOT NULL
+        ORDER BY avg_roi DESC
         ${sql.raw(limitClause)}
       `);
 
