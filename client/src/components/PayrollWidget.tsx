@@ -8,7 +8,7 @@ export function PayrollWidget() {
   const onSheetUrl = "https://docs.google.com/spreadsheets/d/1baasY58BNibdrI45ciXeZehU8IjzBOlKux5xUXFYYX0/edit?usp=sharing&embedded=true";
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-background">
+    <div className="fixed inset-x-0 bottom-0 top-[180px] flex flex-col bg-background">
       <div className="flex items-center gap-2 p-2 bg-background z-10 border-b">
         <button
           onClick={() => setSelectedSheet('BC')}
