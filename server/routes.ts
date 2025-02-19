@@ -869,6 +869,7 @@ export function registerRoutes(app: Express): Server {
                                 ORDER BY scheduled_delivery DESC) as rn
             FROM incoming_loads il
             WHERE CAST(il.profit_roi AS DECIMAL) > 0
+            AND load_type = 'Incoming'
           )
           SELECT 
             s.name as supplier_name,
@@ -889,6 +890,7 @@ export function registerRoutes(app: Express): Server {
           FROM incoming_loads il
           JOIN suppliers s ON s.id = CAST(il.supplier_id AS INTEGER)
           WHERE CAST(il.profit_roi AS DECIMAL) > 0
+          AND load_type = 'Incoming'
           GROUP BY il.supplier_id, s.name
           ORDER BY avg_roi DESC`;
 
@@ -904,6 +906,7 @@ export function registerRoutes(app: Express): Server {
         FROM incoming_loads il
         JOIN suppliers s ON s.id = CAST(il.supplier_id AS INTEGER)
         WHERE ${dateFilter}
+        AND load_type = 'Incoming'
         GROUP BY il.supplier_id, s.name
         ORDER BY load_count DESC`;
 
