@@ -88,11 +88,11 @@ export function registerRoutes(app: Express): Server {
     try {
       const decodedPath = decodeURIComponent(req.path).trim();
       const filename = path.basename(decodedPath);
-      
+
       // Find the actual file in uploads directory that matches the name ignoring case
       const files = fs.readdirSync(uploadDir);
       const actualFile = files.find(f => f.toLowerCase() === filename.toLowerCase());
-      
+
       if (!actualFile) {
         console.error('File not found:', filename);
         return res.status(404).json({
@@ -758,9 +758,9 @@ export function registerRoutes(app: Express): Server {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
       const { startDate, endDate, status } = req.query;
-      
+
       let query = db.select().from(carrierLoads);
-      
+
       if (startDate) {
         query = query.where(sql`${carrierLoads.date} >= ${startDate}`);
       }
@@ -773,7 +773,7 @@ export function registerRoutes(app: Express): Server {
       if (req.query.referenceNumber) {
         query = query.where(sql`LOWER(${carrierLoads.referenceNumber}) = LOWER(${req.query.referenceNumber})`);
       }
-      
+
       const loads = await query;
       return res.json(loads);
     } catch (error) {
@@ -806,7 +806,7 @@ export function registerRoutes(app: Express): Server {
     try {
       const id = parseInt(req.params.id);
       const { status } = req.body;
-      
+
       const result = await db.update(carrierLoads)
         .set({ status })
         .where(eq(carrierLoads.id, id))
@@ -850,11 +850,11 @@ export function registerRoutes(app: Express): Server {
 
   // Supplier metrics endpoint
   router.get("/api/supplier-metrics", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (!req.isAuthenticated()) return res.sendStatus(4001);
     try {
       const { days, loadCount } = req.query;
       let dateFilter = sql`TRUE`;
-      
+
       if (days !== 'all') {
         dateFilter = sql`il.created_at >= CURRENT_DATE - MAKE_INTERVAL(days => ${days}::integer)`;
       }
@@ -894,33 +894,40 @@ export function registerRoutes(app: Express): Server {
           GROUP BY il.supplier_id, s.name
           ORDER BY avg_roi DESC`;
 
-      // For load count with date filter
-      const loadCountQuery = sql`
+      // For load count with date filter and cost check
+      const costQuery = sql`
+        WITH ValidLoads AS (
+          SELECT 
+            il.*,
+            ROW_NUMBER() OVER (
+              PARTITION BY il.supplier_id 
+              ORDER BY scheduled_delivery DESC
+            ) as rn
+          FROM incoming_loads il
+          WHERE CAST(il.load_cost AS DECIMAL) > 0 
+          AND CAST(il.freight_cost AS DECIMAL) > 0
+          AND load_type = 'Incoming'
+        )
         SELECT 
           s.name as supplier_name,
-          il.supplier_id,
+          vl.supplier_id,
           COUNT(*) as load_count,
-          AVG(CASE WHEN CAST(il.profit_roi AS DECIMAL) > 0 
-              THEN CAST(il.profit_roi AS DECIMAL) 
+          AVG(CASE WHEN CAST(vl.profit_roi AS DECIMAL) > 0 
+              THEN CAST(vl.profit_roi AS DECIMAL) 
               ELSE NULL
               END) as avg_roi,
-          AVG(CASE 
-              WHEN CAST(il.load_cost AS DECIMAL) > 0 AND CAST(il.freight_cost AS DECIMAL) > 0
-              THEN CAST(il.load_cost AS DECIMAL) + 
-                   CASE WHEN il.freight_cost_currency = 'USD' 
-                        THEN CAST(il.freight_cost AS DECIMAL) * 1.35 -- Using 1.35 as current USD/CAD rate
-                        ELSE CAST(il.freight_cost AS DECIMAL)
-                   END
-              ELSE NULL
+          AVG(CAST(vl.load_cost AS DECIMAL) + 
+              CASE WHEN vl.freight_cost_currency = 'USD' 
+                   THEN CAST(vl.freight_cost AS DECIMAL) * 1.35
+                   ELSE CAST(vl.freight_cost AS DECIMAL)
               END) as avg_cost_per_load
-        FROM incoming_loads il
-        JOIN suppliers s ON s.id = CAST(il.supplier_id AS INTEGER)
-        WHERE ${dateFilter}
-        AND load_type = 'Incoming'
-        GROUP BY il.supplier_id, s.name
-        ORDER BY load_count DESC`;
+        FROM ValidLoads vl
+        JOIN suppliers s ON s.id = CAST(vl.supplier_id AS INTEGER)
+        WHERE ${loadCount === 'all' ? sql`TRUE` : sql`vl.rn <= ${loadCount}`}
+        GROUP BY vl.supplier_id, s.name
+        ORDER BY avg_cost_per_load DESC`;
 
-      const metrics = loadCount !== 'all' ? await db.execute(roiQuery) : await db.execute(loadCountQuery);
+      const metrics = loadCount !== 'all' ? await db.execute(roiQuery) : await db.execute(costQuery);
 
       return res.json(metrics);
     } catch (error) {
@@ -934,7 +941,7 @@ export function registerRoutes(app: Express): Server {
     try {
       const days = req.query.days as string;
       let dateFilter = sql`TRUE`;
-      
+
       if (days !== 'all') {
         dateFilter = sql`date >= CURRENT_DATE - MAKE_INTERVAL(days => ${days}::integer)`;
       }
