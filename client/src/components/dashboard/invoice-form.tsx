@@ -182,8 +182,8 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   // Instead of creating a new carrier load entry, we update the existing entry with the same reference number.
   const syncCarrierLoad = async (invoice: Invoice) => {
     try {
-      if (!invoice.invoiceNumber || !invoice.carrier) {
-        console.log('Skipping carrier load sync - missing invoice number or carrier');
+      if (!invoice.invoiceNumber || !invoice.carrier || !invoice.freightCost || Number(invoice.freightCost) <= 0) {
+        console.log('Skipping carrier load sync - missing required fields or freight cost is 0');
         return;
       }
 
