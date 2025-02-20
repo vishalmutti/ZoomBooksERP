@@ -143,37 +143,43 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
         formData.append('id', initialData.id.toString());
       }
 
-      // Check for existing carrier load
-      const carrierResponse = await fetch('/api/carrier-loads');
-      const carrierLoads = await carrierResponse.json();
-      const existingCarrierLoad = carrierLoads.find(load => load.referenceNumber === data.referenceNumber);
+      // Only sync carrier load if both carrier is selected and freight cost > 0
+      if (data.carrier && data.freightCost && Number(data.freightCost) > 0) {
+        // Check for existing carrier load
+        const carrierResponse = await fetch('/api/carrier-loads');
+        const carrierLoads = await carrierResponse.json();
+        const existingCarrierLoad = carrierLoads.find(load => load.referenceNumber === data.referenceNumber);
 
-      // Create/update carrier load
-      const carrierFormData = new FormData();
-      carrierFormData.append('carrierData', JSON.stringify({
-        date: data.scheduledPickup || new Date().toISOString().split('T')[0],
-        referenceNumber: data.referenceNumber,
-        carrier: data.carrier,
-        freightCost: data.freightCost,
-        freightCostCurrency: data.freightCostCurrency,
-        status: "UNPAID"
-      }));
+        // Create/update carrier load
+        const carrierFormData = new FormData();
+        carrierFormData.append('carrierData', JSON.stringify({
+          date: data.scheduledPickup || new Date().toISOString().split('T')[0],
+          referenceNumber: data.referenceNumber,
+          carrier: data.carrier,
+          freightCost: data.freightCost,
+          freightCostCurrency: data.freightCostCurrency,
+          status: "UNPAID"
+        }));
 
-      // Map BOL to POD and freightInvoice
-      if (files.bol) carrierFormData.append('pod', files.bol);
-      if (files.freightInvoice) carrierFormData.append('freightInvoice', files.freightInvoice);
+        // Map BOL to POD and freightInvoice
+        if (files.bol) carrierFormData.append('pod', files.bol);
+        if (files.freightInvoice) carrierFormData.append('freightInvoice', files.freightInvoice);
 
-      const carrierEndpoint = existingCarrierLoad 
-        ? `/api/carrier-loads/${existingCarrierLoad.id}`
-        : '/api/carrier-loads';
-      const carrierMethod = existingCarrierLoad ? 'PATCH' : 'POST';
+        const carrierEndpoint = existingCarrierLoad 
+          ? `/api/carrier-loads/${existingCarrierLoad.id}`
+          : '/api/carrier-loads';
+        const carrierMethod = existingCarrierLoad ? 'PATCH' : 'POST';
 
-      await fetch(carrierEndpoint, {
-        method: carrierMethod,
-        body: carrierFormData
-      });
+        await fetch(carrierEndpoint, {
+          method: carrierMethod,
+          body: carrierFormData
+        });
 
-      await queryClient.invalidateQueries({ queryKey: ["/api/carrier-loads"] });
+        await queryClient.invalidateQueries({ queryKey: ["/api/carrier-loads"] });
+        console.log('Carrier load synced successfully');
+      } else {
+        console.log('Skipping carrier load sync - no carrier selected or freight cost is 0');
+      }
 
       // Log form data and files for debugging
       console.log('Form data to submit:', data);
