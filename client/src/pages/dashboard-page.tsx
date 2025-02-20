@@ -11,6 +11,7 @@ import { LogOut, Plus } from "lucide-react";
 import { useState } from "react";
 import { SupplierForm } from "@/components/dashboard/supplier-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { WholesaleMetrics } from "@/components/dashboard/wholesale-metrics";
 
 export default function DashboardPage() {
   const { logoutMutation } = useAuth();
@@ -82,7 +83,7 @@ export default function DashboardPage() {
           <TabsContent value="wholesale" className="space-y-4">
             <div className="grid gap-4">
               <h2 className="text-2xl font-bold">Wholesale Metrics</h2>
-              <p className="text-muted-foreground">Coming soon - Wholesale performance metrics and analytics</p>
+              <WholesaleMetrics />
             </div>
           </TabsContent>
         </Tabs>
