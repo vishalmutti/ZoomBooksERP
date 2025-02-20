@@ -16,19 +16,23 @@ export default function OntarioMetricsPage() {
       try {
         const response = await axios.get('https://list.lkdev.com/report_serve.php?cmreport_id=2&r=54338224&amazonseller_id=196&cmkey=44f343fb207c118c67ac11801d1f745250fba02c&customjson=%7B%0A%20%22days%22%3A7%0A%7D');
 
-        // Parse data directly
-        const lines = response.data.split('\n');
-        const transformedData = lines
-          .slice(1) // Skip header
-          .filter(line => line.trim())
-          .map(line => {
-            const [date, , , count] = line.split(',');
+        // Split data into records and parse
+        const records = response.data.split(/\s+/);
+        const transformedData = records
+          .slice(1) // Skip header row
+          .map(record => {
+            const [date, , , count] = record.split(',');
+            if (!date || !count) return null;
             return {
               date: date.trim(),
-              count: parseInt(count.trim(), 10) || 0
+              count: parseInt(count.trim(), 10)
             };
           })
-          .filter(row => !isNaN(row.count));
+          .filter((row): row is { date: string; count: number } => 
+            row !== null && !isNaN(row.count)
+          );
+
+        console.log('Parsed data:', transformedData); // Debug log
 
         // Sort by date
         transformedData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
