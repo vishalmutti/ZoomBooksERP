@@ -14,7 +14,17 @@ export default function OntarioMetricsPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('https://list.lkdev.com/report_serve.php?cmreport_id=2&r=54338224&amazonseller_id=196&cmkey=44f343fb207c118c67ac11801d1f745250fba02c&customjson=%7B%0A%20%22days%22%3A7%0A%7D');
+        const response = await fetch('https://list.lkdev.com/report_serve.php?cmreport_id=2&r=54338224&amazonseller_id=196&cmkey=44f343fb207c118c67ac11801d1f745250fba02c&customjson=%7B%0A%20%22days%22%3A7%0A%7D', {
+          mode: 'cors',
+          headers: {
+            'Accept': 'text/plain'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const text = await response.text();
         
         // Split by newlines and filter empty lines
