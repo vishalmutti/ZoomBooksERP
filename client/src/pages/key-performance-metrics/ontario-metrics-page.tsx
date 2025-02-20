@@ -14,11 +14,15 @@ export default function OntarioMetricsPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get('https://list.lkdev.com/report_serve.php?cmreport_id=2&r=54338224&amazonseller_id=196&cmkey=44f343fb207c118c67ac11801d1f745250fba02c&customjson=%7B%0A%20%22days%22%3A7%0A%7D');
+        const response = await axios.get('https://list.lkdev.com/report_serve.php?cmreport_id=2&r=54338224&amazonseller_id=196&cmkey=44f343fb207c118c67ac11801d1f745250fba02c&customjson=%7B%0A%20%22days%22%3A7%0A%7D', {
+          responseType: 'text'
+        });
 
         // Split data into records and parse
-        const records = response.data.split(/\s+/);
-        const transformedData = records
+        const records = response.data.split('\n');
+        const dataRows = records.filter(row => row.trim()); // Remove empty lines
+        
+        const transformedData = dataRows
           .slice(1) // Skip header row
           .map(record => {
             const [date, , , count] = record.split(',');
@@ -32,7 +36,8 @@ export default function OntarioMetricsPage() {
             row !== null && !isNaN(row.count)
           );
 
-        console.log('Parsed data:', transformedData); // Debug log
+        console.log('Raw response:', response.data);
+        console.log('Parsed data:', transformedData);
 
         // Sort by date
         transformedData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
