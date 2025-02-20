@@ -14,26 +14,18 @@ export default function OntarioMetricsPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get('https://list.lkdev.com/report_serve.php', {
-          params: {
-            cmreport_id: 2,
-            r: '54338224',
-            amazonseller_id: '196',
-            cmkey: '44f343fb207c118c67ac11801d1f745250fba02c',
-            customjson: JSON.stringify({ days: 7 })
-          }
-        });
+        const response = await axios.get('https://list.lkdev.com/report_serve.php?cmreport_id=2&r=54338224&amazonseller_id=196&cmkey=44f343fb207c118c67ac11801d1f745250fba02c&customjson=%7B%0A%20%22days%22%3A7%0A%7D');
 
-        // Parse space-separated records
-        const rows = response.data.trim().split(/\s+/);
-        const headerRow = rows[0]; // "date,shift,line,count"
-        const transformedData = rows
-          .slice(1) // Skip header row
-          .map(row => {
-            const values = row.split(',');
+        // Parse data directly
+        const lines = response.data.split('\n');
+        const transformedData = lines
+          .slice(1) // Skip header
+          .filter(line => line.trim())
+          .map(line => {
+            const [date, , , count] = line.split(',');
             return {
-              date: values[0],
-              count: parseInt(values[3], 10) || 0
+              date: date.trim(),
+              count: parseInt(count.trim(), 10) || 0
             };
           })
           .filter(row => !isNaN(row.count));
