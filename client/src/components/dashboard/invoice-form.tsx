@@ -239,7 +239,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       const endpoint = existingLoad 
         ? `/api/carrier-loads/${existingLoad.id}`
         : "/api/carrier-loads";
-      
+
       console.log('Syncing carrier load:', {
         existingLoad,
         endpoint,
@@ -478,9 +478,27 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                 <Label htmlFor="invoiceNumber">Invoice Number</Label>
                 <Input {...form.register("invoiceNumber")} />
               </div>
-              {/* Carrier Dropdown */}
               <div>
-                <Label htmlFor="carrier">Carrier</Label>
+                <Label htmlFor="dueDate">Due Date</Label>
+                <Input type="date" {...form.register("dueDate")} />
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="noFreightCost"
+                  className="h-4 w-4"
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      form.setValue("carrier", "");
+                      form.setValue("freightCost", "0");
+                    }
+                  }}
+                />
+                <Label htmlFor="noFreightCost">No Freight Cost</Label>
+              </div>
+              {/* Optional Carrier Dropdown */}
+              <div>
+                <Label htmlFor="carrier">Carrier (Optional)</Label>
                 <select
                   {...form.register("carrier")}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
@@ -490,10 +508,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                     <option key={carrier.id} value={carrier.name}>{carrier.name}</option>
                   ))}
                 </select>
-              </div>
-              <div>
-                <Label htmlFor="dueDate">Due Date</Label>
-                <Input type="date" {...form.register("dueDate")} />
               </div>
               <TabsContent value="manual">
                 <div>
