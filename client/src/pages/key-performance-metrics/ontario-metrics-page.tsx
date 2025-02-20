@@ -25,11 +25,21 @@ export default function OntarioMetricsPage() {
           }
         });
         
-        // Transform data to only include date and count
-        const transformedData = response.data.map((item: any) => ({
-          date: item.date,
-          count: parseInt(item.count)
-        }));
+        // Parse CSV data
+        const rows = response.data.split('\n');
+        const headers = rows[0].split(',');
+        const dateIndex = headers.indexOf('date');
+        const countIndex = headers.indexOf('count');
+        
+        const transformedData = rows.slice(1)
+          .filter(row => row.trim())
+          .map(row => {
+            const columns = row.split(',');
+            return {
+              date: columns[dateIndex],
+              count: parseInt(columns[countIndex], 10)
+            };
+          });
         
         setMetricsData(transformedData);
       } catch (error) {
@@ -49,7 +59,7 @@ export default function OntarioMetricsPage() {
             <CardTitle>Daily Counts</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[400px]">
+            <div className="h-[400px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={metricsData}>
                   <CartesianGrid strokeDasharray="3 3" />
