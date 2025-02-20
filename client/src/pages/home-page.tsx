@@ -28,6 +28,12 @@ const widgets = [
     description: "Coming soon - Track inventory levels and manage stock",
     path: "/inventory",
     icon: "📦"
+  },
+  {
+    title: "Key Performance Metrics",
+    description: "Coming soon - Monitor business performance and analytics",
+    path: "/metrics",
+    icon: "📊"
   }
 ];
 
