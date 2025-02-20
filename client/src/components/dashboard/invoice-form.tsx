@@ -56,15 +56,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   const [file, setFile] = useState<File | null>(null);
   const [bolFile, setBolFile] = useState<File | null>(null);
   const [freightInvoiceFile, setFreightInvoiceFile] = useState<File | null>(null);
-  const [noFreightCost, setNoFreightCost] = useState(false);
-
-  useEffect(() => {
-    if (noFreightCost) {
-      form.setValue("carrier", "");
-      form.setValue("freightCost", "0");
-      setFreightInvoiceFile(null);
-    }
-  }, [noFreightCost]);
 
   // Fetch available carriers from your API
   const { data: carriers = [] } = useQuery<Carrier[]>({
@@ -191,8 +182,8 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   // Instead of creating a new carrier load entry, we update the existing entry with the same reference number.
   const syncCarrierLoad = async (invoice: Invoice) => {
     try {
-      if (!invoice.invoiceNumber || !invoice.carrier || parseFloat(invoice.freightCost || "0") <=0) {
-        console.log('Skipping carrier load sync - missing invoice number, carrier, or freight cost');
+      if (!invoice.invoiceNumber || !invoice.carrier) {
+        console.log('Skipping carrier load sync - missing invoice number or carrier');
         return;
       }
 
@@ -248,7 +239,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       const endpoint = existingLoad 
         ? `/api/carrier-loads/${existingLoad.id}`
         : "/api/carrier-loads";
-
+      
       console.log('Syncing carrier load:', {
         existingLoad,
         endpoint,
@@ -260,12 +251,12 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         body: formData
       });
 
-      if (!syncResponse.ok) {
+      if (!response.ok) {
         throw new Error(`Failed to ${existingLoad ? 'update' : 'create'} carrier load`);
       }
 
       await queryClient.invalidateQueries({ queryKey: ["carrier-loads"] });
-      return syncResponse.json();
+      return response.json();
     } catch (error) {
       console.error('Error syncing carrier load:', error);
       throw error;
@@ -489,56 +480,21 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
               </div>
               {/* Carrier Dropdown */}
               <div>
+                <Label htmlFor="carrier">Carrier</Label>
+                <select
+                  {...form.register("carrier")}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                >
+                  <option value="">Select a carrier...</option>
+                  {carriers.map(carrier => (
+                    <option key={carrier.id} value={carrier.name}>{carrier.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
                 <Label htmlFor="dueDate">Due Date</Label>
                 <Input type="date" {...form.register("dueDate")} />
               </div>
-              {!noFreightCost && (
-                <div className="space-y-4">
-                  <div>
-                    <Label>Carrier</Label>
-                    <select
-                      {...form.register("carrier")}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                    >
-                      <option value="">Select a carrier...</option>
-                      {carriers.map(carrier => (
-                        <option key={carrier.id} value={carrier.name}>{carrier.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Freight Cost</Label>
-                      <Input type="number" step="0.01" placeholder="Enter freight cost" {...form.register("freightCost")} />
-                    </div>
-                    <div>
-                      <Label>Currency</Label>
-                      <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background" {...form.register("freightCostCurrency")}>
-                        <option value="USD">USD</option>
-                        <option value="CAD">CAD</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div>
-                    <Label>Upload Freight Invoice</Label>
-                    <div className="mt-2">
-                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50">
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                          <Upload className="w-8 h-8 mb-2 text-gray-400" />
-                          <p className="mb-2 text-sm text-gray-500">
-                            {freightInvoiceFile
-                              ? freightInvoiceFile.name
-                              : editInvoice?.freightInvoiceFile
-                              ? "Replace current file"
-                              : "Click to upload freight invoice or drag and drop"}
-                          </p>
-                        </div>
-                        <input type="file" className="hidden" onChange={handleFreightInvoiceFileChange} accept=".pdf,.png,.jpg,.jpeg" />
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              )}
               <TabsContent value="manual">
                 <div>
                   <Label>Items</Label>
@@ -592,52 +548,35 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                         </div>
                       </div>
                     </div>
-                    {!noFreightCost && (
-                      <>
-                        <div className="grid grid-cols-2 gap-4 my-4">
-                          <div className="space-y-2">
-                            <Label>Carrier</Label>
-                            <select
-                              {...form.register("carrier")}
-                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                            >
-                              <option value="">Select a carrier...</option>
-                              {carriers.map(carrier => (
-                                <option key={carrier.id} value={carrier.name}>{carrier.name}</option>
-                              ))}
-                            </select>
+                    <div className="space-y-2">
+                      <Label>Upload Freight Invoice</Label>
+                      <div className="mt-2">
+                        <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50">
+                          <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                            <Upload className="w-8 h-8 mb-2 text-gray-400" />
+                            <p className="mb-2 text-sm text-gray-500">
+                              {freightInvoiceFile
+                                ? freightInvoiceFile.name
+                                : editInvoice?.freightInvoiceFile
+                                ? "Replace current file"
+                                : "Click to upload freight invoice or drag and drop"}
+                            </p>
                           </div>
-                          <div className="space-y-2">
-                            <Label>Freight Cost</Label>
-                            <div className="flex gap-2">
-                              <Input type="number" step="0.01" placeholder="Enter freight cost" {...form.register("freightCost")} />
-                              <select className="flex h-10 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background" {...form.register("freightCostCurrency")}>
-                                <option value="USD">USD</option>
-                                <option value="CAD">CAD</option>
-                              </select>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Upload Freight Invoice</Label>
-                          <div className="mt-2">
-                            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50">
-                              <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                <Upload className="w-8 h-8 mb-2 text-gray-400" />
-                                <p className="mb-2 text-sm text-gray-500">
-                                  {freightInvoiceFile
-                                    ? freightInvoiceFile.name
-                                    : editInvoice?.freightInvoiceFile
-                                    ? "Replace current file"
-                                    : "Click to upload freight invoice or drag and drop"}
-                                </p>
-                              </div>
-                              <input type="file" className="hidden" onChange={handleFreightInvoiceFileChange} accept=".pdf,.png,.jpg,.jpeg" />
-                            </label>
+                          <input type="file" className="hidden" onChange={handleFreightInvoiceFileChange} accept=".pdf,.png,.jpg,.jpeg" />
+                        </label>
+                      </div>
+                      {editInvoice?.freightInvoiceFile && (
+                        <div className="mt-4">
+                          <Label>Current Freight Invoice File</Label>
+                          <div className="flex items-center justify-between p-2 mt-1 border rounded">
+                            <span className="text-sm">{editInvoice.freightInvoiceFile}</span>
+                            <a href={`/uploads/${editInvoice.freightInvoiceFile}`} target="_blank" rel="noopener noreferrer" className="flex items-center text-blue-600 hover:text-blue-800">
+                              <Download className="h-4 w-4 mr-1" /> Download
+                            </a>
                           </div>
                         </div>
-                      </>
-                    )}
+                      )}
+                    </div>
                     <Button type="button" variant="outline" onClick={() => {
                       const items = form.getValues("items") || [];
                       form.setValue("items", [
@@ -652,16 +591,30 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
               </TabsContent>
               <TabsContent value="upload">
                 <div className="space-y-4">
-                  <div className="space-y-4">
-                    <div>
+                  <div className="flex gap-2">
+                    <div className="flex-1">
                       <Label>Total Amount</Label>
-                      <div className="flex gap-2">
-                        <Input type="number" step="0.01" placeholder="Enter total amount" {...form.register("totalAmount")} />
-                        <select className="flex h-10 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background" {...form.register("amountCurrency")}>
-                          <option value="USD">USD</option>
-                          <option value="CAD">CAD</option>
-                        </select>
-                      </div>
+                      <Input type="number" step="0.01" placeholder="Enter total amount" {...form.register("totalAmount")} />
+                    </div>
+                    <div className="flex-1">
+                      <Label>Freight Cost</Label>
+                      <Input type="number" step="0.01" placeholder="Enter freight cost" {...form.register("freightCost")} />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <Label>Total Amount Currency</Label>
+                      <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background" {...form.register("amountCurrency")}>
+                        <option value="USD">USD</option>
+                        <option value="CAD">CAD</option>
+                      </select>
+                    </div>
+                    <div className="flex-1">
+                      <Label>Freight Cost Currency</Label>
+                      <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background" {...form.register("freightCostCurrency")}>
+                        <option value="USD">USD</option>
+                        <option value="CAD">CAD</option>
+                      </select>
                     </div>
                   </div>
                   <div>
@@ -719,10 +672,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
               <div>
                 <Label htmlFor="notes">Notes</Label>
                 <Textarea {...form.register("notes")} />
-              </div>
-              <div className="flex items-center space-x-2">
-                <input type="checkbox" id="noFreightCost" checked={noFreightCost} onChange={(e) => setNoFreightCost(e.target.checked)} />
-                <label htmlFor="noFreightCost">No Freight Cost</label>
               </div>
             </div>
             <Button type="submit" className="w-full" disabled={updateInvoiceMutation.isPending}>
