@@ -13,7 +13,7 @@ import CarrierPage from "@/pages/carrier-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import { Navbar } from "@/components/dashboard/navbar";
 import PayrollPage from "@/pages/payroll-page";
-import MetricsPage from "@/pages/metrics-page";
+import MetricsPage from "@/pages/key-performance-metrics/metrics-page";
 import OntarioMetricsPage from "@/pages/ontario-metrics-page"; // Added
 import BritishColumbiaMetricsPage from "@/pages/british-columbia-metrics-page"; // Added
 
