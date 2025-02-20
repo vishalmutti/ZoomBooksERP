@@ -56,6 +56,15 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   const [file, setFile] = useState<File | null>(null);
   const [bolFile, setBolFile] = useState<File | null>(null);
   const [freightInvoiceFile, setFreightInvoiceFile] = useState<File | null>(null);
+  const [noFreightCost, setNoFreightCost] = useState(false);
+
+  useEffect(() => {
+    if (noFreightCost) {
+      form.setValue("carrier", "");
+      form.setValue("freightCost", "0");
+      setFreightInvoiceFile(null);
+    }
+  }, [noFreightCost]);
 
   // Fetch available carriers from your API
   const { data: carriers = [] } = useQuery<Carrier[]>({
@@ -182,8 +191,8 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
   // Instead of creating a new carrier load entry, we update the existing entry with the same reference number.
   const syncCarrierLoad = async (invoice: Invoice) => {
     try {
-      if (!invoice.invoiceNumber || !invoice.carrier) {
-        console.log('Skipping carrier load sync - missing invoice number or carrier');
+      if (!invoice.invoiceNumber || !invoice.carrier || parseFloat(invoice.freightCost || "0") <=0) {
+        console.log('Skipping carrier load sync - missing invoice number, carrier, or freight cost');
         return;
       }
 
@@ -239,7 +248,7 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
       const endpoint = existingLoad 
         ? `/api/carrier-loads/${existingLoad.id}`
         : "/api/carrier-loads";
-      
+
       console.log('Syncing carrier load:', {
         existingLoad,
         endpoint,
@@ -251,12 +260,12 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
         body: formData
       });
 
-      if (!response.ok) {
+      if (!syncResponse.ok) {
         throw new Error(`Failed to ${existingLoad ? 'update' : 'create'} carrier load`);
       }
 
       await queryClient.invalidateQueries({ queryKey: ["carrier-loads"] });
-      return response.json();
+      return syncResponse.json();
     } catch (error) {
       console.error('Error syncing carrier load:', error);
       throw error;
@@ -672,6 +681,10 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
               <div>
                 <Label htmlFor="notes">Notes</Label>
                 <Textarea {...form.register("notes")} />
+              </div>
+              <div className="flex items-center space-x-2">
+                <input type="checkbox" id="noFreightCost" checked={noFreightCost} onChange={(e) => setNoFreightCost(e.target.checked)} />
+                <label htmlFor="noFreightCost">No Freight Cost</label>
               </div>
             </div>
             <Button type="submit" className="w-full" disabled={updateInvoiceMutation.isPending}>

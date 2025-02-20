@@ -48,6 +48,10 @@ export default function InvoiceTable({
     },
   });
 
+  const formatCurrency = (amount: number | null, currency: string = 'CAD') => {
+    return amount != null ? `$${Number(amount).toFixed(2)} ${currency}` : "N/A";
+  };
+
   return (
     <Table>
       <TableHeader>
@@ -66,22 +70,15 @@ export default function InvoiceTable({
         {(invoices || []).map((invoice) => (
           <TableRow key={invoice.id}>
             <TableCell>{invoice.clientName}</TableCell>
-            <TableCell>{invoice.carrier || "N/A"}</TableCell>
-
-            {/* Amount in the format "$100.00 USD" or "$100.00 CAD" */}
+            <TableCell>
+              {invoice.freightCost && Number(invoice.freightCost) > 0 ? (invoice.carrier || "N/A") : "-"}
+            </TableCell>
             <TableCell>
               {`$${Number(invoice.totalAmount).toFixed(2)} ${invoice.amountCurrency}`}
             </TableCell>
-
-            {/* Freight cost in the same format, or "N/A" if not present */}
             <TableCell>
-              {invoice.freightCost != null
-                ? `$${Number(invoice.freightCost).toFixed(2)} ${
-                    invoice.freightCostCurrency
-                  }`
-                : "N/A"}
+              {formatCurrency(invoice.freightCost, invoice.freightCostCurrency)}
             </TableCell>
-
             <TableCell>
               {invoice.freightInvoiceFile ? (
                 <a
@@ -111,11 +108,9 @@ export default function InvoiceTable({
                 "N/A"
               )}
             </TableCell>
-
             <TableCell>
               {format(new Date(invoice.dueDate), "MMM d, yyyy")}
             </TableCell>
-
             <TableCell>
               {invoice.isPaid ? (
                 <span className="text-green-600">Paid</span>
@@ -123,7 +118,6 @@ export default function InvoiceTable({
                 <span className="text-red-600">Unpaid</span>
               )}
             </TableCell>
-
             <TableCell>
               {!invoice.isPaid && (
                 <Button
