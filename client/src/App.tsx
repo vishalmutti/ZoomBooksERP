@@ -14,8 +14,8 @@ import { ProtectedRoute } from "./lib/protected-route";
 import { Navbar } from "@/components/dashboard/navbar";
 import PayrollPage from "@/pages/payroll-page";
 import MetricsPage from "@/pages/key-performance-metrics/metrics-page";
-import OntarioMetricsPage from "@/pages/ontario-metrics-page"; // Added
-import BritishColumbiaMetricsPage from "@/pages/british-columbia-metrics-page"; // Added
+import OntarioMetricsPage from "@/pages/key-performance-metrics/ontario-metrics-page";
+import BritishColumbiaMetricsPage from "@/pages/key-performance-metrics/british-columbia-metrics-page";
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   return (
