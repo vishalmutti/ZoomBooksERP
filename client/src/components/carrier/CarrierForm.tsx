@@ -216,6 +216,13 @@ export function CarrierForm({ initialData, onOpenChange, open }: CarrierFormProp
               render={({ field: { value, ...field } }) => (
                 <FormItem>
                   <FormLabel>Freight Invoice</FormLabel>
+                  {initialData?.freightInvoice && (
+                    <div className="mb-2">
+                      <a href={`/uploads/${initialData.freightInvoice}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
+                        Current File: {initialData.freightInvoice}
+                      </a>
+                    </div>
+                  )}
                   <FormControl>
                     <Input 
                       type="file" 
@@ -233,6 +240,13 @@ export function CarrierForm({ initialData, onOpenChange, open }: CarrierFormProp
               render={({ field: { value, ...field } }) => (
                 <FormItem>
                   <FormLabel>POD</FormLabel>
+                  {initialData?.pod && (
+                    <div className="mb-2">
+                      <a href={`/uploads/${initialData.pod}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
+                        Current File: {initialData.pod}
+                      </a>
+                    </div>
+                  )}
                   <FormControl>
                     <Input 
                       type="file" 
