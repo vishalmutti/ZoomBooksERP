@@ -71,7 +71,7 @@ export function WholesaleMetrics() {
           const [isExpanded, setIsExpanded] = useState(false);
           
           return (
-            <Card key={supplier.id} className="flex flex-col">
+            <Card key={supplier.id} className="h-fit">
               <CardHeader>
                 <CardTitle className="text-lg">{supplier.name}</CardTitle>
               </CardHeader>
