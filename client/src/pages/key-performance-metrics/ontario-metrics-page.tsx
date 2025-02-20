@@ -24,15 +24,16 @@ export default function OntarioMetricsPage() {
           }
         });
 
-        // Parse CSV response
-        const rows = response.data.split(/\s+/);
+        // Parse space-separated records
+        const rows = response.data.trim().split(/\s+/);
+        const headerRow = rows[0]; // "date,shift,line,count"
         const transformedData = rows
           .slice(1) // Skip header row
           .map(row => {
-            const [date, , , count] = row.split(',');
+            const values = row.split(',');
             return {
-              date: date.trim(),
-              count: parseInt(count, 10) || 0
+              date: values[0],
+              count: parseInt(values[3], 10) || 0
             };
           })
           .filter(row => !isNaN(row.count));
