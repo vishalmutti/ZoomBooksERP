@@ -412,6 +412,57 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
         </div>
       </div>
 
+      {/* Export Button */}
+      <div className="mb-4">
+        <Button variant="outline" onClick={() => {
+          if (!filteredInvoices?.length) return;
+
+          const headers = [
+            'Invoice #', 'Supplier', 'Carrier', 'Amount', 
+            'Freight Cost', 'Due Date', 'Status'
+          ];
+
+          const csvData = filteredInvoices.map(invoice => [
+            invoice.invoiceNumber,
+            suppliers.find(s => s.id === invoice.supplierId)?.name || 'N/A',
+            invoice.carrier || 'N/A',
+            `$${Number(invoice.totalAmount).toFixed(2)} ${invoice.amountCurrency}`,
+            invoice.freightCost ? `$${Number(invoice.freightCost).toFixed(2)} ${invoice.freightCostCurrency}` : 'N/A',
+            format(new Date(invoice.dueDate), "MMM d, yyyy"),
+            invoice.isPaid ? 'Paid' : 'Unpaid'
+          ].join(','));
+
+          const csv = [headers.join(','), ...csvData].join('\n');
+          const blob = new Blob([csv], { type: 'text/csv' });
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `invoices-${format(new Date(), "yyyy-MM-dd")}.csv`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        }} className="w-full">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="mr-2"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          Export CSV
+        </Button>
+      </div>
+
       {/* Data Table */}
       <DataTable columns={columns} data={filteredInvoices} />
 
