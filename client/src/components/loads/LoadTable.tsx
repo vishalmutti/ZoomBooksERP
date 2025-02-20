@@ -385,13 +385,10 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
 
   return (
     <div className="rounded-md border overflow-x-auto">
-      <div className="flex justify-between mb-4">
-        <div className="flex gap-2">
-          <LoadForm />
-          <Button variant="outline" onClick={exportToCSV}>
-            <LuDownload className="mr-2 h-4 w-4" /> Export CSV
-          </Button>
-        </div>
+      <div className="flex justify-end mb-4">
+        <Button variant="outline" onClick={exportToCSV}>
+          <LuDownload className="mr-2 h-4 w-4" /> Export CSV
+        </Button>
       </div>
       <div className="space-y-4">
         <div className="grid grid-cols-4 gap-4">
