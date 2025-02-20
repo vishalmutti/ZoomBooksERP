@@ -13,6 +13,9 @@ import CarrierPage from "@/pages/carrier-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import { Navbar } from "@/components/dashboard/navbar";
 import PayrollPage from "@/pages/payroll-page";
+import MetricsPage from "@/pages/metrics-page";
+import OntarioMetricsPage from "@/pages/ontario-metrics-page"; // Added
+import BritishColumbiaMetricsPage from "@/pages/british-columbia-metrics-page"; // Added
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -59,6 +62,25 @@ function Router() {
           <ProtectedRoute path="/payroll" component={PayrollPage} />
         </AppLayout>
       </Route>
+
+      <Route path="/metrics"> {/* Added route for MetricsPage */}
+        <AppLayout>
+          <ProtectedRoute path="/metrics" component={MetricsPage} />
+        </AppLayout>
+      </Route>
+
+      <Route path="/metrics/ontario"> {/* Added route for OntarioMetricsPage */}
+        <AppLayout>
+          <ProtectedRoute path="/metrics/ontario" component={OntarioMetricsPage} />
+        </AppLayout>
+      </Route>
+
+      <Route path="/metrics/british-columbia"> {/* Added route for BritishColumbiaMetricsPage */}
+        <AppLayout>
+          <ProtectedRoute path="/metrics/british-columbia" component={BritishColumbiaMetricsPage} />
+        </AppLayout>
+      </Route>
+
 
       <Route path="/">
         <AppLayout>
