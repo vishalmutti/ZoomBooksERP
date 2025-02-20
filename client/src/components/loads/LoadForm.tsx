@@ -330,6 +330,22 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
             )}
           />
 
+          <div className="flex items-center space-x-2 mb-4">
+            <input
+              type="checkbox"
+              id="noFreightCost"
+              className="h-4 w-4"
+              onChange={(e) => {
+                if (e.target.checked) {
+                  form.setValue("carrier", "");
+                  form.setValue("freightCost", "0");
+                  form.setValue("freightCostCurrency", "CAD");
+                }
+              }}
+            />
+            <Label htmlFor="noFreightCost">No Freight Cost</Label>
+          </div>
+
           <div className="grid grid-cols-3 gap-4">
             <FormField
               control={form.control}
@@ -344,57 +360,43 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-2">
-              <div className="flex items-center space-x-2 mb-4">
-                <input
-                  type="checkbox"
-                  id="noFreightCost"
-                  className="h-4 w-4"
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      form.setValue("carrier", "");
-                      form.setValue("freightCost", "0");
-                      form.setValue("freightCostCurrency", "CAD");
-                    }
-                  }}
-                />
-                <Label htmlFor="noFreightCost">No Freight Cost</Label>
-              </div>
-              <FormField
-                control={form.control}
-                name="freightCost"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Freight Cost (Optional)</FormLabel>
+            <FormField
+              control={form.control}
+              name="freightCost"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Freight Cost (Optional)</FormLabel>
+                  <FormControl>
+                    <Input type="number" step="0.01" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="freightCostCurrency"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Currency (Optional)</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value || 'USD'}>
                     <FormControl>
-                      <Input type="number" step="0.01" {...field} />
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select currency" />
+                      </SelectTrigger>
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="freightCostCurrency"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Currency (Optional)</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || 'USD'}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select currency" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="USD">USD</SelectItem>
-                        <SelectItem value="CAD">CAD</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                    <SelectContent>
+                      <SelectItem value="USD">USD</SelectItem>
+                      <SelectItem value="CAD">CAD</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4">
             <FormField
               control={form.control}
               name="profitRoi"
