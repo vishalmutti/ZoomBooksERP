@@ -63,18 +63,44 @@ export function WholesaleMetrics() {
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {revenueBySupplier.map(({ supplier, revenue }) => (
-          <Card key={supplier.id}>
-            <CardHeader>
-              <CardTitle className="text-lg">{supplier.name}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl font-bold">
-                ${revenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        {revenueBySupplier.map(({ supplier, revenue }) => {
+          const supplierInvoices = filteredInvoices.filter(invoice => invoice.supplierId === supplier.id);
+          
+          return (
+            <Card key={supplier.id}>
+              <CardHeader>
+                <CardTitle className="text-lg">{supplier.name}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-xl font-bold mb-4">
+                  ${revenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
+                <div className="border rounded-lg">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="px-3 py-2 text-left">Due Date</th>
+                        <th className="px-3 py-2 text-right">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {supplierInvoices.map((invoice) => (
+                        <tr key={invoice.id}>
+                          <td className="px-3 py-2">
+                            {new Date(invoice.dueDate).toLocaleDateString()}
+                          </td>
+                          <td className="px-3 py-2 text-right">
+                            ${Number(invoice.totalAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
