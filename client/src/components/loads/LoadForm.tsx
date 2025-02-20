@@ -550,7 +550,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
     <Dialog open={open} onOpenChange={setOpen}>
       {!initialData && (
         <DialogTrigger asChild>
-          <Button>
+          <Button className="w-full">
             <LuPlus className="mr-2 h-4 w-4" /> New Load
           </Button>
         </DialogTrigger>

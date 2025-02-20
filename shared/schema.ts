@@ -224,7 +224,7 @@ export const insertLoadSchema = createInsertSchema(incomingLoads)
   })
   .extend({
     scheduledPickup: z.string().nullable(),
-    scheduledDelivery: z.string().nullable(),
+    scheduledDelivery: z.string().optional().nullable(),
   });
 
 export const insertIncomingLoadSchema = insertLoadSchema;
