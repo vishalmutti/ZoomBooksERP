@@ -323,6 +323,45 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
     );
   }
 
+  const exportToCSV = () => {
+    if (!loads?.length) return;
+
+    const headers = [
+      'Type', 'Supplier', 'Status', 'Reference Number', 'Location', 
+      'Carrier', 'Scheduled Pickup', 'Scheduled Delivery', 'Load Cost', 
+      'Freight Cost', 'Profit/ROI', 'Notes'
+    ];
+
+    const csvData = loads.map(load => {
+      const supplier = suppliers.find(s => s.id.toString() === load.supplierId);
+      return [
+        load.loadType,
+        supplier?.name || 'Unknown Supplier',
+        load.status,
+        load.referenceNumber,
+        load.location,
+        load.carrier,
+        load.scheduledPickup ? format(new Date(load.scheduledPickup), "MMM d, yyyy") : '',
+        load.scheduledDelivery ? format(new Date(load.scheduledDelivery), "MMM d, yyyy") : '',
+        `$${Number(load.loadCost).toFixed(2)}`,
+        `$${Number(load.freightCost).toFixed(2)} ${load.freightCostCurrency}`,
+        `${Number(load.profitRoi).toFixed(2)}%`,
+        load.notes
+      ].join(',');
+    });
+
+    const csv = [headers.join(','), ...csvData].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `loads-${format(new Date(), "yyyy-MM-dd")}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
+
   if (!loads?.length) {
     return (
       <div className="text-center py-12">
@@ -345,6 +384,14 @@ export function LoadTable({ loads, suppliers = [], isLoading, onEdit, onDelete }
 
   return (
     <div className="rounded-md border overflow-x-auto">
+      <div className="flex justify-between mb-4">
+        <div className="flex gap-2">
+          <LoadForm />
+          <Button variant="outline" onClick={exportToCSV}>
+            <LuDownload className="mr-2 h-4 w-4" /> Export CSV
+          </Button>
+        </div>
+      </div>
       <div className="space-y-4">
         <div className="grid grid-cols-4 gap-4">
           <Input
