@@ -261,16 +261,18 @@ export function CarrierTable() {
 
   return (
     <div className="container mx-auto py-8">
-      <div className="flex flex-col gap-4 mb-6">
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold">Carrier Loads</h2>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={exportToCSV}>
-              Export CSV
-            </Button>
-            <CarrierForm />
-          </div>
+      <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="col-span-3">
+          <CarrierForm />
         </div>
+        <div className="col-span-1">
+          <Button variant="outline" className="w-full" onClick={exportToCSV}>
+            Export CSV
+          </Button>
+        </div>
+      </div>
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold">Carrier Loads</h2>
       </div>
       {editingCarrier && (
         <CarrierForm
