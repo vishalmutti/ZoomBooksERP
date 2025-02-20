@@ -489,21 +489,56 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
               </div>
               {/* Carrier Dropdown */}
               <div>
-                <Label htmlFor="carrier">Carrier</Label>
-                <select
-                  {...form.register("carrier")}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                >
-                  <option value="">Select a carrier...</option>
-                  {carriers.map(carrier => (
-                    <option key={carrier.id} value={carrier.name}>{carrier.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
                 <Label htmlFor="dueDate">Due Date</Label>
                 <Input type="date" {...form.register("dueDate")} />
               </div>
+              {!noFreightCost && (
+                <div className="space-y-4">
+                  <div>
+                    <Label>Carrier</Label>
+                    <select
+                      {...form.register("carrier")}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                    >
+                      <option value="">Select a carrier...</option>
+                      {carriers.map(carrier => (
+                        <option key={carrier.id} value={carrier.name}>{carrier.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Freight Cost</Label>
+                      <Input type="number" step="0.01" placeholder="Enter freight cost" {...form.register("freightCost")} />
+                    </div>
+                    <div>
+                      <Label>Currency</Label>
+                      <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background" {...form.register("freightCostCurrency")}>
+                        <option value="USD">USD</option>
+                        <option value="CAD">CAD</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Upload Freight Invoice</Label>
+                    <div className="mt-2">
+                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <Upload className="w-8 h-8 mb-2 text-gray-400" />
+                          <p className="mb-2 text-sm text-gray-500">
+                            {freightInvoiceFile
+                              ? freightInvoiceFile.name
+                              : editInvoice?.freightInvoiceFile
+                              ? "Replace current file"
+                              : "Click to upload freight invoice or drag and drop"}
+                          </p>
+                        </div>
+                        <input type="file" className="hidden" onChange={handleFreightInvoiceFileChange} accept=".pdf,.png,.jpg,.jpeg" />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              )}
               <TabsContent value="manual">
                 <div>
                   <Label>Items</Label>
@@ -617,30 +652,16 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
               </TabsContent>
               <TabsContent value="upload">
                 <div className="space-y-4">
-                  <div className="flex gap-2">
-                    <div className="flex-1">
+                  <div className="space-y-4">
+                    <div>
                       <Label>Total Amount</Label>
-                      <Input type="number" step="0.01" placeholder="Enter total amount" {...form.register("totalAmount")} />
-                    </div>
-                    <div className="flex-1">
-                      <Label>Freight Cost</Label>
-                      <Input type="number" step="0.01" placeholder="Enter freight cost" {...form.register("freightCost")} />
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <div className="flex-1">
-                      <Label>Total Amount Currency</Label>
-                      <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background" {...form.register("amountCurrency")}>
-                        <option value="USD">USD</option>
-                        <option value="CAD">CAD</option>
-                      </select>
-                    </div>
-                    <div className="flex-1">
-                      <Label>Freight Cost Currency</Label>
-                      <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background" {...form.register("freightCostCurrency")}>
-                        <option value="USD">USD</option>
-                        <option value="CAD">CAD</option>
-                      </select>
+                      <div className="flex gap-2">
+                        <Input type="number" step="0.01" placeholder="Enter total amount" {...form.register("totalAmount")} />
+                        <select className="flex h-10 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background" {...form.register("amountCurrency")}>
+                          <option value="USD">USD</option>
+                          <option value="CAD">CAD</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
                   <div>
