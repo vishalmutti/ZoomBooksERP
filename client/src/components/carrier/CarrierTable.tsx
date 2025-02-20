@@ -261,11 +261,13 @@ export function CarrierTable() {
 
   return (
     <div className="container mx-auto py-8">
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        <div className="col-span-3">
-          <CarrierForm />
+      <div className="flex gap-4 mb-6">
+        <div className="flex-1">
+          <CarrierForm>
+            <Button className="w-full">New Carrier Load</Button>
+          </CarrierForm>
         </div>
-        <div className="col-span-1">
+        <div className="w-48">
           <Button variant="outline" className="w-full" onClick={exportToCSV}>
             Export CSV
           </Button>
