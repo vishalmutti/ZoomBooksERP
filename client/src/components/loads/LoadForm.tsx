@@ -490,7 +490,39 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
             />
           </div>
 
-          
+          <FormField
+            control={form.control}
+            name="carrier"
+            render={({ field }) => {
+              const { data: carriers = [], isLoading, isError } = useQuery({
+                queryKey: ["/api/carriers"],
+              });
+
+              if (isLoading) return <FormItem><FormLabel>Carrier</FormLabel><p>Loading...</p></FormItem>;
+              if (isError) return <FormItem><FormLabel>Carrier</FormLabel><p>Error loading carriers</p></FormItem>;
+
+              return (
+                <FormItem>
+                  <FormLabel>Carrier (Optional)</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a carrier" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {carriers.map((carrier) => (
+                        <SelectItem key={carrier.id} value={carrier.name}>
+                          {carrier.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
+          />
 
           <FormField
             control={form.control}
