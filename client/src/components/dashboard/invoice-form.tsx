@@ -678,52 +678,6 @@ export function InvoiceForm({ editInvoice, onComplete }: InvoiceFormProps) {
                   </div>
                 </div>
               </TabsContent>
-              {!noFreightCost && (
-                <>
-                  <div className="grid grid-cols-2 gap-4 my-4">
-                    <div className="space-y-2">
-                      <Label>Carrier</Label>
-                      <select
-                        {...form.register("carrier")}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                      >
-                        <option value="">Select a carrier...</option>
-                        {carriers.map(carrier => (
-                          <option key={carrier.id} value={carrier.name}>{carrier.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Freight Cost</Label>
-                      <div className="flex gap-2">
-                        <Input type="number" step="0.01" placeholder="Enter freight cost" {...form.register("freightCost")} />
-                        <select className="flex h-10 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background" {...form.register("freightCostCurrency")}>
-                          <option value="USD">USD</option>
-                          <option value="CAD">CAD</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Upload Freight Invoice</Label>
-                    <div className="mt-2">
-                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50">
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                          <Upload className="w-8 h-8 mb-2 text-gray-400" />
-                          <p className="mb-2 text-sm text-gray-500">
-                            {freightInvoiceFile
-                              ? freightInvoiceFile.name
-                              : editInvoice?.freightInvoiceFile
-                              ? "Replace current file"
-                              : "Click to upload freight invoice or drag and drop"}
-                          </p>
-                        </div>
-                        <input type="file" className="hidden" onChange={handleFreightInvoiceFileChange} accept=".pdf,.png,.jpg,.jpeg" />
-                      </label>
-                    </div>
-                  </div>
-                </>
-              )}
               <div>
                 <Label htmlFor="notes">Notes</Label>
                 <Textarea {...form.register("notes")} />
