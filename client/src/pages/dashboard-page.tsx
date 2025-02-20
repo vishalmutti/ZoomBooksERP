@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Invoice } from "@shared/schema";
 import { AROverview } from "@/components/dashboard/ar-overview";
@@ -36,7 +35,10 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-background">
       <header className="border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-center flex-grow">Financial Management Dashboard</h1>
+          <div className="text-left"> {/* Added to left-align the header */}
+            <h1 className="text-2xl font-bold">Accounts Receivable Dashboard</h1>
+            <p className="text-sm text-gray-600">Manage receivables and wholesale metrics in one place</p>
+          </div>
           <Button variant="ghost" onClick={() => logoutMutation.mutate()}>
             <LogOut className="h-4 w-4 mr-2" />
             Logout
