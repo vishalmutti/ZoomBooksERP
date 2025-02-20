@@ -19,14 +19,11 @@ export default function OntarioMetricsPage() {
         });
 
         // Split data into records and parse
-        const records = response.data.split('\n');
-        const dataRows = records.filter(row => row.trim()); // Remove empty lines
-        
-        const transformedData = dataRows
+        const rows = response.data.trim().split('\n');
+        const transformedData = rows
           .slice(1) // Skip header row
-          .map(record => {
-            const [date, , , count] = record.split(',');
-            if (!date || !count) return null;
+          .map(row => {
+            const [date, , , count] = row.split(',');
             return {
               date: date.trim(),
               count: parseInt(count.trim(), 10)
