@@ -23,9 +23,6 @@ export default function OntarioMetricsPage() {
         const rows = response.data.split('\n').filter(row => row.trim());
         const headers = rows[0].split(',');
         
-        // Parse data rows
-        const rows = text.split('\n').filter(row => row.trim());
-        
         // Skip header row and parse data
         const transformedData = rows
           .slice(1)
