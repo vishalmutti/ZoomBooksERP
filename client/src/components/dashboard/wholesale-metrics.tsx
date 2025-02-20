@@ -1,19 +1,56 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Invoice } from "@shared/schema";
+import { Invoice, Supplier } from "@shared/schema";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState } from "react";
 
 export function WholesaleMetrics() {
+  const [timeFilter, setTimeFilter] = useState<'30' | '90' | 'all'>('all');
+  
   const { data: invoices = [] } = useQuery<Invoice[]>({
     queryKey: ["/api/invoices"],
   });
 
-  const totalRevenue = invoices.reduce((sum, invoice) => {
-    return sum + Number(invoice.totalAmount);
-  }, 0);
+  const { data: suppliers = [] } = useQuery<Supplier[]>({
+    queryKey: ["/api/suppliers"],
+  });
+
+  const filteredInvoices = invoices.filter(invoice => {
+    if (timeFilter === 'all') return true;
+    
+    const dueDate = new Date(invoice.dueDate);
+    const now = new Date();
+    const daysDiff = Math.floor((now.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+    return daysDiff <= parseInt(timeFilter);
+  });
+
+  const revenueBySupplier = suppliers.map(supplier => {
+    const supplierInvoices = filteredInvoices.filter(invoice => invoice.supplierId === supplier.id);
+    const totalRevenue = supplierInvoices.reduce((sum, invoice) => sum + Number(invoice.totalAmount), 0);
+    return {
+      supplier,
+      revenue: totalRevenue
+    };
+  }).sort((a, b) => b.revenue - a.revenue);
+
+  const totalRevenue = revenueBySupplier.reduce((sum, { revenue }) => sum + revenue, 0);
 
   return (
-    <div className="grid gap-4">
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <Select value={timeFilter} onValueChange={(value: '30' | '90' | 'all') => setTimeFilter(value)}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Select time period" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="30">Last 30 Days</SelectItem>
+            <SelectItem value="90">Last 90 Days</SelectItem>
+            <SelectItem value="all">All Time</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle>Total Revenue (Excluding Freight)</CardTitle>
@@ -24,6 +61,21 @@ export function WholesaleMetrics() {
           </div>
         </CardContent>
       </Card>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {revenueBySupplier.map(({ supplier, revenue }) => (
+          <Card key={supplier.id}>
+            <CardHeader>
+              <CardTitle className="text-lg">{supplier.name}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-xl font-bold">
+                ${revenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }
