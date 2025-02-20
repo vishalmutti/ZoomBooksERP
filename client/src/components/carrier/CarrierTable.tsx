@@ -57,7 +57,7 @@ export function CarrierTable() {
         params.append('endDate', formattedEndDate);
       }
       if (statusFilter !== "ALL") params.append('status', statusFilter);
-      
+
       const response = await fetch(`/api/carrier-loads?${params.toString()}`);
       if (!response.ok) {
         throw new Error('Failed to fetch carrier loads');
@@ -93,7 +93,7 @@ export function CarrierTable() {
       });
     },
   });
-  
+
   const updateStatusMutation = useMutation({
     mutationFn: async ({ loadId, newStatus }: { loadId: number; newStatus: "PAID" | "UNPAID" }) => {
       const response = await fetch(`/api/carrier-loads/${loadId}/status`, {
@@ -254,7 +254,7 @@ export function CarrierTable() {
 
   // Get unique carriers
   const uniqueCarriers = Array.from(new Set(data.map(row => row.carrier))).sort();
-  
+
   const filteredData = data.filter(row => 
     carrierFilter === "ALL" || row.carrier === carrierFilter
   );
@@ -263,7 +263,9 @@ export function CarrierTable() {
     <div className="container mx-auto py-8">
       <div className="grid grid-cols-4 gap-4 mb-6">
         <div className="col-span-3">
-          <CarrierForm />
+          <CarrierForm>
+            <Button className="w-full">New Carrier Load</Button>
+          </CarrierForm>
         </div>
         <div className="col-span-1">
           <Button variant="outline" className="w-full" onClick={exportToCSV}>
