@@ -15,6 +15,8 @@ import type { InsertIncomingLoad } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Label } from "@/components/ui/label";
+
 
 interface Supplier {
   id: number;
@@ -337,12 +339,51 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
               )}
             />
             <div className="grid grid-cols-2 gap-2">
+              <div className="flex items-center space-x-2 mb-4">
+                <input
+                  type="checkbox"
+                  id="noFreightCost"
+                  className="h-4 w-4"
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      form.setValue("carrier", "");
+                      form.setValue("freightCost", "0");
+                      form.setValue("freightCostCurrency", "CAD");
+                    }
+                  }}
+                />
+                <Label htmlFor="noFreightCost">No Freight Cost</Label>
+              </div>
+              <FormField
+                control={form.control}
+                name="carrier"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Carrier (Optional)</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a carrier" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {carriers.map((carrier) => (
+                          <SelectItem key={carrier.id} value={carrier.name}>
+                            {carrier.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="freightCost"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Freight Cost</FormLabel>
+                    <FormLabel>Freight Cost (Optional)</FormLabel>
                     <FormControl>
                       <Input type="number" step="0.01" {...field} />
                     </FormControl>
@@ -355,7 +396,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
                 name="freightCostCurrency"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Currency</FormLabel>
+                    <FormLabel>Currency (Optional)</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value || 'USD'}>
                       <FormControl>
                         <SelectTrigger>
@@ -453,7 +494,7 @@ export function LoadForm({ onClose, initialData, defaultType, show }: LoadFormPr
 
               return (
                 <FormItem>
-                  <FormLabel>Carrier</FormLabel>
+                  <FormLabel>Carrier (Optional)</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
