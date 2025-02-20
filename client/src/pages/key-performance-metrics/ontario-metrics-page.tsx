@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import axios from "axios";
@@ -24,29 +23,17 @@ export default function OntarioMetricsPage() {
             customjson: JSON.stringify({ days: 7 })
           }
         });
-        
-        // Parse data with multiple possible delimiters
-        const rows = response.data.split('\n');
-        const firstRow = rows[0];
-        const delimiter = firstRow.includes('\t') ? '\t' : 
-                         firstRow.includes(',') ? ',' : 
-                         firstRow.includes(';') ? ';' : ' ';
-        
-        const headers = rows[0].split(delimiter);
-        const dateIndex = headers.findIndex(h => h.toLowerCase().includes('date'));
-        const countIndex = headers.findIndex(h => h.toLowerCase().includes('count'));
-        
-        const transformedData = rows.slice(1)
-          .filter(row => row.trim())
-          .map(row => {
-            const columns = row.split(delimiter);
-            return {
-              date: columns[dateIndex],
-              count: parseInt(columns[countIndex], 10) || 0
-            };
-          })
-          .filter(row => !isNaN(row.count));
-        
+
+        // Parse the JSON response directly
+        const responseData = response.data;
+        const transformedData = Array.isArray(responseData) ? responseData.map(row => ({
+          date: row.date?.split(' ')[0] || '', // Extract just the date part
+          count: parseInt(row.count, 10) || 0
+        })) : [];
+
+        // Sort by date
+        transformedData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
         setMetricsData(transformedData);
       } catch (error) {
         console.error('Error fetching metrics data:', error);
