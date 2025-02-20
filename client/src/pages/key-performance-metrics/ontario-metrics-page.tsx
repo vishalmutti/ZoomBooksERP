@@ -14,19 +14,20 @@ export default function OntarioMetricsPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get('https://list.lkdev.com/report_serve.php?cmreport_id=2&r=54338224&amazonseller_id=196&cmkey=44f343fb207c118c67ac11801d1f745250fba02c&customjson=%7B%0A%20%22days%22%3A7%0A%7D', {
-          responseType: 'text'
-        });
-
-        // Split data into records and parse
-        const rows = response.data.trim().split('\n');
+        const response = await fetch('https://list.lkdev.com/report_serve.php?cmreport_id=2&r=54338224&amazonseller_id=196&cmkey=44f343fb207c118c67ac11801d1f745250fba02c&customjson=%7B%0A%20%22days%22%3A7%0A%7D');
+        const text = await response.text();
+        
+        // Split by newlines and filter empty lines
+        const rows = text.split('\n').filter(row => row.trim());
+        
+        // Skip header row and parse data
         const transformedData = rows
-          .slice(1) // Skip header row
+          .slice(1)
           .map(row => {
-            const [date, , , count] = row.split(',');
+            const [date, , , count] = row.split(',').map(cell => cell.trim());
             return {
-              date: date.trim(),
-              count: parseInt(count.trim(), 10)
+              date,
+              count: parseInt(count, 10)
             };
           })
           .filter((row): row is { date: string; count: number } => 
