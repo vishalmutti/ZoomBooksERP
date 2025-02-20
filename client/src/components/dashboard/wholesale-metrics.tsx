@@ -65,16 +65,17 @@ export function WholesaleMetrics() {
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {revenueBySupplier.map(({ supplier, revenue }) => {
+        {revenueBySupplier.map(({ supplier, revenue }, index) => {
           const supplierInvoices = filteredInvoices.filter(invoice => invoice.supplierId === supplier.id);
+          const expandedKey = `supplier-${supplier.id}-expanded`;
           const [isExpanded, setIsExpanded] = useState(false);
           
           return (
-            <Card key={supplier.id}>
+            <Card key={supplier.id} className="flex flex-col">
               <CardHeader>
                 <CardTitle className="text-lg">{supplier.name}</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex-1">
                 <div className="flex justify-between items-center mb-4">
                   <div className="text-xl font-bold">
                     ${revenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -83,8 +84,9 @@ export function WholesaleMetrics() {
                     {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </Button>
                 </div>
-                <div className={`border rounded-lg ${isExpanded ? '' : 'hidden'}`}>
-                  <table className="w-full text-sm">
+                <div className={`border rounded-lg overflow-hidden ${isExpanded ? '' : 'hidden'}`}>
+                  <div className="max-h-[200px] overflow-auto">
+                    <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b">
                         <th className="px-3 py-2 text-left">Invoice #</th>
@@ -108,6 +110,7 @@ export function WholesaleMetrics() {
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 </div>
               </CardContent>
             </Card>
