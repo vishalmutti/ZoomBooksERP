@@ -25,21 +25,27 @@ export default function OntarioMetricsPage() {
           }
         });
         
-        // Parse CSV data
+        // Parse data with multiple possible delimiters
         const rows = response.data.split('\n');
-        const headers = rows[0].split(',');
-        const dateIndex = headers.indexOf('date');
-        const countIndex = headers.indexOf('count');
+        const firstRow = rows[0];
+        const delimiter = firstRow.includes('\t') ? '\t' : 
+                         firstRow.includes(',') ? ',' : 
+                         firstRow.includes(';') ? ';' : ' ';
+        
+        const headers = rows[0].split(delimiter);
+        const dateIndex = headers.findIndex(h => h.toLowerCase().includes('date'));
+        const countIndex = headers.findIndex(h => h.toLowerCase().includes('count'));
         
         const transformedData = rows.slice(1)
           .filter(row => row.trim())
           .map(row => {
-            const columns = row.split(',');
+            const columns = row.split(delimiter);
             return {
               date: columns[dateIndex],
-              count: parseInt(columns[countIndex], 10)
+              count: parseInt(columns[countIndex], 10) || 0
             };
-          });
+          })
+          .filter(row => !isNaN(row.count));
         
         setMetricsData(transformedData);
       } catch (error) {
