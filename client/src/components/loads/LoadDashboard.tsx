@@ -91,13 +91,32 @@ export function LoadDashboard() {
           <SupplierMetrics />
         </TabsContent>
         <TabsContent value="analysis">
-          <div className="w-full h-[800px]">
-            <iframe 
-              src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSKtTGY95ztrGS7SGJrVxjZaQB5oUzO08gbx-fukRX8sfNAMD0mUjolv52d2yboi3-QM8_vN31WVN83/pubhtml?widget=true&amp;headers=false"
-              className="w-full h-full border-0"
-              title="Load Analysis Spreadsheet"
-            />
-          </div>
+          <Tabs defaultValue="ontario" className="w-full">
+            <TabsList>
+              <TabsTrigger value="ontario">Ontario</TabsTrigger>
+              <TabsTrigger value="bc">British Columbia</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="ontario">
+              <div className="w-full h-[800px]">
+                <iframe 
+                  src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSKtTGY95ztrGS7SGJrVxjZaQB5oUzO08gbx-fukRX8sfNAMD0mUjolv52d2yboi3-QM8_vN31WVN83/pubhtml"
+                  className="w-full h-full border-0"
+                  title="Ontario Load Analysis"
+                />
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="bc">
+              <div className="w-full h-[800px]">
+                <iframe 
+                  src="https://docs.google.com/spreadsheets/d/e/2PACX-1vRZT2MeAiQ3MkNdjkHhVOmIB-NACC3aT7s28HQdkslKyV_DJRdcNCLwSiu-P9uVkVL92P_ijkinu2kt/pubhtml"
+                  className="w-full h-full border-0"
+                  title="British Columbia Load Analysis"
+                />
+              </div>
+            </TabsContent>
+          </Tabs>
         </TabsContent>
       </Tabs>
 
