@@ -65,7 +65,7 @@ export function LoadDashboard() {
           <TabsTrigger value="metrics">Supplier Metrics</TabsTrigger>
           <TabsTrigger value="analysis">Load Analysis</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="loads" className="space-y-4">
           <div className="flex justify-end">
             <LoadForm
@@ -96,9 +96,9 @@ export function LoadDashboard() {
               <TabsTrigger value="ontario">Ontario</TabsTrigger>
               <TabsTrigger value="bc">British Columbia</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="ontario">
-              <div className="w-full h-[800px]">
+              <div className="w-full h-[calc(100vh-180px)]">
                 <iframe 
                   src="https://docs.google.com/spreadsheets/d/1MCMO9DGFa2sZosevSNbZpwtpgazXxxCuKdx3BVuyKX4/edit?usp=sharing"
                   className="w-full h-full border-0"
@@ -106,9 +106,9 @@ export function LoadDashboard() {
                 />
               </div>
             </TabsContent>
-            
+
             <TabsContent value="bc">
-              <div className="w-full h-[800px]">
+              <div className="w-full h-[calc(100vh-180px)]">
                 <iframe 
                   src="https://docs.google.com/spreadsheets/d/1bzpoaKySMP7bwgXNLPZZ7svVX06zQfOKWPd6T6XOz5I/edit?usp=sharing"
                   className="w-full h-full border-0"
