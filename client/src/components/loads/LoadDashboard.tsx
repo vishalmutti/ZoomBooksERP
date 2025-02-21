@@ -16,6 +16,7 @@ export function LoadDashboard() {
   const [showAddSupplier, setShowAddSupplier] = useState(false);
   const [editingLoad, setEditingLoad] = useState<IncomingLoad | null>(null);
   const [showAddLoad, setShowAddLoad] = useState(false);
+  const [selectedTab, setSelectedTab] = useState("loads"); // Added state for selected tab
 
   const { data: loads, isLoading, refetch } = useQuery<IncomingLoad[]>({
     queryKey: ["/api/loads"],
@@ -59,7 +60,7 @@ export function LoadDashboard() {
         </p>
       </div>
 
-      <Tabs defaultValue="loads" className="space-y-4">
+      <Tabs defaultValue="loads" className="space-y-4" onValueChange={setSelectedTab}>
         <TabsList>
           <TabsTrigger value="loads">Loads</TabsTrigger>
           <TabsTrigger value="metrics">Supplier Metrics</TabsTrigger>
@@ -129,20 +130,22 @@ export function LoadDashboard() {
         />
       )}
 
-      <div className="mt-8">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold">Load Suppliers</h2>
-          <Button onClick={() => setShowAddSupplier(true)}>
-            <LuPlus className="mr-2 h-4 w-4" /> Add Supplier
-          </Button>
-        </div>
+      {selectedTab !== "analysis" && ( // Conditionally render Load Suppliers
+        <div className="mt-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">Load Suppliers</h2>
+            <Button onClick={() => setShowAddSupplier(true)}>
+              <LuPlus className="mr-2 h-4 w-4" /> Add Supplier
+            </Button>
+          </div>
 
-        <LoadSupplierList suppliers={suppliers} />
-        <LoadSupplierForm
-          open={showAddSupplier}
-          onOpenChange={setShowAddSupplier}
-        />
-      </div>
+          <LoadSupplierList suppliers={suppliers} />
+          <LoadSupplierForm
+            open={showAddSupplier}
+            onOpenChange={setShowAddSupplier}
+          />
+        </div>
+      )}
     </div>
   );
 }
