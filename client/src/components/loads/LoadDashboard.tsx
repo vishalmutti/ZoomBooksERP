@@ -63,6 +63,7 @@ export function LoadDashboard() {
         <TabsList>
           <TabsTrigger value="loads">Loads</TabsTrigger>
           <TabsTrigger value="metrics">Supplier Metrics</TabsTrigger>
+          <TabsTrigger value="analysis">Load Analysis</TabsTrigger>
         </TabsList>
         
         <TabsContent value="loads" className="space-y-4">
@@ -88,6 +89,15 @@ export function LoadDashboard() {
 
         <TabsContent value="metrics">
           <SupplierMetrics />
+        </TabsContent>
+        <TabsContent value="analysis">
+          <div className="w-full h-[800px]">
+            <iframe 
+              src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSKtTGY95ztrGS7SGJrVxjZaQB5oUzO08gbx-fukRX8sfNAMD0mUjolv52d2yboi3-QM8_vN31WVN83/pubhtml?widget=true&amp;headers=false"
+              className="w-full h-full border-0"
+              title="Load Analysis Spreadsheet"
+            />
+          </div>
         </TabsContent>
       </Tabs>
 
