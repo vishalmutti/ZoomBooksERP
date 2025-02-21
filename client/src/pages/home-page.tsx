@@ -7,7 +7,7 @@ import { PayrollWidget } from "@/components/PayrollWidget";
 const widgets = [
   {
     title: "Load Management",
-    description: "Track and manage your inventory, wholesale, and miscellaneous loads",
+    description: "Track and manage your inventory loads and view key supplier metrics",
     path: "/loads",
     icon: "🚚"
   },
@@ -19,25 +19,25 @@ const widgets = [
   },
   {
     title: "Accounts Receivable",
-    description: "Manage invoices, track payments, and monitor AR aging",
+    description: "Manage invoices and view key wholesale metrics",
     path: "/dashboard",
     icon: "💰"
   },
   {
     title: "Carrier Portal",
-    description: "Coming soon - Manage carrier documentation and payments",
+    description: "Manage carrier documentation and payments",
     path: "/carrier",
     icon: "🚛"
   },
   {
     title: "Inventory",
-    description: "Coming soon - Track inventory levels and manage stock",
+    description: "Track warehouse inventory levels and manage G&P stock",
     path: "/inventory",
     icon: "📦"
   },
   {
     title: "Key Performance Metrics",
-    description: "Coming soon - Monitor business performance and analytics",
+    description: "Monitor business performance and analytics",
     path: "/metrics",
     icon: "📊"
   }
