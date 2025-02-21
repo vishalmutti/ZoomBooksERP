@@ -6,6 +6,12 @@ import { PayrollWidget } from "@/components/PayrollWidget";
 
 const widgets = [
   {
+    title: "Load Management",
+    description: "Track and manage your inventory, wholesale, and miscellaneous loads",
+    path: "/loads",
+    icon: "🚚"
+  },
+  {
     title: "Payroll",
     description: "View and manage employee hours for BC and ON",
     path: "/payroll",
@@ -46,10 +52,7 @@ export default function HomePage() {
 
   return (
     <div className="space-y-6">
-      {/* Load Management Widget */}
-      <LoadManagementWidget />
-
-      {/* Other Widgets */}
+      {/* Widgets Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {widgets.map((widget) => (
           <Link key={widget.title} href={widget.path}>
