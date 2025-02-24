@@ -1,4 +1,37 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from 'react';
+
+function StorageUtilization() {
+  const [utilization, setUtilization] = useState<string>("Loading...");
+
+  useEffect(() => {
+    const fetchStorageUtilization = async () => {
+      try {
+        const response = await fetch("https://docs.google.com/spreadsheets/d/1I26GhVusZsMkInB17CwuRZZlEAcBG-3b/gviz/tq?tqx=out:json&sheet=Sheet1&range=T2");
+        const text = await response.text();
+        const jsonStart = text.indexOf('{');
+        const jsonEnd = text.lastIndexOf('}') + 1;
+        const jsonString = text.slice(jsonStart, jsonEnd);
+        const data = JSON.parse(jsonString);
+
+        if (data.table && data.table.rows && data.table.rows[0] && data.table.rows[0].c && data.table.rows[0].c[0]) {
+          const cellValue = data.table.rows[0].c[0].v;
+          const formattedValue = (cellValue * 100).toFixed(2);
+          setUtilization(formattedValue + '%');
+        }
+      } catch (error) {
+        console.error("Error fetching storage utilization:", error);
+        setUtilization("Error");
+      }
+    };
+
+    fetchStorageUtilization();
+    const interval = setInterval(fetchStorageUtilization, 300000); // Refresh every 5 minutes
+    return () => clearInterval(interval);
+  }, []);
+
+  return <div className="text-2xl font-bold">{utilization}</div>;
+}
 import { useEffect } from 'react';
 import { Link } from 'wouter';
 
@@ -92,7 +125,7 @@ export default function OntarioMetricsPage() {
               <CardTitle>Storage Utilization</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">17.71%</div>
+              <StorageUtilization />
               <div className="text-sm text-muted-foreground">Click for details</div>
             </CardContent>
           </Card>
