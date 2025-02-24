@@ -92,7 +92,8 @@ export default function OntarioMetricsPage() {
               <CardTitle>Storage Utilization</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">Click to view details</p>
+              <div className="text-2xl font-bold">17.71%</div>
+              <div className="text-sm text-muted-foreground">Click for details</div>
             </CardContent>
           </Card>
         </Link>
