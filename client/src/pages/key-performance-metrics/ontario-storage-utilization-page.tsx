@@ -8,16 +8,19 @@ export default function OntarioStorageUtilizationPage() {
     // Function to fetch data from Google Sheet
     const fetchStorageUtilization = async () => {
       try {
-        const response = await fetch("https://docs.google.com/spreadsheets/d/1I26GhVusZsMkInB17CwuRZZlEAcBG-3b/gviz/tq?tqx=out:json");
+        const response = await fetch("https://docs.google.com/spreadsheets/d/1I26GhVusZsMkInB17CwuRZZlEAcBG-3b/gviz/tq?tqx=out:json&sheet=Sheet1&range=T2");
         const text = await response.text();
         const jsonStart = text.indexOf('{');
         const jsonEnd = text.lastIndexOf('}') + 1;
         const jsonString = text.slice(jsonStart, jsonEnd);
         const data = JSON.parse(jsonString);
 
-        // Get value from cell T2
-        const cellValue = data.table.rows[1].c[19].v; // T is the 20th column (index 19)
-        setStorageUtilization(cellValue);
+        if (data.table && data.table.rows && data.table.rows[0] && data.table.rows[0].c && data.table.rows[0].c[0]) {
+          const cellValue = data.table.rows[0].c[0].v;
+          setStorageUtilization(cellValue.toString());
+        } else {
+          throw new Error("Invalid data structure");
+        }
       } catch (error) {
         console.error("Error fetching storage utilization:", error);
         setStorageUtilization("Error fetching data"); // Set a default value on error
@@ -25,6 +28,10 @@ export default function OntarioStorageUtilizationPage() {
     };
 
     fetchStorageUtilization();
+
+    // Refresh data every 5 minutes
+    const interval = setInterval(fetchStorageUtilization, 300000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
