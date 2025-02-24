@@ -81,6 +81,11 @@ function Router() {
         </AppLayout>
       </Route>
 
+      <Route path="/metrics/ontario/storage">
+        <AppLayout>
+          <ProtectedRoute path="/metrics/ontario/storage" component={OntarioStorageUtilizationPage} />
+        </AppLayout>
+      </Route>
 
       <Route path="/">
         <AppLayout>
