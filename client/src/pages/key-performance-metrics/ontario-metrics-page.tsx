@@ -1,5 +1,29 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEffect } from 'react';
+
+function TableauViz() {
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.type = 'module';
+    script.src = 'https://prod-useast-b.online.tableau.com/javascripts/api/tableau.embedding.3.latest.min.js';
+    document.head.appendChild(script);
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, []);
+
+  return (
+    <tableau-viz 
+      id='tableau-viz' 
+      src='https://prod-useast-b.online.tableau.com/t/amerifoliollc/views/ClientDashboard/Inventory/c3c8146b-6fcc-4526-a983-1e92deadbec2/InventoryDataON' 
+      width='100%' 
+      height='1940' 
+      hide-tabs 
+      toolbar='bottom'
+    />
+  );
+}
 
 export default function OntarioMetricsPage() {
   return (
@@ -18,6 +42,9 @@ export default function OntarioMetricsPage() {
           allowFullScreen
           className="w-full h-[600px] rounded-lg shadow-lg"
         />
+      </div>
+      <div className="mb-8">
+        <TableauViz />
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
