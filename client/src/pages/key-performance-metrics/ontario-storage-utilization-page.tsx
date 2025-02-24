@@ -17,7 +17,8 @@ export default function OntarioStorageUtilizationPage() {
 
         if (data.table && data.table.rows && data.table.rows[0] && data.table.rows[0].c && data.table.rows[0].c[0]) {
           const cellValue = data.table.rows[0].c[0].v;
-          setStorageUtilization(cellValue.toString());
+          const formattedValue = (cellValue * 100).toFixed(2);
+          setStorageUtilization(formattedValue);
         } else {
           throw new Error("Invalid data structure");
         }
