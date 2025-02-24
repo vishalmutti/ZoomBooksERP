@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState, useEffect } from 'react';
+import { Link } from 'wouter';
 
 function StorageUtilization() {
   const [utilization, setUtilization] = useState<string>("Loading...");
@@ -32,8 +33,6 @@ function StorageUtilization() {
 
   return <div className="text-2xl font-bold">{utilization}</div>;
 }
-import { useEffect } from 'react';
-import { Link } from 'wouter';
 
 function TableauViz() {
   useEffect(() => {
