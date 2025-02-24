@@ -27,7 +27,7 @@ function StorageUtilization() {
     };
 
     fetchStorageUtilization();
-    const interval = setInterval(fetchStorageUtilization, 300000); // Refresh every 5 minutes
+    const interval = setInterval(fetchStorageUtilization, 5000); // Refresh every 5 seconds
     return () => clearInterval(interval);
   }, []);
 

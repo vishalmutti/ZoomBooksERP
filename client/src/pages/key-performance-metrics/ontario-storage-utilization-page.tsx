@@ -31,7 +31,7 @@ export default function OntarioStorageUtilizationPage() {
     fetchStorageUtilization();
 
     // Refresh data every 5 minutes
-    const interval = setInterval(fetchStorageUtilization, 300000);
+    const interval = setInterval(fetchStorageUtilization, 5000); // Refresh every 5 seconds
     return () => clearInterval(interval);
   }, []);
 
