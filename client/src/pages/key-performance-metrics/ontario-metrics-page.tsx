@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useEffect } from 'react';
 
@@ -28,7 +27,7 @@ function TableauViz() {
 export default function OntarioMetricsPage() {
   return (
     <div className="container mx-auto p-8">
-      <h1 className="text-3xl font-bold mb-6">Ontario Warehouse Metrics</h1>
+      <h1 className="text-3xl font-bold mb-6 text-center">Ontario Warehouse Metrics</h1>
       <div className="grid grid-cols-2 gap-4 mb-8">
         <iframe
           src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTFBbDbDXphC27IvqHY1OoJNFE7i_J2mP6eoLeXaAHFZmfuaUOTvb5PdypNNwaCatmDUrNTvG4CZMKv/pubchart?oid=525167611&format=interactive"
@@ -44,11 +43,22 @@ export default function OntarioMetricsPage() {
         />
       </div>
       <div className="mb-8">
-        <h2 className="text-2xl font-bold mb-4">Ontario Inventory Metrics</h2>
+        <h2 className="text-2xl font-bold mb-4 text-center">Ontario Inventory Metrics</h2>
         <TableauViz />
       </div>
       <div className="mb-8">
-        <h2 className="text-2xl font-bold mb-4">MF Orders Ontario</h2>
+        <h2 className="text-2xl font-bold mb-4 text-center">FBA Orders Ontario</h2>
+        <tableau-viz 
+          id='tableau-viz-fba' 
+          src='https://prod-useast-b.online.tableau.com/t/amerifoliollc/views/ClientDashboard/Orders/699e52ae-cb0f-4c1c-968a-6ca1dcd43019/FBAONL6Months' 
+          width='100%' 
+          height='1940' 
+          hide-tabs 
+          toolbar='bottom'
+        />
+      </div>
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold mb-4 text-center">MF Orders Ontario</h2>
         <tableau-viz 
           id='tableau-viz-orders' 
           src='https://prod-useast-b.online.tableau.com/t/amerifoliollc/views/ClientDashboard/Orders/b68daced-096a-44ca-a948-6e1f56361c2d/MFOrdersON' 
