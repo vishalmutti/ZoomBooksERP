@@ -47,6 +47,17 @@ export default function OntarioMetricsPage() {
         <h2 className="text-2xl font-bold mb-4">Ontario Inventory Metrics</h2>
         <TableauViz />
       </div>
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold mb-4">MF Orders Ontario</h2>
+        <tableau-viz 
+          id='tableau-viz-orders' 
+          src='https://prod-useast-b.online.tableau.com/t/amerifoliollc/views/ClientDashboard/Orders/b68daced-096a-44ca-a948-6e1f56361c2d/MFOrdersON' 
+          width='100%' 
+          height='1940' 
+          hide-tabs 
+          toolbar='bottom'
+        />
+      </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader>
