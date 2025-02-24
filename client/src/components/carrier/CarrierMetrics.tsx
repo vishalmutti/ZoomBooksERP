@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -14,7 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface CarrierSpend {
   carrier: string;
@@ -22,10 +20,12 @@ interface CarrierSpend {
   loadCount: number;
 }
 
-export function CarrierMetrics() {
-  const [timeRange, setTimeRange] = useState<'14'|'30'|'90'|'all'>('30');
+type TimeRangeOption = '14' | '30' | '90' | 'all';
 
-  const { data: metricsData } = useQuery({
+export function CarrierMetrics() {
+  const [timeRange, setTimeRange] = useState<TimeRangeOption>('30');
+
+  const { data: metricsData = [] } = useQuery({
     queryKey: ['carrier-metrics', timeRange],
     queryFn: async () => {
       const response = await fetch(`/api/carrier-metrics?days=${timeRange}`);
@@ -34,59 +34,89 @@ export function CarrierMetrics() {
     }
   });
 
-  const sortedBySpend = [...(metricsData || [])].sort((a, b) => b.totalSpend - a.totalSpend);
-  const sortedByLoads = [...(metricsData || [])].sort((a, b) => b.loadCount - a.loadCount);
+  const sortedBySpend = [...metricsData].sort((a, b) => b.totalSpend - a.totalSpend);
+  const sortedByLoads = [...metricsData].sort((a, b) => b.loadCount - a.loadCount);
+
+  const timeRangeOptions = [
+    { value: "14", label: "Last 14 Days" },
+    { value: "30", label: "Last 30 Days" },
+    { value: "90", label: "Last 90 Days" },
+    { value: "all", label: "All Time" },
+  ];
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Carrier Metrics</h2>
-        <Select value={timeRange} onValueChange={(value) => setTimeRange(value as typeof timeRange)}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select time range" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="14">Last 14 Days</SelectItem>
-            <SelectItem value="30">Last 30 Days</SelectItem>
-            <SelectItem value="90">Last 90 Days</SelectItem>
-            <SelectItem value="all">All Time</SelectItem>
-          </SelectContent>
-        </Select>
+        <TimeRangeSelector 
+          value={timeRange} 
+          onChange={(value) => setTimeRange(value as TimeRangeOption)} 
+          options={timeRangeOptions}
+        />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Top Carriers by Spend</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {sortedBySpend.slice(0, 5).map((carrier, index) => (
-                <div key={carrier.carrier} className="flex justify-between items-center">
-                  <span>{index + 1}. {carrier.carrier}</span>
-                  <span>${Number(carrier.totalSpend).toFixed(2)}</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 gap-4">
+        <MetricsCard 
+          title="Top Carriers by Spend" 
+          data={sortedBySpend.slice(0, 5)} 
+          renderValue={(carrier) => `$${Number(carrier.totalSpend).toFixed(2)}`}
+        />
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Top Carriers by Load Count</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {sortedByLoads.slice(0, 5).map((carrier, index) => (
-                <div key={carrier.carrier} className="flex justify-between items-center">
-                  <span>{index + 1}. {carrier.carrier}</span>
-                  <span>{carrier.loadCount} loads</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <MetricsCard 
+          title="Top Carriers by Load Count" 
+          data={sortedByLoads.slice(0, 5)} 
+          renderValue={(carrier) => `${carrier.loadCount} loads`}
+        />
       </div>
     </div>
+  );
+}
+
+interface TimeRangeSelectorProps {
+  value: string;
+  onChange: (value: string) => void;
+  options: Array<{ value: string; label: string }>;
+}
+
+function TimeRangeSelector({ value, onChange, options }: TimeRangeSelectorProps) {
+  return (
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger className="w-[180px]">
+        <SelectValue placeholder="Select time range" />
+      </SelectTrigger>
+      <SelectContent>
+        {options.map(option => (
+          <SelectItem key={option.value} value={option.value}>
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+interface MetricsCardProps {
+  title: string;
+  data: CarrierSpend[];
+  renderValue: (carrier: CarrierSpend) => string;
+}
+
+function MetricsCard({ title, data, renderValue }: MetricsCardProps) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-2">
+          {data.map((carrier, index) => (
+            <div key={carrier.carrier} className="flex justify-between items-center">
+              <span>{index + 1}. {carrier.carrier}</span>
+              <span>{renderValue(carrier)}</span>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
