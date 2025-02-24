@@ -85,14 +85,16 @@ export default function OntarioMetricsPage() {
             <p className="text-muted-foreground">Coming soon</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Storage Utilization</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">Coming soon</p>
-          </CardContent>
-        </Card>
+        <Link href="/metrics/ontario/storage">
+          <Card className="cursor-pointer hover:bg-accent transition-colors">
+            <CardHeader>
+              <CardTitle>Storage Utilization</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Click to view details</p>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
     </div>
   );
