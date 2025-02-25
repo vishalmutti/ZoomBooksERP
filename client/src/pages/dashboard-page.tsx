@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Invoice } from "@shared/schema";
+import { Invoice, Supplier } from "@shared/schema";
 import { AROverview } from "@/components/dashboard/ar-overview";
 import { InvoiceList } from "@/components/dashboard/invoice-list";
 import { InvoiceForm } from "@/components/dashboard/invoice-form";
@@ -11,6 +11,8 @@ import { useState } from "react";
 import { SupplierForm } from "@/components/dashboard/supplier-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WholesaleMetrics } from "@/components/dashboard/wholesale-metrics";
+import { WholesaleProvider } from "@/components/dashboard/WholesaleContext";
+import InvoiceTable from "@/components/dashboard/invoice-table";
 
 export default function DashboardPage() {
   const { logoutMutation } = useAuth();
@@ -83,10 +85,13 @@ export default function DashboardPage() {
           </TabsContent>
 
           <TabsContent value="wholesale" className="space-y-4">
-            <div className="grid gap-4">
-              <h2 className="text-2xl font-bold">Wholesale Metrics</h2>
-              <WholesaleMetrics />
-            </div>
+            <WholesaleProvider>
+              <div className="grid gap-4">
+                <h2 className="text-2xl font-bold">Wholesale Metrics</h2>
+                <WholesaleMetrics />
+                <InvoiceTable invoices={invoices} />
+              </div>
+            </WholesaleProvider>
           </TabsContent>
         </Tabs>
       </main>

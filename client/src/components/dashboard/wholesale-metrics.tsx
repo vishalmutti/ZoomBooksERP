@@ -6,9 +6,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useWholesaleContext } from "./WholesaleContext";
 
 export function WholesaleMetrics() {
-  const [timeFilter, setTimeFilter] = useState<'30' | '90' | 'all'>('all');
+  const { timeFilter, setTimeFilter, setSelectedSupplier, setFromMetrics } = useWholesaleContext();
   
   const { data: invoices = [] } = useQuery<Invoice[]>({
     queryKey: ["/api/invoices"],
@@ -71,16 +72,33 @@ export function WholesaleMetrics() {
           const [isExpanded, setIsExpanded] = useState(false);
           
           return (
-            <Card key={supplier.id} className="h-fit">
+            <Card 
+            key={supplier.id} 
+            className="h-fit"
+          >
               <CardHeader>
                 <CardTitle className="text-lg">{supplier.name}</CardTitle>
               </CardHeader>
               <CardContent className="flex-1">
-                <div className="flex justify-between items-center mb-4">
+                <div 
+                  className="flex justify-between items-center mb-4 p-2 hover:bg-muted rounded-md cursor-pointer transition-colors"
+                  onClick={() => {
+                    setSelectedSupplier(supplier.id.toString());
+                    setFromMetrics(true);
+                  }}
+                  title="Click to view underlying data"
+                >
                   <div className="text-xl font-bold">
                     ${revenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
-                  <Button variant="ghost" size="sm" onClick={() => setIsExpanded(!isExpanded)}>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent triggering the parent onClick
+                      setIsExpanded(!isExpanded);
+                    }}
+                  >
                     {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </Button>
                 </div>
