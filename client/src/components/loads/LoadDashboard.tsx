@@ -73,11 +73,10 @@ export function LoadDashboard() {
               onClose={() => setShowAddLoad(false)}
               defaultType="Incoming"
               show={showAddLoad}
-            >
-              <Button onClick={() => setShowAddLoad(true)}>
-                <LuPlus className="mr-2 h-4 w-4" /> New Load
-              </Button>
-            </LoadForm>
+            />
+            <Button onClick={() => setShowAddLoad(true)}>
+              <LuPlus className="mr-2 h-4 w-4" /> New Load
+            </Button>
           </div>
         <LoadTable 
           loads={filteredLoads} 
@@ -99,21 +98,23 @@ export function LoadDashboard() {
             </TabsList>
 
             <TabsContent value="ontario">
-              <div className="w-full h-[calc(100vh-50px)]">
+              <div className="w-full h-[calc(100vh-75px)]">
                 <iframe 
                   src="https://docs.google.com/spreadsheets/d/1MCMO9DGFa2sZosevSNbZpwtpgazXxxCuKdx3BVuyKX4/edit?usp=sharing"
                   className="w-full h-full border-0"
                   title="Ontario Load Analysis"
+                  style={{height: 'calc(100vh - 75px)'}}
                 />
               </div>
             </TabsContent>
 
             <TabsContent value="bc">
-              <div className="w-full h-[calc(100vh-50px)]">
+              <div className="w-full h-[calc(100vh-75px)]">
                 <iframe 
                   src="https://docs.google.com/spreadsheets/d/1bzpoaKySMP7bwgXNLPZZ7svVX06zQfOKWPd6T6XOz5I/edit?usp=sharing"
                   className="w-full h-full border-0"
                   title="British Columbia Load Analysis"
+                  style={{height: 'calc(100vh - 75px)'}}
                 />
               </div>
             </TabsContent>
@@ -126,7 +127,6 @@ export function LoadDashboard() {
           initialData={editingLoad}
           onClose={handleClose}
           show={true}
-          suppliers={suppliers}
         />
       )}
 

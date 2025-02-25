@@ -3,6 +3,8 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 import { useAuth } from "@/hooks/use-auth";
 import { LoadManagementWidget } from "@/components/LoadManagementWidget";
 import { PayrollWidget } from "@/components/PayrollWidget";
+import ZoomBookAI from "./zoom-book-ai";
+import { Route } from "wouter";
 
 const widgets = [
   {
@@ -46,6 +48,12 @@ const widgets = [
     description: "Access important resources and training materials",
     path: "/important-links",
     icon: "🔗"
+  },
+  {
+    title: "Zoom Book AI",
+    description: "Chat with a top AI model",
+    path: "/zoom-book-ai",
+    icon: "🤖"
   }
 ];
 

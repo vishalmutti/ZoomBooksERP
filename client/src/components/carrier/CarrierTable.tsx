@@ -278,7 +278,7 @@ export function CarrierTable() {
   const exportToCSV = () => {
     const csvContent = [
       ["Date", "Reference Number", "Carrier", "Freight Cost", "Status"],
-      ...data.map((row: CarrierLoad) => [
+      ...filteredData.map((row: CarrierLoad) => [
         row.date,
         row.referenceNumber,
         row.carrier,

@@ -18,6 +18,7 @@ import MetricsPage from "@/pages/key-performance-metrics/metrics-page";
 import OntarioMetricsPage from "@/pages/key-performance-metrics/ontario-metrics-page";
 import BritishColumbiaMetricsPage from "@/pages/key-performance-metrics/british-columbia-metrics-page";
 import OntarioStorageUtilizationPage from "@/pages/key-performance-metrics/ontario-storage-utilization-page"; // Added import
+import ZoomBookAI from "@/pages/zoom-book-ai";
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -98,6 +99,12 @@ function Router() {
       <Route path="/important-links">
         <AppLayout>
           <ProtectedRoute path="/important-links" component={ImportantLinksPage} />
+        </AppLayout>
+      </Route>
+
+      <Route path="/zoom-book-ai">
+        <AppLayout>
+          <ProtectedRoute path="/zoom-book-ai" component={ZoomBookAI} />
         </AppLayout>
       </Route>
 
