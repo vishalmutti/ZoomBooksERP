@@ -1,11 +1,12 @@
 import { DataTable } from "@/components/ui/data-table";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ColumnDef } from "@tanstack/react-table";
+import { ColumnDef, Row } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { LuFileText } from "react-icons/lu";
+import { useCarrierContext } from "./CarrierContext";
 
 interface CarrierLoad {
   id: number;
@@ -13,9 +14,22 @@ interface CarrierLoad {
   referenceNumber: string;
   carrier: string;
   freightCost: number;
+  freightCostCurrency: "CAD" | "USD";
   freightInvoice?: string;
   pod?: string;
   status: "PAID" | "UNPAID";
+}
+
+// Interface for the form data that matches what CarrierForm expects
+interface CarrierFormData {
+  id?: number;
+  date: string;
+  referenceNumber: string;
+  carrier: string;
+  freightCost: number;
+  freightCostCurrency: "CAD" | "USD";
+  freightInvoice?: File;
+  pod?: File;
 }
 
 import { CarrierForm } from "./CarrierForm";
@@ -37,14 +51,45 @@ const FileLink = ({ file }: { file?: string }) => {
 export function CarrierTable() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { selectedCarrier, timeRange, fromMetrics, setSelectedCarrier } = useCarrierContext();
   const [editingCarrier, setEditingCarrier] = useState<CarrierLoad | null>(null);
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "PAID" | "UNPAID">("ALL");
   const [carrierFilter, setCarrierFilter] = useState<string>("ALL");
 
+  // Apply filters from metrics when navigating from metrics view
+  useEffect(() => {
+    if (fromMetrics && selectedCarrier) {
+      setCarrierFilter(selectedCarrier);
+      
+      // Calculate date range based on timeRange
+      const endDate = new Date();
+      let startDate = new Date();
+      
+      if (timeRange === 'all') {
+        // Set to a date far in the past for "all time"
+        startDate = new Date(2000, 0, 1);
+      } else {
+        // Subtract days based on timeRange
+        const days = parseInt(timeRange);
+        startDate.setDate(startDate.getDate() - days);
+      }
+      
+      setStartDate(startDate.toISOString().split('T')[0]);
+      setEndDate(endDate.toISOString().split('T')[0]);
+    }
+  }, [fromMetrics, selectedCarrier, timeRange]);
+
+  // Reset filters when clearing the "from metrics" view
+  useEffect(() => {
+    if (!fromMetrics && selectedCarrier) {
+      setSelectedCarrier(null);
+    }
+  }, [fromMetrics, selectedCarrier, setSelectedCarrier]);
+
   const { data = [], isLoading } = useQuery({
-    queryKey: ['carrier-loads', startDate, endDate, statusFilter],
+    queryKey: ['carrier-loads', startDate, endDate, statusFilter, carrierFilter],
     queryFn: async () => {
       const params = new URLSearchParams();
       // Format dates to match SQL date format
@@ -57,6 +102,7 @@ export function CarrierTable() {
         params.append('endDate', formattedEndDate);
       }
       if (statusFilter !== "ALL") params.append('status', statusFilter);
+      if (carrierFilter !== "ALL") params.append('carrier', carrierFilter);
       
       const response = await fetch(`/api/carrier-loads?${params.toString()}`);
       if (!response.ok) {
@@ -142,7 +188,7 @@ export function CarrierTable() {
     {
       accessorKey: "freightCost",
       header: "Freight Cost",
-      cell: ({ row }) => {
+      cell: ({ row }: { row: Row<CarrierLoad> }) => {
         const value = row.getValue<string | number>("freightCost");
         const currency = row.original.freightCostCurrency;
         const numericValue = typeof value === 'string' ? parseFloat(value) : value;
@@ -152,17 +198,17 @@ export function CarrierTable() {
     {
       accessorKey: "freightInvoice",
       header: "Freight Invoice",
-      cell: ({ row }) => <FileLink file={row.getValue("freightInvoice")} />,
+      cell: ({ row }: { row: Row<CarrierLoad> }) => <FileLink file={row.getValue("freightInvoice")} />,
     },
     {
       accessorKey: "pod",
       header: "POD",
-      cell: ({ row }) => <FileLink file={row.getValue("pod")} />,
+      cell: ({ row }: { row: Row<CarrierLoad> }) => <FileLink file={row.getValue("pod")} />,
     },
     {
       accessorKey: "status",
       header: "Status",
-      cell: ({ row }) => {
+      cell: ({ row }: { row: Row<CarrierLoad> }) => {
         const status = row.getValue("status") as "PAID" | "UNPAID";
         return (
           <select
@@ -182,7 +228,7 @@ export function CarrierTable() {
     {
       id: "actions",
       header: "Actions",
-      cell: ({ row }) => (
+      cell: ({ row }: { row: Row<CarrierLoad> }) => (
         <div className="flex gap-2">
           <Button
             variant="outline"
@@ -232,14 +278,14 @@ export function CarrierTable() {
   const exportToCSV = () => {
     const csvContent = [
       ["Date", "Reference Number", "Carrier", "Freight Cost", "Status"],
-      ...data.map(row => [
+      ...data.map((row: CarrierLoad) => [
         row.date,
         row.referenceNumber,
         row.carrier,
         `${row.freightCost}`,
         row.status
       ])
-    ].map(row => row.join(",")).join("\n");
+    ].map((row: string[]) => row.join(",")).join("\n");
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -252,12 +298,48 @@ export function CarrierTable() {
     window.URL.revokeObjectURL(url);
   };
 
-  // Get unique carriers
-  const uniqueCarriers = Array.from(new Set(data.map(row => row.carrier))).sort();
+  // Convert CarrierLoad to CarrierFormData for the form
+  const convertToFormData = (load: CarrierLoad): CarrierFormData => {
+    return {
+      id: load.id,
+      date: load.date,
+      referenceNumber: load.referenceNumber,
+      carrier: load.carrier,
+      freightCost: load.freightCost,
+      freightCostCurrency: load.freightCostCurrency,
+      // File properties will be handled by the form component
+    };
+  };
+
+  // Get unique carriers with proper typing
+  const uniqueCarriers: string[] = Array.from(
+    new Set(data.map((row: CarrierLoad) => row.carrier))
+  ).sort() as string[];
   
-  const filteredData = data.filter(row => 
-    carrierFilter === "ALL" || row.carrier === carrierFilter
-  );
+  // Apply all filters to the data (carrier, date range, status)
+  const filteredData = data.filter((row: CarrierLoad) => {
+    // Apply carrier filter
+    const carrierMatch = carrierFilter === "ALL" || row.carrier === carrierFilter;
+    
+    // Apply date range filter
+    let dateMatch = true;
+    if (startDate && endDate) {
+      const rowDate = new Date(row.date);
+      const filterStartDate = new Date(startDate);
+      const filterEndDate = new Date(endDate);
+      
+      // Set end date to end of day for inclusive comparison
+      filterEndDate.setHours(23, 59, 59, 999);
+      
+      dateMatch = rowDate >= filterStartDate && rowDate <= filterEndDate;
+    }
+    
+    // Apply status filter
+    const statusMatch = statusFilter === "ALL" || row.status === statusFilter;
+    
+    // Return true only if all filters match
+    return carrierMatch && dateMatch && statusMatch;
+  });
 
   return (
     <div className="container mx-auto py-8">
@@ -274,7 +356,7 @@ export function CarrierTable() {
       </div>
       {editingCarrier && (
         <CarrierForm
-          initialData={editingCarrier}
+          initialData={convertToFormData(editingCarrier)}
           open={!!editingCarrier}
           onOpenChange={(open) => !open && setEditingCarrier(null)}
         />

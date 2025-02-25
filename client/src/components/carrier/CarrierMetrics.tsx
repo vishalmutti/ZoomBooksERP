@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Card,
@@ -13,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useCarrierContext } from "./CarrierContext";
 
 interface CarrierSpend {
   carrier: string;
@@ -23,7 +23,13 @@ interface CarrierSpend {
 type TimeRangeOption = '14' | '30' | '90' | 'all';
 
 export function CarrierMetrics() {
-  const [timeRange, setTimeRange] = useState<TimeRangeOption>('30');
+  const { 
+    timeRange, 
+    setTimeRange, 
+    setSelectedCarrier, 
+    setActiveTab, 
+    setFromMetrics 
+  } = useCarrierContext();
 
   const { data: metricsData = [] } = useQuery({
     queryKey: ['carrier-metrics', timeRange],
@@ -44,6 +50,12 @@ export function CarrierMetrics() {
     { value: "all", label: "All Time" },
   ];
 
+  const handleCarrierClick = (carrier: string) => {
+    setSelectedCarrier(carrier);
+    setFromMetrics(true);
+    setActiveTab("loads");
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -60,12 +72,14 @@ export function CarrierMetrics() {
           title="Top Carriers by Spend" 
           data={sortedBySpend.slice(0, 5)} 
           renderValue={(carrier) => `$${Number(carrier.totalSpend).toFixed(2)}`}
+          onCarrierClick={handleCarrierClick}
         />
 
         <MetricsCard 
           title="Top Carriers by Load Count" 
           data={sortedByLoads.slice(0, 5)} 
           renderValue={(carrier) => `${carrier.loadCount} loads`}
+          onCarrierClick={handleCarrierClick}
         />
       </div>
     </div>
@@ -99,9 +113,10 @@ interface MetricsCardProps {
   title: string;
   data: CarrierSpend[];
   renderValue: (carrier: CarrierSpend) => string;
+  onCarrierClick: (carrier: string) => void;
 }
 
-function MetricsCard({ title, data, renderValue }: MetricsCardProps) {
+function MetricsCard({ title, data, renderValue, onCarrierClick }: MetricsCardProps) {
   return (
     <Card>
       <CardHeader>
@@ -110,7 +125,12 @@ function MetricsCard({ title, data, renderValue }: MetricsCardProps) {
       <CardContent>
         <div className="space-y-2">
           {data.map((carrier, index) => (
-            <div key={carrier.carrier} className="flex justify-between items-center">
+            <div 
+              key={carrier.carrier} 
+              className="flex justify-between items-center p-2 hover:bg-muted rounded-md cursor-pointer transition-colors"
+              onClick={() => onCarrierClick(carrier.carrier)}
+              title="Click to view underlying data"
+            >
               <span>{index + 1}. {carrier.carrier}</span>
               <span>{renderValue(carrier)}</span>
             </div>
