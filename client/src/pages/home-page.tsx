@@ -40,6 +40,12 @@ const widgets = [
     description: "Monitor business performance and analytics",
     path: "/metrics",
     icon: "📊"
+  },
+  {
+    title: "Important Links",
+    description: "Access important resources and training materials",
+    path: "/important-links",
+    icon: "🔗"
   }
 ];
 

@@ -8,6 +8,7 @@ import AuthPage from "@/pages/auth-page";
 import DashboardPage from "@/pages/dashboard-page";
 import SuppliersPage from "@/pages/suppliers-page";
 import HomePage from "@/pages/home-page";
+import ImportantLinksPage from "@/pages/important-links-page";
 import { LoadsPage } from "@/pages/LoadsPage";
 import CarrierPage from "@/pages/carrier-page";
 import { ProtectedRoute } from "./lib/protected-route";
@@ -91,6 +92,12 @@ function Router() {
       <Route path="/">
         <AppLayout>
           <ProtectedRoute path="/" component={HomePage} />
+        </AppLayout>
+      </Route>
+
+      <Route path="/important-links">
+        <AppLayout>
+          <ProtectedRoute path="/important-links" component={ImportantLinksPage} />
         </AppLayout>
       </Route>
 

@@ -1,0 +1,19 @@
+{
+    "sqltools.connections": [
+        {
+            "pgOptions": {
+                "ssl": {
+                    "rejectUnauthorized": true
+                }
+            },
+            "previewLimit": 50,
+            "server": "ep-solitary-boat-a48bij2d.us-east-1.aws.neon.tech",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "database": "neondb",
+            "username": "neondb_owner",
+            "password": "npg_AiDHzTW6Ftr5",
+            "name": "Replit PostgreSQL"
+        }
+    ]
+}

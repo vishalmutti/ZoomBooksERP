@@ -33,6 +33,15 @@ export default function DashboardPage() {
     return <div>Loading...</div>;
   }
 
+  // Enhance invoices by mapping each invoice to include supplierName from suppliers data
+  const enhancedInvoices = invoices.map((invoice) => {
+    const supplier = suppliers.find((s) => s.id === invoice.supplierId);
+    return {
+      ...invoice,
+      supplierName: supplier ? supplier.name : `Supplier ${invoice.supplierId}`,
+    };
+  });
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
@@ -89,7 +98,7 @@ export default function DashboardPage() {
               <div className="grid gap-4">
                 <h2 className="text-2xl font-bold">Wholesale Metrics</h2>
                 <WholesaleMetrics />
-                <InvoiceTable invoices={invoices} />
+                <InvoiceTable invoices={enhancedInvoices} />
               </div>
             </WholesaleProvider>
           </TabsContent>
