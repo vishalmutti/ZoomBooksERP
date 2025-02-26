@@ -478,6 +478,31 @@ const dayToDayOfWeek: Record<string, number> = {
 };
 
 function AvailabilityForm({ employee, onSubmit, isLoading }: AvailabilityFormProps) {
+  // Helper function to create a day availability object
+  const createDayAvailability = (
+    isAvailable: boolean = false, 
+    startTime: string = "09:00", 
+    endTime: string = "17:00", 
+    isPreferred: boolean = false // Added isPreferred
+  ) => ({
+    isAvailable,
+    startTime,
+    endTime,
+    isPreferred
+  });
+
+  // Create the initial default values
+  const initialValues: AvailabilityValues = {
+    employeeId: employee.id,
+    monday: createDayAvailability(),
+    tuesday: createDayAvailability(),
+    wednesday: createDayAvailability(),
+    thursday: createDayAvailability(),
+    friday: createDayAvailability(),
+    saturday: createDayAvailability(),
+    sunday: createDayAvailability()
+  };
+
   const form = useForm<AvailabilityValues>({
     resolver: zodResolver(availabilitySchema),
     defaultValues: initialValues
@@ -508,29 +533,7 @@ function AvailabilityForm({ employee, onSubmit, isLoading }: AvailabilityFormPro
   }, [availability]);
 
   // Helper function to create a day availability object
-  const createDayAvailability = (
-    isAvailable: boolean = false, 
-    startTime: string = "09:00", 
-    endTime: string = "17:00", 
-    isPreferred: boolean = false // Added isPreferred
-  ) => ({
-    isAvailable,
-    startTime,
-    endTime,
-    isPreferred
-  });
-
-  // Create the initial default values
-  const initialValues: AvailabilityValues = {
-    employeeId: employee.id,
-    monday: createDayAvailability(),
-    tuesday: createDayAvailability(),
-    wednesday: createDayAvailability(),
-    thursday: createDayAvailability(),
-    friday: createDayAvailability(),
-    saturday: createDayAvailability(),
-    sunday: createDayAvailability()
-  };
+  
 
   // Map database numeric dayOfWeek values (0-6) to form field names
   // In DB: 0 = Sunday, 1 = Monday, etc.
