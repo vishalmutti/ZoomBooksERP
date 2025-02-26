@@ -8,11 +8,12 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-export async function apiRequest(
-  method: string,
-  url: string,
-  data?: unknown | undefined,
-): Promise<Response> {
+export async function apiRequest<T = any>(options: {
+  url: string;
+  method: string;
+  data?: unknown | undefined;
+}): Promise<T> {
+  const { url, method, data } = options;
   const headers: Record<string, string> = {};
   let body: string | FormData | undefined = undefined;
 
@@ -33,7 +34,8 @@ export async function apiRequest(
   });
 
   await throwIfResNotOk(res);
-  return res;
+  if (res.status === 204) return {} as T; // No content
+  return await res.json();
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
