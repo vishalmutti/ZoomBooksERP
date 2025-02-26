@@ -517,13 +517,26 @@ function AvailabilityForm({ employee, availability, onSubmit, isLoading }: Avail
 
   // If we have availability data, populate the form
   if (availability && availability.length > 0) {
+    // Reset all days to not available first
+    Object.keys(defaultValues).forEach(key => {
+      if (key !== 'employeeId') {
+        defaultValues[key as keyof typeof defaultValues] = {
+          isAvailable: false,
+          startTime: "09:00",
+          endTime: "17:00",
+          availableShifts: []
+        };
+      }
+    });
+
+    // Then set the available days
     availability.forEach(avail => {
       const dayKey = dayMap[avail.dayOfWeek];
-      if (dayKey) {
+      if (dayKey && dayKey in defaultValues) {
         defaultValues[dayKey] = {
           isAvailable: true,
-          startTime: avail.startTime,
-          endTime: avail.endTime,
+          startTime: avail.startTime || "09:00",
+          endTime: avail.endTime || "17:00",
           availableShifts: avail.isPreferred ? ["day"] : []
         };
       }
