@@ -88,11 +88,11 @@ export function registerRoutes(app: Express): Server {
     try {
       const decodedPath = decodeURIComponent(req.path).trim();
       const filename = path.basename(decodedPath);
-      
+
       // Find the actual file in uploads directory that matches the name ignoring case
       const files = fs.readdirSync(uploadDir);
       const actualFile = files.find(f => f.toLowerCase() === filename.toLowerCase());
-      
+
       if (!actualFile) {
         console.error('File not found:', filename);
         return res.status(404).json({
@@ -727,6 +727,43 @@ export function registerRoutes(app: Express): Server {
   });
 
 
+  // Employee routes
+  app.post("/api/employees", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const result = await db.insert(employees).values(req.body).returning();
+      return res.json(result[0]);
+    } catch (error) {
+      console.error('Error creating employee:', error);
+      return res.status(500).json({ 
+        message: 'Failed to create employee',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  app.patch("/api/employees/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const id = parseInt(req.params.id);
+      const result = await db.update(employees)
+        .set(req.body)
+        .where(eq(employees.id, id))
+        .returning();
+
+      if (result.length === 0) {
+        return res.status(404).json({ message: 'Employee not found' });
+      }
+      return res.json(result[0]);
+    } catch (error) {
+      console.error('Error updating employee:', error);
+      return res.status(500).json({ 
+        message: 'Failed to update employee',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Department routes
   app.get("/api/departments", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
@@ -743,7 +780,7 @@ export function registerRoutes(app: Express): Server {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
       console.log('Department creation request body:', req.body);
-      
+
       const departmentData = {
         name: req.body.name,
         description: req.body.description,
@@ -751,10 +788,10 @@ export function registerRoutes(app: Express): Server {
         requiredStaffDay: parseInt(req.body.requiredStaffDay) || 0,
         requiredStaffNight: parseInt(req.body.requiredStaffNight) || 0
       };
-      
+
       // Parse the data through the schema
       const parsed = insertDepartmentSchema.safeParse(departmentData);
-      
+
       if (!parsed.success) {
         console.error('Invalid department data:', parsed.error);
         return res.status(400).json({ 
@@ -762,13 +799,13 @@ export function registerRoutes(app: Express): Server {
           error: parsed.error.format() 
         });
       }
-      
+
       console.log('Processed department data:', departmentData);
-      
+
       const result = await db.insert(departments)
         .values(departmentData)
         .returning();
-      
+
       console.log('Created department:', result[0]);  
       return res.json(result[0]);
     } catch (error) {
@@ -779,16 +816,16 @@ export function registerRoutes(app: Express): Server {
       });
     }
   });
-  
+
   app.patch("/api/departments/:id", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
       const id = parseInt(req.params.id);
       console.log('Department update request body:', req.body);
-      
+
       // Parse the data through the schema
       const parsed = insertDepartmentSchema.partial().safeParse(req.body);
-      
+
       if (!parsed.success) {
         console.error('Invalid department update data:', parsed.error);
         return res.status(400).json({ 
@@ -796,16 +833,16 @@ export function registerRoutes(app: Express): Server {
           error: parsed.error.format() 
         });
       }
-      
+
       const result = await db.update(departments)
         .set(parsed.data)
         .where(eq(departments.id, id))
         .returning();
-      
+
       if (result.length === 0) {
         return res.status(404).json({ message: 'Department not found' });
       }
-      
+
       console.log('Updated department:', result[0]);  
       return res.json(result[0]);
     } catch (error) {
@@ -816,18 +853,18 @@ export function registerRoutes(app: Express): Server {
       });
     }
   });
-  
+
   app.delete("/api/departments/:id", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
       const id = parseInt(req.params.id);
-      
+
       // First check if department exists
       const existingDept = await db.select().from(departments).where(eq(departments.id, id));
       if (existingDept.length === 0) {
         return res.status(404).json({ message: 'Department not found' });
       }
-      
+
       // Check if department has employees
       const employeesInDept = await db.select().from(employees).where(eq(employees.departmentId, id));
       if (employeesInDept.length > 0) {
@@ -835,9 +872,9 @@ export function registerRoutes(app: Express): Server {
           message: `Cannot delete department with ${employeesInDept.length} employees. Reassign them first.`
         });
       }
-      
+
       await db.delete(departments).where(eq(departments.id, id));
-      
+
       return res.json({ success: true, message: 'Department deleted successfully' });
     } catch (error) {
       console.error('Error deleting department:', error);
@@ -879,9 +916,9 @@ export function registerRoutes(app: Express): Server {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
       const { startDate, endDate, status } = req.query;
-      
+
       let query = db.select().from(carrierLoads);
-      
+
       if (startDate) {
         query = query.where(sql`${carrierLoads.date} >= ${startDate}`);
       }
@@ -894,7 +931,7 @@ export function registerRoutes(app: Express): Server {
       if (req.query.referenceNumber) {
         query = query.where(sql`LOWER(${carrierLoads.referenceNumber}) = LOWER(${req.query.referenceNumber})`);
       }
-      
+
       const loads = await query;
       return res.json(loads);
     } catch (error) {
@@ -927,7 +964,7 @@ export function registerRoutes(app: Express): Server {
     try {
       const id = parseInt(req.params.id);
       const { status } = req.body;
-      
+
       const result = await db.update(carrierLoads)
         .set({ status })
         .where(eq(carrierLoads.id, id))
@@ -975,7 +1012,7 @@ export function registerRoutes(app: Express): Server {
     try {
       const { days, roiRange, costRange, type } = req.query;
       let dateFilter = sql`TRUE`;
-      
+
       if (days !== 'all') {
         dateFilter = sql`il.created_at >= CURRENT_DATE - MAKE_INTERVAL(days => ${days}::integer)`;
       }
@@ -1060,7 +1097,7 @@ export function registerRoutes(app: Express): Server {
     try {
       const days = req.query.days as string;
       let dateFilter = sql`TRUE`;
-      
+
       if (days !== 'all') {
         dateFilter = sql`date >= CURRENT_DATE - MAKE_INTERVAL(days => ${days}::integer)`;
       }
