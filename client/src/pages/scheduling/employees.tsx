@@ -466,6 +466,8 @@ interface AvailabilityFormProps {
   isLoading: boolean;
 }
 
+import { useEffect } from 'react';
+
 // Map day names to database dayOfWeek values
 const dayToDayOfWeek: Record<string, number> = {
   'monday': 1,    // Monday is 1 in database
