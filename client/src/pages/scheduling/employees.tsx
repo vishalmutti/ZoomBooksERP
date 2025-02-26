@@ -661,10 +661,9 @@ function AvailabilityForm({ employee, onSubmit, isLoading }: AvailabilityFormPro
     onSubmit(availabilityData);
   };
 
-  const AvailabilityForm = ({ employee, availability, onSubmit, isLoading }: AvailabilityFormProps) => {
-    return (
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-6">
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-6">
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
