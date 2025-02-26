@@ -202,7 +202,7 @@ export default function EmployeesPage() {
   const filteredEmployees = searchQuery.trim() === ""
     ? employees || []
     : (employees || []).filter(emp => 
-        `${emp.firstName} ${emp.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         emp.email.toLowerCase().includes(searchQuery.toLowerCase())
       );
 
@@ -294,7 +294,7 @@ export default function EmployeesPage() {
                   return (
                     <TableRow key={employee.id}>
                       <TableCell className="font-medium">
-                        {employee.firstName} {employee.lastName}
+                        {employee.name}
                       </TableCell>
                       <TableCell>{employee.email}</TableCell>
                       <TableCell>{employee.phone || "—"}</TableCell>

@@ -19,10 +19,7 @@ import { InsertDepartment } from "@shared/schema";
 // Extend the schema to add client-side validation
 const formSchema = z.object({
   name: z.string().min(1, "Department name is required"),
-  description: z.string().optional(),
-  requiredStaffDay: z.coerce.number().int().min(0).optional(),
-  requiredStaffNight: z.coerce.number().int().min(0).optional(),
-  targetHours: z.string().optional(),
+  targetHours: z.string().min(1, "Target hours is required"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -35,9 +32,6 @@ interface DepartmentFormProps {
 export function DepartmentForm({ onSubmit, initialData }: DepartmentFormProps) {
   const defaultValues: Partial<FormValues> = {
     name: initialData?.name || "",
-    description: initialData?.description || "",
-    requiredStaffDay: initialData?.requiredStaffDay || 0,
-    requiredStaffNight: initialData?.requiredStaffNight || 0,
     targetHours: initialData?.targetHours || "",
   };
 
@@ -67,74 +61,7 @@ export function DepartmentForm({ onSubmit, initialData }: DepartmentFormProps) {
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Brief description of the department's function"
-                  {...field}
-                  value={field.value || ""}
-                />
-              </FormControl>
-              <FormDescription>
-                A short description of the department's responsibilities
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
 
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="requiredStaffDay"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Required Staff (Day)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    min="0"
-                    {...field}
-                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                    value={field.value || 0}
-                  />
-                </FormControl>
-                <FormDescription>
-                  Minimum staff needed for day shift
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="requiredStaffNight"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Required Staff (Night)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    min="0"
-                    {...field}
-                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                    value={field.value || 0}
-                  />
-                </FormControl>
-                <FormDescription>
-                  Minimum staff needed for night shift
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
 
         <FormField
           control={form.control}
