@@ -624,9 +624,9 @@ function AvailabilityForm({ employee, onSubmit, isLoading }: AvailabilityFormPro
 
     console.log("Submitting availability data:", availabilityData);
     await onSubmit(availabilityData);
-    };
+  };
 
-    // Create availability entries only for days marked as available
+  const AvailabilityForm: React.FC<AvailabilityFormProps> = ({ employee, availability, onSubmit, isLoading }) => {
     const availabilityData = Object.entries(data)
       .filter(([key, value]) => 
         // Filter out the employeeId field and only include days marked as available
