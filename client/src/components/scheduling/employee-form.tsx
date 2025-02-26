@@ -165,7 +165,15 @@ export function EmployeeForm({ onSubmit, initialData, departments }: EmployeeFor
             <FormItem>
               <FormLabel>Skills</FormLabel>
               <FormControl>
-                <Input placeholder="Forklift, Inventory Management" {...field} />
+                <Input 
+                  placeholder="Forklift, Inventory Management" 
+                  value={Array.isArray(field.value) ? field.value.join(', ') : field.value || ''}
+                  onChange={(e) => {
+                    // Convert comma-separated string to array
+                    const skillsArray = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+                    field.onChange(skillsArray.length > 0 ? skillsArray : []);
+                  }}
+                />
               </FormControl>
               <FormDescription>
                 Enter skills separated by commas

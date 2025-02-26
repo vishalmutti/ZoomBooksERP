@@ -301,10 +301,8 @@ export default function EmployeesPage() {
                       <TableCell>{department?.name || "—"}</TableCell>
                       <TableCell>{employee.position || "—"}</TableCell>
                       <TableCell>
-                        <Badge 
-                          variant={employee.status === "active" ? "default" : "secondary"}
-                        >
-                          {employee.status}
+                        <Badge variant="default">
+                          Active
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
@@ -340,7 +338,7 @@ export default function EmployeesPage() {
                             <DropdownMenuItem
                               className="text-red-600"
                               onClick={() => {
-                                if (confirm(`Are you sure you want to delete ${employee.firstName} ${employee.lastName}?`)) {
+                                if (confirm(`Are you sure you want to delete ${employee.name}?`)) {
                                   deleteEmployeeMutation.mutate(employee.id);
                                 }
                               }}
@@ -402,7 +400,7 @@ export default function EmployeesPage() {
             <SheetHeader>
               <SheetTitle>Manage Availability</SheetTitle>
               <SheetDescription>
-                Configure when {selectedEmployee.firstName} {selectedEmployee.lastName} is available to work.
+                Configure when {selectedEmployee.name} is available to work.
               </SheetDescription>
             </SheetHeader>
             <div className="py-6">
