@@ -594,17 +594,36 @@ function AvailabilityForm({ employee, onSubmit, isLoading }: AvailabilityFormPro
   //   }
   // }, [availability, employee.id]);
 
-  const onFormSubmit = (data: AvailabilityValues) => {
+  const onFormSubmit = async (data: AvailabilityValues) => {
     // Transform the form data to the API format for saving to database
-    // The reverse mapping of our dayMap: we need to convert day keys to database dayOfWeek values
     const dayToDayOfWeek: Record<string, number> = {
-      'monday': 1,    // Monday is 1 in database
-      'tuesday': 2,   
-      'wednesday': 3, 
-      'thursday': 4,  
-      'friday': 5,    
-      'saturday': 6,  
-      'sunday': 0     // Sunday is 0 in database
+      'monday': 1,
+      'tuesday': 2,
+      'wednesday': 3,
+      'thursday': 4,
+      'friday': 5,
+      'saturday': 6,
+      'sunday': 0
+    };
+
+    // Create availability entries for days marked as available
+    const availabilityData = Object.entries(data)
+      .filter(([key, value]) => 
+        key !== 'employeeId' && 
+        value && 
+        typeof value === 'object' && 
+        value.isAvailable === true
+      )
+      .map(([dayKey, value]) => ({
+        employeeId: employee.id,
+        dayOfWeek: dayToDayOfWeek[dayKey],
+        startTime: value.startTime || "09:00",
+        endTime: value.endTime || "17:00",
+        isPreferred: value.availableShifts?.includes("day") || false
+      }));
+
+    console.log("Submitting availability data:", availabilityData);
+    await onSubmit(availabilityData);
     };
 
     // Create availability entries only for days marked as available
