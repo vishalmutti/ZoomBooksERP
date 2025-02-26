@@ -483,7 +483,7 @@ function AvailabilityForm({ employee, onSubmit, isLoading }: AvailabilityFormPro
     isAvailable: boolean = false, 
     startTime: string = "09:00", 
     endTime: string = "17:00", 
-    isPreferred: boolean = false // Added isPreferred
+    isPreferred: boolean = false
   ) => ({
     isAvailable,
     startTime,
@@ -533,7 +533,7 @@ function AvailabilityForm({ employee, onSubmit, isLoading }: AvailabilityFormPro
   }, [availability]);
 
   // Helper function to create a day availability object
-  
+
 
   // Map database numeric dayOfWeek values (0-6) to form field names
   // In DB: 0 = Sunday, 1 = Monday, etc.
