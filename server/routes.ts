@@ -728,6 +728,17 @@ export function registerRoutes(app: Express): Server {
 
 
   // Department routes
+  app.get("/api/departments", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const result = await db.select().from(departments);
+      return res.json(result);
+    } catch (error) {
+      console.error('Error fetching departments:', error);
+      return res.status(500).json({ message: 'Failed to fetch departments' });
+    }
+  });
+
   app.post("/api/departments", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     try {

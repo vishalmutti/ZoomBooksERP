@@ -268,7 +268,7 @@ export default function DepartmentsPage() {
                                   });
                                   return;
                                 }
-                                
+
                                 if (confirm(`Are you sure you want to delete ${department.name}?`)) {
                                   deleteDepartmentMutation.mutate(department.id);
                                 }
