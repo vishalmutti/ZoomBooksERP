@@ -504,17 +504,28 @@ function AvailabilityForm({ employee, availability, onSubmit, isLoading }: Avail
     sunday: { isAvailable: false }
   };
   
+  // Map numeric days to day names
+  const dayMap = {
+    0: "sunday",
+    1: "monday",
+    2: "tuesday",
+    3: "wednesday",
+    4: "thursday",
+    5: "friday",
+    6: "saturday"
+  };
+
   // If we have availability data, populate the form
   if (availability && availability.length > 0) {
     availability.forEach(avail => {
-      const day = avail.dayOfWeek.toLowerCase();
-      if (day in defaultValues) {
+      const dayKey = dayMap[avail.dayOfWeek as keyof typeof dayMap];
+      if (dayKey && dayKey in defaultValues) {
         // @ts-ignore - We know these properties exist
-        defaultValues[day] = {
+        defaultValues[dayKey] = {
           isAvailable: true,
           startTime: avail.startTime,
           endTime: avail.endTime,
-          availableShifts: avail.availableShifts?.split(',') as ("day" | "night")[] || [],
+          availableShifts: ["day"], // Default to day shift since it's not in the DB yet
         };
       }
     });
