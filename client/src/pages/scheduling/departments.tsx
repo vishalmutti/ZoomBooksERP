@@ -58,11 +58,11 @@ export default function DepartmentsPage() {
   });
 
   const createDepartmentMutation = useMutation({
-    mutationFn: async (data: InsertDepartment) => {
+    mutationFn: async (data: Partial<Department>) => {
       return await apiRequest<Department>({
         url: '/api/departments',
         method: 'POST',
-        data,
+        data: data as InsertDepartment,
       });
     },
     onSuccess: () => {
@@ -83,7 +83,7 @@ export default function DepartmentsPage() {
   });
 
   const updateDepartmentMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: Partial<InsertDepartment> }) => {
+    mutationFn: async ({ id, data }: { id: number; data: Partial<Department> }) => {
       return await apiRequest<Department>({
         url: `/api/departments/${id}`,
         method: 'PATCH',

@@ -21,13 +21,14 @@ export function DepartmentForm({ onSubmit, initialData }: DepartmentFormProps) {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    onSubmit({
+    const data: Partial<Department> = {
       name,
       description,
-      targetHours: targetHours as unknown as number,
+      targetHours: parseFloat(targetHours),
       requiredStaffDay: Number(requiredStaffDay),
       requiredStaffNight: Number(requiredStaffNight),
-    });
+    };
+    onSubmit(data);
   };
 
   // Calculate target hours based on staff requirements
