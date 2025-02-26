@@ -478,6 +478,11 @@ const dayToDayOfWeek: Record<string, number> = {
 };
 
 function AvailabilityForm({ employee, onSubmit, isLoading }: AvailabilityFormProps) {
+  const form = useForm<AvailabilityValues>({
+    resolver: zodResolver(availabilitySchema),
+    defaultValues: initialValues
+  });
+
   const { data: availability } = useQuery({
     queryKey: ['availability', employee.id],
     queryFn: () => fetch(`/api/employee-availability/${employee.id}`).then(res => res.json())
@@ -501,6 +506,25 @@ function AvailabilityForm({ employee, onSubmit, isLoading }: AvailabilityFormPro
       form.reset(defaultValues);
     }
   }, [availability]);
+
+  const onFormSubmit = async (data: AvailabilityValues) => {
+    const availabilityData = Object.entries(data)
+      .filter(([key, value]) => 
+        key !== 'employeeId' && 
+        value && 
+        typeof value === 'object' && 
+        value.isAvailable === true
+      )
+      .map(([dayKey, value]) => ({
+        employeeId: employee.id,
+        dayOfWeek: dayToDayOfWeek[dayKey],
+        startTime: value.startTime || "09:00",
+        endTime: value.endTime || "17:00",
+        isPreferred: value.isPreferred || false
+      }));
+
+    await onSubmit(availabilityData);
+  };
 
 
   // Helper function to create a day availability object
