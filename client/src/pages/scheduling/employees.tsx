@@ -564,11 +564,7 @@ function AvailabilityForm({ employee, onSubmit, isLoading }: AvailabilityFormPro
     "saturday"   // 6
   ] as const;
 
-  // Initialize form with initial default values
-  const form = useForm<AvailabilityValues>({
-    resolver: zodResolver(availabilitySchema),
-    defaultValues: initialValues
-  });
+  // Form is already initialized above, remove duplicate declaration
 
   // Check if an availability day is enabled - this is a helper to avoid type errors
   const isDayEnabled = (dayKey: string): boolean => {
