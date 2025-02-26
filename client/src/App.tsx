@@ -17,8 +17,16 @@ import PayrollPage from "@/pages/payroll-page";
 import MetricsPage from "@/pages/key-performance-metrics/metrics-page";
 import OntarioMetricsPage from "@/pages/key-performance-metrics/ontario-metrics-page";
 import BritishColumbiaMetricsPage from "@/pages/key-performance-metrics/british-columbia-metrics-page";
-import OntarioStorageUtilizationPage from "@/pages/key-performance-metrics/ontario-storage-utilization-page"; // Added import
+import OntarioStorageUtilizationPage from "@/pages/key-performance-metrics/ontario-storage-utilization-page"; 
 import ZoomBookAI from "@/pages/zoom-book-ai";
+
+// Scheduling Pages
+import SchedulingDashboard from "@/pages/scheduling/index";
+import ScheduleCalendarPage from "@/pages/scheduling/calendar";
+import EmployeesPage from "@/pages/scheduling/employees";
+import DepartmentsPage from "@/pages/scheduling/departments";
+import TimeOffRequestsPage from "@/pages/scheduling/time-off";
+import GenerateSchedulePage from "@/pages/scheduling/generate";
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -66,19 +74,56 @@ function Router() {
         </AppLayout>
       </Route>
 
-      <Route path="/metrics"> {/* Added route for MetricsPage */}
+      {/* Scheduling Routes */}
+      <Route path="/scheduling">
+        <AppLayout>
+          <ProtectedRoute path="/scheduling" component={SchedulingDashboard} />
+        </AppLayout>
+      </Route>
+
+      <Route path="/scheduling/calendar">
+        <AppLayout>
+          <ProtectedRoute path="/scheduling/calendar" component={ScheduleCalendarPage} />
+        </AppLayout>
+      </Route>
+
+      <Route path="/scheduling/employees">
+        <AppLayout>
+          <ProtectedRoute path="/scheduling/employees" component={EmployeesPage} />
+        </AppLayout>
+      </Route>
+
+      <Route path="/scheduling/departments">
+        <AppLayout>
+          <ProtectedRoute path="/scheduling/departments" component={DepartmentsPage} />
+        </AppLayout>
+      </Route>
+
+      <Route path="/scheduling/time-off">
+        <AppLayout>
+          <ProtectedRoute path="/scheduling/time-off" component={TimeOffRequestsPage} />
+        </AppLayout>
+      </Route>
+
+      <Route path="/scheduling/generate">
+        <AppLayout>
+          <ProtectedRoute path="/scheduling/generate" component={GenerateSchedulePage} />
+        </AppLayout>
+      </Route>
+
+      <Route path="/metrics">
         <AppLayout>
           <ProtectedRoute path="/metrics" component={MetricsPage} />
         </AppLayout>
       </Route>
 
-      <Route path="/metrics/ontario"> {/* Added route for OntarioMetricsPage */}
+      <Route path="/metrics/ontario">
         <AppLayout>
           <ProtectedRoute path="/metrics/ontario" component={OntarioMetricsPage} />
         </AppLayout>
       </Route>
 
-      <Route path="/metrics/british-columbia"> {/* Added route for BritishColumbiaMetricsPage */}
+      <Route path="/metrics/british-columbia">
         <AppLayout>
           <ProtectedRoute path="/metrics/british-columbia" component={BritishColumbiaMetricsPage} />
         </AppLayout>
