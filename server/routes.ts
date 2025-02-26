@@ -775,6 +775,50 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Employee availability routes
+  app.get("/api/employee-availability/:employeeId", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const employeeId = parseInt(req.params.employeeId);
+      const result = await db.select().from(employeeAvailability)
+        .where(eq(employeeAvailability.employeeId, employeeId));
+      return res.json(result);
+    } catch (error) {
+      console.error('Error fetching availability:', error);
+      return res.status(500).json({ message: 'Failed to fetch availability' });
+    }
+  });
+
+  app.put("/api/employee-availability/:employeeId", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const employeeId = parseInt(req.params.employeeId);
+      
+      // Delete existing availability
+      await db.delete(employeeAvailability)
+        .where(eq(employeeAvailability.employeeId, employeeId));
+
+      // Insert new availability records
+      const availabilityData = req.body;
+      if (Array.isArray(availabilityData) && availabilityData.length > 0) {
+        const result = await db.insert(employeeAvailability)
+          .values(availabilityData.map(data => ({
+            employeeId,
+            dayOfWeek: data.dayOfWeek,
+            startTime: data.startTime,
+            endTime: data.endTime,
+            isPreferred: data.isPreferred || false
+          })))
+          .returning();
+        return res.json(result);
+      }
+      return res.json([]);
+    } catch (error) {
+      console.error('Error updating availability:', error);
+      return res.status(500).json({ message: 'Failed to update availability' });
+    }
+  });
+
   // Department routes
   app.get("/api/departments", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);

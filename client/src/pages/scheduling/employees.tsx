@@ -525,16 +525,15 @@ function AvailabilityForm({ employee, availability, onSubmit, isLoading }: Avail
 
   const onFormSubmit = (data: AvailabilityValues) => {
     // Transform the form data to the API format
-    const availabilityData = days.map(day => {
+    const availabilityData = days.map((day, index) => {
       const dayData = data[day.key as keyof typeof data];
       if (dayData.isAvailable) {
         return {
           employeeId: employee.id,
-          dayOfWeek: day.name,
-          isAvailable: true,
+          dayOfWeek: index, // Use numeric index for day of week (0-6)
           startTime: dayData.startTime || "09:00",
           endTime: dayData.endTime || "17:00",
-          availableShifts: dayData.availableShifts?.join(',') || "day",
+          isPreferred: true,
         };
       }
       return null;
