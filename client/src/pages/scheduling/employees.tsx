@@ -401,7 +401,7 @@ export default function EmployeesPage() {
       {/* Manage Availability Sheet */}
       {selectedEmployee && (
         <Sheet open={isManagingAvailability} onOpenChange={setIsManagingAvailability}>
-          <SheetContent className="sm:max-w-md">
+          <SheetContent className="sm:max-w-md overflow-y-auto max-h-screen">
             <SheetHeader>
               <SheetTitle>Manage Availability</SheetTitle>
               <SheetDescription>
