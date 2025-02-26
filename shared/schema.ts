@@ -337,7 +337,6 @@ export const employees = pgTable("employees", {
   phone: varchar("phone", { length: 50 }),
   departmentId: integer("department_id").references(() => departments.id).notNull(),
   position: varchar("position", { length: 100 }).notNull(),
-  skills: text("skills").array(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

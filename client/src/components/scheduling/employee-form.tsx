@@ -32,9 +32,7 @@ const formSchema = z.object({
     required_error: "Department is required",
   }),
   position: z.string().optional(),
-  skills: z.string().optional().transform(val => 
-    val ? val.split(',').map(s => s.trim()) : null
-  ),
+  
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -47,19 +45,12 @@ interface EmployeeFormProps {
 
 export function EmployeeForm({ onSubmit, initialData, departments }: EmployeeFormProps) {
   // Convert array of skills back to comma-separated string for the form
-  const skillsString = initialData?.skills 
-    ? Array.isArray(initialData.skills)
-      ? initialData.skills.join(', ')
-      : initialData.skills
-    : '';
-
   const defaultValues: Partial<FormValues> = {
     name: initialData?.name || "",
     email: initialData?.email || "",
     phone: initialData?.phone || "",
     departmentId: initialData?.departmentId || undefined,
     position: initialData?.position || "",
-    skills: skillsString,
   };
 
   const form = useForm<FormValues>({
@@ -158,30 +149,7 @@ export function EmployeeForm({ onSubmit, initialData, departments }: EmployeeFor
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="skills"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Skills</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="Forklift, Inventory Management" 
-                  value={Array.isArray(field.value) ? field.value.join(', ') : field.value || ''}
-                  onChange={(e) => {
-                    // Convert comma-separated string to array
-                    const skillsArray = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
-                    field.onChange(skillsArray.length > 0 ? skillsArray : []);
-                  }}
-                />
-              </FormControl>
-              <FormDescription>
-                Enter skills separated by commas
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        
 
 
 
