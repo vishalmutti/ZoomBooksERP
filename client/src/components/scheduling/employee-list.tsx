@@ -38,7 +38,10 @@ export function EmployeeList() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error('Failed to create employee');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to create employee');
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -46,6 +49,21 @@ export function EmployeeList() {
       toast({
         title: 'Success',
         description: 'Employee created successfully',
+      });
+      // Close the dialog after successful creation
+      const dialogElement = document.querySelector('[role="dialog"]');
+      if (dialogElement) {
+        const closeButton = dialogElement.querySelector('button[aria-label="Close"]');
+        if (closeButton) {
+          (closeButton as HTMLButtonElement).click();
+        }
+      }
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
       });
     },
   });
