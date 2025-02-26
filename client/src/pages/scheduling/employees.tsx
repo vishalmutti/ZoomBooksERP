@@ -469,29 +469,42 @@ interface AvailabilityFormProps {
 }
 
 function AvailabilityForm({ employee, availability, onSubmit, isLoading }: AvailabilityFormProps) {
+  // Helper function to create a day availability object
+  const createDayAvailability = (
+    isAvailable: boolean = false, 
+    startTime: string = "09:00", 
+    endTime: string = "17:00", 
+    availableShifts: ("day" | "night")[] = []
+  ) => ({
+    isAvailable,
+    startTime,
+    endTime,
+    availableShifts
+  });
+
   // Create the initial default values
   const initialValues: AvailabilityValues = {
     employeeId: employee.id,
-    monday: { isAvailable: false, startTime: "09:00", endTime: "17:00", availableShifts: [] },
-    tuesday: { isAvailable: false, startTime: "09:00", endTime: "17:00", availableShifts: [] },
-    wednesday: { isAvailable: false, startTime: "09:00", endTime: "17:00", availableShifts: [] },
-    thursday: { isAvailable: false, startTime: "09:00", endTime: "17:00", availableShifts: [] },
-    friday: { isAvailable: false, startTime: "09:00", endTime: "17:00", availableShifts: [] },
-    saturday: { isAvailable: false, startTime: "09:00", endTime: "17:00", availableShifts: [] },
-    sunday: { isAvailable: false, startTime: "09:00", endTime: "17:00", availableShifts: [] }
+    monday: createDayAvailability(),
+    tuesday: createDayAvailability(),
+    wednesday: createDayAvailability(),
+    thursday: createDayAvailability(),
+    friday: createDayAvailability(),
+    saturday: createDayAvailability(),
+    sunday: createDayAvailability()
   };
 
-  // Map numeric days to day keys based on database format (0 = Sunday, 1 = Monday, etc.)
-  // This mapping is crucial to convert between database and UI formats
-  const dayMap: Record<number, keyof Omit<AvailabilityValues, 'employeeId'>> = {
-    0: "sunday",
-    1: "monday",
-    2: "tuesday",
-    3: "wednesday",
-    4: "thursday",
-    5: "friday",
-    6: "saturday"
-  };
+  // Map database numeric dayOfWeek values (0-6) to form field names
+  // In DB: 0 = Sunday, 1 = Monday, etc.
+  const dayMap = [
+    "sunday",    // 0
+    "monday",    // 1
+    "tuesday",   // 2
+    "wednesday", // 3
+    "thursday",  // 4
+    "friday",    // 5
+    "saturday"   // 6
+  ] as const;
 
   // Initialize form with initial default values
   const form = useForm<AvailabilityValues>({
@@ -499,30 +512,46 @@ function AvailabilityForm({ employee, availability, onSubmit, isLoading }: Avail
     defaultValues: initialValues
   });
 
+  // Check if an availability day is enabled - this is a helper to avoid type errors
+  const isDayEnabled = (dayKey: string): boolean => {
+    try {
+      const fieldValue = form.getValues(`${dayKey}.isAvailable` as any);
+      return Boolean(fieldValue);
+    } catch (err) {
+      return false;
+    }
+  };
+
   // Update form when availability data changes
   useEffect(() => {
     if (availability && availability.length > 0) {
       console.log("Loading availability data:", availability);
       
       // Create a new values object with initial defaults
-      const formValues = structuredClone(initialValues);
+      const formValues = {
+        employeeId: employee.id,
+        monday: createDayAvailability(),
+        tuesday: createDayAvailability(),
+        wednesday: createDayAvailability(),
+        thursday: createDayAvailability(),
+        friday: createDayAvailability(),
+        saturday: createDayAvailability(), 
+        sunday: createDayAvailability()
+      };
       
       // Update form values with data from the database
       availability.forEach(avail => {
-        const dayKeyIndex = avail.dayOfWeek;
+        const dayIndex = avail.dayOfWeek;
         
-        if (dayKeyIndex >= 0 && dayKeyIndex <= 6) {
-          const dayKey = dayMap[dayKeyIndex];
+        if (dayIndex >= 0 && dayIndex < dayMap.length) {
+          const dayKey = dayMap[dayIndex];
           
-          if (dayKey) {
-            // Safely update the form values
-            formValues[dayKey as keyof typeof formValues] = {
-              isAvailable: true,
-              startTime: avail.startTime || "09:00",
-              endTime: avail.endTime || "17:00",
-              availableShifts: avail.isPreferred ? ["day"] : []
-            };
-          }
+          formValues[dayKey] = createDayAvailability(
+            true, // available
+            avail.startTime || "09:00",
+            avail.endTime || "17:00",
+            avail.isPreferred ? ["day"] : []
+          );
         }
       });
       
@@ -532,26 +561,48 @@ function AvailabilityForm({ employee, availability, onSubmit, isLoading }: Avail
   }, [availability, employee.id]);
 
   const onFormSubmit = (data: AvailabilityValues) => {
-    // Transform the form data to the API format
-    const availabilityData = days.map((day, index) => {
-      const dayKey = day.key as keyof typeof data;
-      const dayData = data[dayKey];
-      
-      // Convert day index to match database (0 = Sunday, 1 = Monday, etc.)
-      // JavaScript array indexes days differently than our backend
-      let dbDayIndex = (index + 1) % 7; // Convert Monday(0) to 1, Sunday(6) to 0
-      
-      if (dayData && typeof dayData === 'object' && 'isAvailable' in dayData && dayData.isAvailable) {
+    // Transform the form data to the API format for saving to database
+    // The reverse mapping of our dayMap: we need to convert day keys to database dayOfWeek values
+    const dayToDayOfWeek: Record<string, number> = {
+      'monday': 1,    // Monday is 1 in database
+      'tuesday': 2,   
+      'wednesday': 3, 
+      'thursday': 4,  
+      'friday': 5,    
+      'saturday': 6,  
+      'sunday': 0     // Sunday is 0 in database
+    };
+    
+    // Create availability entries only for days marked as available
+    const availabilityData = Object.entries(data)
+      .filter(([key, value]) => 
+        // Filter out the employeeId field and only include days marked as available
+        key !== 'employeeId' && 
+        value && 
+        typeof value === 'object' && 
+        'isAvailable' in value && 
+        value.isAvailable === true
+      )
+      .map(([dayKey, dayData]) => {
+        // Cast to make TypeScript happy
+        const data = dayData as { 
+          isAvailable: boolean; 
+          startTime: string; 
+          endTime: string; 
+          availableShifts: ("day" | "night")[];
+        };
+        
+        // Get the numeric day of week value from our mapping
+        const dayOfWeek = dayToDayOfWeek[dayKey];
+        
         return {
           employeeId: employee.id,
-          dayOfWeek: dbDayIndex,
-          startTime: dayData.startTime || "09:00",
-          endTime: dayData.endTime || "17:00",
-          isPreferred: Array.isArray(dayData.availableShifts) && dayData.availableShifts.includes("day")
+          dayOfWeek,  // This is the numeric value (0-6) for database
+          startTime: data.startTime || "09:00",
+          endTime: data.endTime || "17:00",
+          isPreferred: Array.isArray(data.availableShifts) && data.availableShifts.includes("day")
         };
-      }
-      return null;
-    }).filter(Boolean);
+      });
     
     console.log("Submitting availability data:", availabilityData);
     onSubmit(availabilityData);
@@ -591,8 +642,8 @@ function AvailabilityForm({ employee, availability, onSubmit, isLoading }: Avail
                     />
                   </div>
                   
-                  {/* Use get() method to safely access nested values */}
-                  {form.getValues(dayKey)?.isAvailable && (
+                  {/* Only show time fields when the day is marked as available */}
+                  {form.watch(`${dayKey}.isAvailable` as const) && (
                     <div className="pl-6 space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <FormField
