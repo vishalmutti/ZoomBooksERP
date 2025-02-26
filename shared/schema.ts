@@ -391,10 +391,10 @@ export const employeeRelations = relations(employees, ({ one, many }) => ({
 }));
 
 // Insert schemas for scheduling tables
-export const insertDepartmentSchema = createInsertSchema(departments, {
-  targetHours: ({decimal}) => decimal("targetHours"),
-  requiredStaffDay: ({number}) => number("requiredStaffDay"),
-  requiredStaffNight: ({number}) => number("requiredStaffNight"),
+export const insertDepartmentSchema = createInsertSchema(departments).extend({
+  targetHours: z.number().or(z.string()),
+  requiredStaffDay: z.number(),
+  requiredStaffNight: z.number(),
 }).omit({
   id: true,
   createdAt: true,
