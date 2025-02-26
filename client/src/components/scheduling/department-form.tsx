@@ -1,11 +1,10 @@
 
-import { useState, useEffect } from "react";
+import { useState, FormEvent, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FormEvent } from "react";
-import { Department, InsertDepartment } from "@shared/schema";
 import { Textarea } from "@/components/ui/textarea";
+import type { Department } from "@shared/schema";
 
 interface DepartmentFormProps {
   onSubmit: (data: Partial<Department>) => void;
@@ -14,41 +13,37 @@ interface DepartmentFormProps {
 
 export function DepartmentForm({ onSubmit, initialData }: DepartmentFormProps) {
   const [name, setName] = useState(initialData?.name || "");
-  const [targetHours, setTargetHours] = useState(initialData?.targetHours?.toString() || "");
+  const [targetHours, setTargetHours] = useState(initialData?.targetHours?.toString() || "0");
   const [description, setDescription] = useState(initialData?.description || "");
   const [requiredStaffDay, setRequiredStaffDay] = useState(initialData?.requiredStaffDay?.toString() || "0");
   const [requiredStaffNight, setRequiredStaffNight] = useState(initialData?.requiredStaffNight?.toString() || "0");
 
+  const calculateTargetHours = () => {
+    const dayStaff = parseInt(requiredStaffDay) || 0;
+    const nightStaff = parseInt(requiredStaffNight) || 0;
+    const totalStaff = dayStaff + nightStaff;
+    const hoursPerPerson = 8.5;
+    const total = (totalStaff * hoursPerPerson).toFixed(1);
+    setTargetHours(total);
+  };
+
+  useEffect(() => {
+    calculateTargetHours();
+  }, [requiredStaffDay, requiredStaffNight]);
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     
-    // Convert string values to the correct types expected by the database schema
     const data: Partial<Department> = {
       name,
       description: description || null,
-      // Ensure targetHours is a string that can be parsed as a decimal by the database
-      targetHours: targetHours,
-      requiredStaffDay: Number(requiredStaffDay),
-      requiredStaffNight: Number(requiredStaffNight),
+      targetHours: parseFloat(targetHours),
+      requiredStaffDay: parseInt(requiredStaffDay) || 0,
+      requiredStaffNight: parseInt(requiredStaffNight) || 0,
     };
     
-    console.log('Submitting department data:', data);
     onSubmit(data);
   };
-
-  // Calculate target hours based on staff requirements
-  const calculateTargetHours = () => {
-    const dayStaff = Number(requiredStaffDay) || 0;
-    const nightStaff = Number(requiredStaffNight) || 0;
-    // Calculate total required hours (staff count × 8.5 hours)
-    const calculatedHours = ((dayStaff + nightStaff) * 8.5).toFixed(2);
-    setTargetHours(calculatedHours);
-  };
-  
-  // Calculate target hours on initial load
-  useEffect(() => {
-    calculateTargetHours();
-  }, []);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -78,10 +73,7 @@ export function DepartmentForm({ onSubmit, initialData }: DepartmentFormProps) {
             type="number"
             min="0"
             value={requiredStaffDay}
-            onChange={(e) => {
-              setRequiredStaffDay(e.target.value);
-              calculateTargetHours();
-            }}
+            onChange={(e) => setRequiredStaffDay(e.target.value)}
             required
           />
         </div>
@@ -92,10 +84,7 @@ export function DepartmentForm({ onSubmit, initialData }: DepartmentFormProps) {
             type="number"
             min="0"
             value={requiredStaffNight}
-            onChange={(e) => {
-              setRequiredStaffNight(e.target.value);
-              calculateTargetHours();
-            }}
+            onChange={(e) => setRequiredStaffNight(e.target.value)}
             required
           />
         </div>
@@ -106,12 +95,11 @@ export function DepartmentForm({ onSubmit, initialData }: DepartmentFormProps) {
           id="targetHours"
           type="number"
           value={targetHours}
-          onChange={(e) => setTargetHours(e.target.value)}
-          required
+          readOnly
           className="bg-muted/50"
         />
         <p className="text-xs text-muted-foreground mt-1">
-          Automatically calculated as (Required Staff × 8.5 hours)
+          Automatically calculated as (Total Staff × 8.5 hours)
         </p>
       </div>
       <Button type="submit" className="w-full">

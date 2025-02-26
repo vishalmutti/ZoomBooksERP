@@ -744,8 +744,16 @@ export function registerRoutes(app: Express): Server {
     try {
       console.log('Department creation request body:', req.body);
       
+      const departmentData = {
+        name: req.body.name,
+        description: req.body.description,
+        targetHours: parseFloat(req.body.targetHours),
+        requiredStaffDay: parseInt(req.body.requiredStaffDay) || 0,
+        requiredStaffNight: parseInt(req.body.requiredStaffNight) || 0
+      };
+      
       // Parse the data through the schema
-      const parsed = insertDepartmentSchema.safeParse(req.body);
+      const parsed = insertDepartmentSchema.safeParse(departmentData);
       
       if (!parsed.success) {
         console.error('Invalid department data:', parsed.error);
@@ -754,14 +762,6 @@ export function registerRoutes(app: Express): Server {
           error: parsed.error.format() 
         });
       }
-      
-      const departmentData = {
-        name: parsed.data.name,
-        description: parsed.data.description,
-        targetHours: parsed.data.targetHours,
-        requiredStaffDay: parsed.data.requiredStaffDay || 0,
-        requiredStaffNight: parsed.data.requiredStaffNight || 0
-      };
       
       console.log('Processed department data:', departmentData);
       
