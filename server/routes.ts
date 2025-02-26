@@ -9,7 +9,7 @@ import fs from "fs";
 import express, { Router } from "express";
 import { eq, sql } from "drizzle-orm";
 import { db } from "./db";
-import { carriers, carrierLoads } from "@shared/schema";
+import { carriers, carrierLoads, departments } from "@shared/schema";
 import { insertInvoiceSchema, insertPaymentSchema, insertSupplierSchema, invoiceItems } from "@shared/schema";
 import { insertIncomingLoadSchema, insertFreightInvoiceSchema } from "@shared/schema";
 import mime from 'mime-types';
