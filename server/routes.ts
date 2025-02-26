@@ -9,7 +9,7 @@ import fs from "fs";
 import express, { Router } from "express";
 import { eq, sql } from "drizzle-orm";
 import { db } from "./db";
-import { carriers, carrierLoads, departments, employees } from "@shared/schema";
+import { carriers, carrierLoads, departments, employees, employeeAvailability } from "@shared/schema";
 import { insertInvoiceSchema, insertPaymentSchema, insertSupplierSchema, invoiceItems } from "@shared/schema";
 import { insertIncomingLoadSchema, insertFreightInvoiceSchema, insertDepartmentSchema } from "@shared/schema";
 import mime from 'mime-types';
@@ -794,7 +794,7 @@ export function registerRoutes(app: Express): Server {
     try {
       const employeeId = parseInt(req.params.employeeId);
       
-      // Delete existing availability
+      // Delete existing availability using eq from drizzle-orm
       await db.delete(employeeAvailability)
         .where(eq(employeeAvailability.employeeId, employeeId));
 
@@ -815,7 +815,10 @@ export function registerRoutes(app: Express): Server {
       return res.json([]);
     } catch (error) {
       console.error('Error updating availability:', error);
-      return res.status(500).json({ message: 'Failed to update availability' });
+      return res.status(500).json({ 
+        message: 'Failed to update availability',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 
