@@ -493,19 +493,19 @@ interface AvailabilityFormProps {
 
 function AvailabilityForm({ employee, availability, onSubmit, isLoading }: AvailabilityFormProps) {
   // Map the API availability data to our form structure
-  const defaultValues: Partial<AvailabilityValues> = {
+  const defaultValues: AvailabilityValues = {
     employeeId: employee.id,
-    monday: { isAvailable: false },
-    tuesday: { isAvailable: false },
-    wednesday: { isAvailable: false },
-    thursday: { isAvailable: false },
-    friday: { isAvailable: false },
-    saturday: { isAvailable: false },
-    sunday: { isAvailable: false }
+    monday: { isAvailable: false, startTime: "09:00", endTime: "17:00", availableShifts: [] },
+    tuesday: { isAvailable: false, startTime: "09:00", endTime: "17:00", availableShifts: [] },
+    wednesday: { isAvailable: false, startTime: "09:00", endTime: "17:00", availableShifts: [] },
+    thursday: { isAvailable: false, startTime: "09:00", endTime: "17:00", availableShifts: [] },
+    friday: { isAvailable: false, startTime: "09:00", endTime: "17:00", availableShifts: [] },
+    saturday: { isAvailable: false, startTime: "09:00", endTime: "17:00", availableShifts: [] },
+    sunday: { isAvailable: false, startTime: "09:00", endTime: "17:00", availableShifts: [] }
   };
-  
+
   // Map numeric days to day names
-  const dayMap = {
+  const dayMap: Record<number, keyof typeof defaultValues> = {
     0: "sunday",
     1: "monday",
     2: "tuesday",
@@ -517,16 +517,14 @@ function AvailabilityForm({ employee, availability, onSubmit, isLoading }: Avail
 
   // If we have availability data, populate the form
   if (availability && availability.length > 0) {
-    console.log("Received availability:", availability);
     availability.forEach(avail => {
-      const dayKey = dayMap[avail.dayOfWeek as keyof typeof dayMap];
-      if (dayKey && dayKey in defaultValues) {
-        // @ts-ignore - We know these properties exist
+      const dayKey = dayMap[avail.dayOfWeek];
+      if (dayKey) {
         defaultValues[dayKey] = {
           isAvailable: true,
-          startTime: avail.startTime || "09:00",
-          endTime: avail.endTime || "17:00",
-          availableShifts: avail.isPreferred ? ["day"] : [],
+          startTime: avail.startTime,
+          endTime: avail.endTime,
+          availableShifts: avail.isPreferred ? ["day"] : []
         };
       }
     });
