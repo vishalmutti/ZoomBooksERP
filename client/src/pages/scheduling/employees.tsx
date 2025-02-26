@@ -97,8 +97,9 @@ export default function EmployeesPage() {
 
   const { data: employeeAvailability, isLoading: isLoadingAvailability } = useQuery<EmployeeAvailability[]>({
     queryKey: ['/api/employee-availability', selectedEmployee?.id],
-    enabled: !!selectedEmployee,
-    // Add a refetch interval to ensure we have the latest data
+    enabled: !!selectedEmployee && isManagingAvailability,
+    // Only fetch when the availability dialog is open
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
   });
 
@@ -438,49 +439,23 @@ const days: Day[] = [
   { name: "Sunday", key: "sunday" }
 ];
 
+// Define the day availability schema once and reuse
+const dayAvailabilitySchema = z.object({
+  isAvailable: z.boolean().default(false),
+  startTime: z.string().optional().default("09:00"),
+  endTime: z.string().optional().default("17:00"),
+  availableShifts: z.array(z.enum(["day", "night"])).default([]),
+});
+
+// Create the full availability schema
 const availabilitySchema = z.object({
-  monday: z.object({
-    isAvailable: z.boolean().default(false),
-    startTime: z.string().optional(),
-    endTime: z.string().optional(),
-    availableShifts: z.array(z.enum(["day", "night"])).optional(),
-  }),
-  tuesday: z.object({
-    isAvailable: z.boolean().default(false),
-    startTime: z.string().optional(),
-    endTime: z.string().optional(),
-    availableShifts: z.array(z.enum(["day", "night"])).optional(),
-  }),
-  wednesday: z.object({
-    isAvailable: z.boolean().default(false),
-    startTime: z.string().optional(),
-    endTime: z.string().optional(),
-    availableShifts: z.array(z.enum(["day", "night"])).optional(),
-  }),
-  thursday: z.object({
-    isAvailable: z.boolean().default(false),
-    startTime: z.string().optional(),
-    endTime: z.string().optional(),
-    availableShifts: z.array(z.enum(["day", "night"])).optional(),
-  }),
-  friday: z.object({
-    isAvailable: z.boolean().default(false),
-    startTime: z.string().optional(),
-    endTime: z.string().optional(),
-    availableShifts: z.array(z.enum(["day", "night"])).optional(),
-  }),
-  saturday: z.object({
-    isAvailable: z.boolean().default(false),
-    startTime: z.string().optional(),
-    endTime: z.string().optional(),
-    availableShifts: z.array(z.enum(["day", "night"])).optional(),
-  }),
-  sunday: z.object({
-    isAvailable: z.boolean().default(false),
-    startTime: z.string().optional(),
-    endTime: z.string().optional(),
-    availableShifts: z.array(z.enum(["day", "night"])).optional(),
-  }),
+  monday: dayAvailabilitySchema,
+  tuesday: dayAvailabilitySchema,
+  wednesday: dayAvailabilitySchema,
+  thursday: dayAvailabilitySchema,
+  friday: dayAvailabilitySchema,
+  saturday: dayAvailabilitySchema,
+  sunday: dayAvailabilitySchema,
   employeeId: z.number(),
 });
 
@@ -494,8 +469,8 @@ interface AvailabilityFormProps {
 }
 
 function AvailabilityForm({ employee, availability, onSubmit, isLoading }: AvailabilityFormProps) {
-  // Map the API availability data to our form structure
-  const defaultValues: AvailabilityValues = {
+  // Create the initial default values
+  const initialValues: AvailabilityValues = {
     employeeId: employee.id,
     monday: { isAvailable: false, startTime: "09:00", endTime: "17:00", availableShifts: [] },
     tuesday: { isAvailable: false, startTime: "09:00", endTime: "17:00", availableShifts: [] },
@@ -506,8 +481,9 @@ function AvailabilityForm({ employee, availability, onSubmit, isLoading }: Avail
     sunday: { isAvailable: false, startTime: "09:00", endTime: "17:00", availableShifts: [] }
   };
 
-  // Map numeric days to day names
-  const dayMap: Record<number, keyof typeof defaultValues> = {
+  // Map numeric days to day keys based on database format (0 = Sunday, 1 = Monday, etc.)
+  // This mapping is crucial to convert between database and UI formats
+  const dayMap: Record<number, keyof Omit<AvailabilityValues, 'employeeId'>> = {
     0: "sunday",
     1: "monday",
     2: "tuesday",
@@ -517,97 +493,67 @@ function AvailabilityForm({ employee, availability, onSubmit, isLoading }: Avail
     6: "saturday"
   };
 
-  // If we have availability data, populate the form
-  if (availability && availability.length > 0) {
-    // Reset all days to not available first
-    Object.keys(defaultValues).forEach(key => {
-      if (key !== 'employeeId') {
-        defaultValues[key as keyof typeof defaultValues] = {
-          isAvailable: false,
-          startTime: "09:00",
-          endTime: "17:00",
-          availableShifts: []
-        };
-      }
-    });
-
-    // Then set the available days
-    availability.forEach(avail => {
-      // Convert the numeric dayOfWeek (0-6) to the corresponding day key
-      const dayKey = dayMap[avail.dayOfWeek as number];
-      if (dayKey && dayKey in defaultValues) {
-        defaultValues[dayKey] = {
-          isAvailable: true,
-          startTime: avail.startTime || "09:00",
-          endTime: avail.endTime || "17:00",
-          availableShifts: avail.isPreferred ? ["day"] : []
-        };
-      }
-    });
-    
-    // Debug to console
-    console.log("Loaded availability data:", availability);
-    console.log("Mapped to form values:", defaultValues);
-  }
-
-  // Initialize form with defaultValues
+  // Initialize form with initial default values
   const form = useForm<AvailabilityValues>({
     resolver: zodResolver(availabilitySchema),
-    defaultValues,
+    defaultValues: initialValues
   });
 
-  // Reset form when availability changes
+  // Update form when availability data changes
   useEffect(() => {
     if (availability && availability.length > 0) {
-      // Create a new defaultValues object with updated data
-      const updatedValues = { ...defaultValues };
+      console.log("Loading availability data:", availability);
       
-      // Reset all days to not available first
-      Object.keys(updatedValues).forEach(key => {
-        if (key !== 'employeeId') {
-          updatedValues[key as keyof typeof updatedValues] = {
-            isAvailable: false,
-            startTime: "09:00",
-            endTime: "17:00",
-            availableShifts: []
-          };
-        }
-      });
-
-      // Then set the available days based on availability data
+      // Create a new values object with initial defaults
+      const formValues = structuredClone(initialValues);
+      
+      // Update form values with data from the database
       availability.forEach(avail => {
-        const dayKey = dayMap[avail.dayOfWeek as number];
-        if (dayKey && dayKey in updatedValues) {
-          updatedValues[dayKey] = {
-            isAvailable: true,
-            startTime: avail.startTime || "09:00",
-            endTime: avail.endTime || "17:00",
-            availableShifts: avail.isPreferred ? ["day"] : []
-          };
+        const dayKeyIndex = avail.dayOfWeek;
+        
+        if (dayKeyIndex >= 0 && dayKeyIndex <= 6) {
+          const dayKey = dayMap[dayKeyIndex];
+          
+          if (dayKey) {
+            // Safely update the form values
+            formValues[dayKey as keyof typeof formValues] = {
+              isAvailable: true,
+              startTime: avail.startTime || "09:00",
+              endTime: avail.endTime || "17:00",
+              availableShifts: avail.isPreferred ? ["day"] : []
+            };
+          }
         }
       });
       
-      // Reset the form with the updated values
-      form.reset(updatedValues);
+      console.log("Setting form values:", formValues);
+      form.reset(formValues);
     }
-  }, [availability, form]);
+  }, [availability, employee.id]);
 
   const onFormSubmit = (data: AvailabilityValues) => {
     // Transform the form data to the API format
     const availabilityData = days.map((day, index) => {
-      const dayData = data[day.key as keyof typeof data];
-      if (dayData.isAvailable) {
+      const dayKey = day.key as keyof typeof data;
+      const dayData = data[dayKey];
+      
+      // Convert day index to match database (0 = Sunday, 1 = Monday, etc.)
+      // JavaScript array indexes days differently than our backend
+      let dbDayIndex = (index + 1) % 7; // Convert Monday(0) to 1, Sunday(6) to 0
+      
+      if (dayData && typeof dayData === 'object' && 'isAvailable' in dayData && dayData.isAvailable) {
         return {
           employeeId: employee.id,
-          dayOfWeek: index, // Use numeric index for day of week (0-6)
+          dayOfWeek: dbDayIndex,
           startTime: dayData.startTime || "09:00",
           endTime: dayData.endTime || "17:00",
-          isPreferred: true,
+          isPreferred: Array.isArray(dayData.availableShifts) && dayData.availableShifts.includes("day")
         };
       }
       return null;
     }).filter(Boolean);
     
+    console.log("Submitting availability data:", availabilityData);
     onSubmit(availabilityData);
   };
 
@@ -620,119 +566,137 @@ function AvailabilityForm({ employee, availability, onSubmit, isLoading }: Avail
           </div>
         ) : (
           <div className="space-y-6">
-            {days.map((day) => (
-              <div key={day.key} className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <FormField
-                    control={form.control}
-                    name={`${day.key}.isAvailable`}
-                    render={({ field }) => (
-                      <FormItem className="flex items-center space-x-2 space-y-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <FormLabel className="font-medium">
-                          {day.name}
-                        </FormLabel>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                {form.watch(`${day.key}.isAvailable`) && (
-                  <div className="pl-6 space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name={`${day.key}.startTime`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Start Time</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="time"
-                                {...field}
-                                value={field.value || ""}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name={`${day.key}.endTime`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>End Time</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="time"
-                                {...field}
-                                value={field.value || ""}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    
+            {days.map((day) => {
+              const dayKey = day.key as keyof AvailabilityValues;
+              
+              return (
+                <div key={day.key} className="space-y-2">
+                  <div className="flex items-center space-x-2">
                     <FormField
                       control={form.control}
-                      name={`${day.key}.availableShifts`}
+                      name={`${dayKey}.isAvailable` as any}
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Available Shifts</FormLabel>
-                          <div className="flex space-x-4">
-                            <FormItem className="flex items-center space-x-2 space-y-0">
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value?.includes("day")}
-                                  onCheckedChange={(checked) => {
-                                    const current = field.value || [];
-                                    if (checked) {
-                                      field.onChange([...current, "day"]);
-                                    } else {
-                                      field.onChange(current.filter(val => val !== "day"));
-                                    }
-                                  }}
-                                />
-                              </FormControl>
-                              <FormLabel>Day Shift</FormLabel>
-                            </FormItem>
-                            
-                            <FormItem className="flex items-center space-x-2 space-y-0">
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value?.includes("night")}
-                                  onCheckedChange={(checked) => {
-                                    const current = field.value || [];
-                                    if (checked) {
-                                      field.onChange([...current, "night"]);
-                                    } else {
-                                      field.onChange(current.filter(val => val !== "night"));
-                                    }
-                                  }}
-                                />
-                              </FormControl>
-                              <FormLabel>Night Shift</FormLabel>
-                            </FormItem>
-                          </div>
-                          <FormMessage />
+                        <FormItem className="flex items-center space-x-2 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={!!field.value}
+                              onCheckedChange={(value) => field.onChange(!!value)}
+                            />
+                          </FormControl>
+                          <FormLabel className="font-medium">
+                            {day.name}
+                          </FormLabel>
                         </FormItem>
                       )}
                     />
                   </div>
-                )}
-                
-                <Separator className="mt-2" />
-              </div>
-            ))}
+                  
+                  {/* Use get() method to safely access nested values */}
+                  {form.getValues(dayKey)?.isAvailable && (
+                    <div className="pl-6 space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name={`${dayKey}.startTime` as any}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Start Time</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="time"
+                                  value={field.value || "09:00"}
+                                  onChange={field.onChange}
+                                  onBlur={field.onBlur}
+                                  ref={field.ref}
+                                  name={field.name}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name={`${dayKey}.endTime` as any}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>End Time</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="time"
+                                  value={field.value || "17:00"}
+                                  onChange={field.onChange}
+                                  onBlur={field.onBlur}
+                                  ref={field.ref}
+                                  name={field.name}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      
+                      <FormField
+                        control={form.control}
+                        name={`${dayKey}.availableShifts` as any}
+                        render={({ field }) => {
+                          const value = field.value || [];
+                          return (
+                            <FormItem>
+                              <FormLabel>Available Shifts</FormLabel>
+                              <div className="flex space-x-4">
+                                <FormItem className="flex items-center space-x-2 space-y-0">
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={Array.isArray(value) && value.includes("day")}
+                                      onCheckedChange={(checked) => {
+                                        const currentArray = Array.isArray(value) ? [...value] : [];
+                                        if (checked) {
+                                          if (!currentArray.includes("day")) {
+                                            field.onChange([...currentArray, "day"]);
+                                          }
+                                        } else {
+                                          field.onChange(currentArray.filter(val => val !== "day"));
+                                        }
+                                      }}
+                                    />
+                                  </FormControl>
+                                  <FormLabel>Day Shift</FormLabel>
+                                </FormItem>
+                                
+                                <FormItem className="flex items-center space-x-2 space-y-0">
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={Array.isArray(value) && value.includes("night")}
+                                      onCheckedChange={(checked) => {
+                                        const currentArray = Array.isArray(value) ? [...value] : [];
+                                        if (checked) {
+                                          if (!currentArray.includes("night")) {
+                                            field.onChange([...currentArray, "night"]);
+                                          }
+                                        } else {
+                                          field.onChange(currentArray.filter(val => val !== "night"));
+                                        }
+                                      }}
+                                    />
+                                  </FormControl>
+                                  <FormLabel>Night Shift</FormLabel>
+                                </FormItem>
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          );
+                        }}
+                      />
+                    </div>
+                  )}
+                  
+                  <Separator className="mt-2" />
+                </div>
+              );
+            })}
           </div>
         )}
         
