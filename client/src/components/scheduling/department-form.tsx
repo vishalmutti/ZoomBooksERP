@@ -1,21 +1,26 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormEvent } from "react";
+import { Department } from "@shared/schema";
 
 interface DepartmentFormProps {
-  onSubmit: (data: { name: string; targetHours: number }) => void;
+  onSubmit: (data: Partial<Department>) => void;
+  initialData?: Department;
 }
 
-export function DepartmentForm({ onSubmit }: DepartmentFormProps) {
-  const [name, setName] = useState("");
-  const [targetHours, setTargetHours] = useState("");
+export function DepartmentForm({ onSubmit, initialData }: DepartmentFormProps) {
+  const [name, setName] = useState(initialData?.name || "");
+  const [targetHours, setTargetHours] = useState(initialData?.targetHours?.toString() || "");
+  const [description, setDescription] = useState(initialData?.description || "");
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     onSubmit({
       name,
+      description,
       targetHours: Number(targetHours),
     });
   };
@@ -32,6 +37,14 @@ export function DepartmentForm({ onSubmit }: DepartmentFormProps) {
         />
       </div>
       <div>
+        <Label htmlFor="description">Description</Label>
+        <Input
+          id="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+      </div>
+      <div>
         <Label htmlFor="targetHours">Target Hours</Label>
         <Input
           id="targetHours"
@@ -42,7 +55,7 @@ export function DepartmentForm({ onSubmit }: DepartmentFormProps) {
         />
       </div>
       <Button type="submit" className="w-full">
-        Create Department
+        {initialData ? 'Update' : 'Create'} Department
       </Button>
     </form>
   );

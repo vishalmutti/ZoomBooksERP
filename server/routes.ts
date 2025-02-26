@@ -731,15 +731,17 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/departments", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
-      const [result] = await db.insert(departments)
-        .values(req.body)
-        .returning({
-          id: departments.id,
-          name: departments.name,
-          description: departments.description,
-          targetHours: departments.targetHours
-        });
-      return res.json(result);
+      const departmentData = {
+        name: req.body.name,
+        description: req.body.description || null,
+        targetHours: req.body.targetHours
+      };
+      
+      const result = await db.insert(departments)
+        .values(departmentData)
+        .returning();
+        
+      return res.json(result[0]);
     } catch (error) {
       console.error('Error creating department:', error);
       return res.status(500).json({ message: 'Failed to create department' });
