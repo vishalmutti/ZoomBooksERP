@@ -538,17 +538,18 @@ function AvailabilityForm({ employee, availability, onSubmit, isLoading }: Avail
     defaultValues,
   });
 
+  // Initialize form with defaultValues
+  const form = useForm<AvailabilityValues>({
+    resolver: zodResolver(availabilitySchema),
+    defaultValues,
+  });
+
   // Reset form when availability changes
   useEffect(() => {
     if (availability && availability.length > 0) {
       form.reset(defaultValues);
     }
   }, [availability]);
-
-  const form = useForm<AvailabilityValues>({
-    resolver: zodResolver(availabilitySchema),
-    defaultValues,
-  });
 
   const onFormSubmit = (data: AvailabilityValues) => {
     // Transform the form data to the API format
