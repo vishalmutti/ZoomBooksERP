@@ -411,7 +411,6 @@ export default function EmployeesPage() {
             <div className="py-6">
               <AvailabilityForm 
                 employee={selectedEmployee}
-                availability={employeeAvailability || []}
                 onSubmit={(data) => updateAvailabilityMutation.mutate(data)}
                 isLoading={isLoadingAvailability}
               />
@@ -444,7 +443,7 @@ const dayAvailabilitySchema = z.object({
   isAvailable: z.boolean().default(false),
   startTime: z.string().optional().default("09:00"),
   endTime: z.string().optional().default("17:00"),
-  availableShifts: z.array(z.enum(["day", "night"])).default([]),
+  isPreferred: z.boolean().default(false), // Added isPreferred field
 });
 
 // Create the full availability schema
@@ -463,23 +462,47 @@ type AvailabilityValues = z.infer<typeof availabilitySchema>;
 
 interface AvailabilityFormProps {
   employee: Employee;
-  availability: EmployeeAvailability[];
   onSubmit: (data: any) => void;
   isLoading: boolean;
 }
 
-function AvailabilityForm({ employee, availability, onSubmit, isLoading }: AvailabilityFormProps) {
+function AvailabilityForm({ employee, onSubmit, isLoading }: AvailabilityFormProps) {
+  const { data: availability } = useQuery({
+    queryKey: ['availability', employee.id],
+    queryFn: () => fetch(`/api/employee-availability/${employee.id}`).then(res => res.json())
+  });
+
+  useEffect(() => {
+    if (availability) {
+      const defaultValues = days.reduce((acc, day) => {
+        const dayData = availability.find(a => a.dayOfWeek === dayToDayOfWeek[day.key.toLowerCase()]);
+        if (dayData) {
+          acc[day.key.toLowerCase()] = {
+            isAvailable: true,
+            startTime: dayData.startTime,
+            endTime: dayData.endTime,
+            isPreferred: dayData.isPreferred
+          };
+        }
+        return acc;
+      }, {});
+
+      form.reset(defaultValues);
+    }
+  }, [availability]);
+
+
   // Helper function to create a day availability object
   const createDayAvailability = (
     isAvailable: boolean = false, 
     startTime: string = "09:00", 
     endTime: string = "17:00", 
-    availableShifts: ("day" | "night")[] = []
+    isPreferred: boolean = false // Added isPreferred
   ) => ({
     isAvailable,
     startTime,
     endTime,
-    availableShifts
+    isPreferred
   });
 
   // Create the initial default values
@@ -523,42 +546,42 @@ function AvailabilityForm({ employee, availability, onSubmit, isLoading }: Avail
   };
 
   // Update form when availability data changes
-  useEffect(() => {
-    if (availability && availability.length > 0) {
-      console.log("Loading availability data:", availability);
-      
-      // Create a new values object with initial defaults
-      const formValues = {
-        employeeId: employee.id,
-        monday: createDayAvailability(),
-        tuesday: createDayAvailability(),
-        wednesday: createDayAvailability(),
-        thursday: createDayAvailability(),
-        friday: createDayAvailability(),
-        saturday: createDayAvailability(), 
-        sunday: createDayAvailability()
-      };
-      
-      // Update form values with data from the database
-      availability.forEach(avail => {
-        const dayIndex = avail.dayOfWeek;
-        
-        if (dayIndex >= 0 && dayIndex < dayMap.length) {
-          const dayKey = dayMap[dayIndex];
-          
-          formValues[dayKey] = createDayAvailability(
-            true, // available
-            avail.startTime || "09:00",
-            avail.endTime || "17:00",
-            avail.isPreferred ? ["day"] : []
-          );
-        }
-      });
-      
-      console.log("Setting form values:", formValues);
-      form.reset(formValues);
-    }
-  }, [availability, employee.id]);
+  // useEffect(() => {
+  //   if (availability && availability.length > 0) {
+  //     console.log("Loading availability data:", availability);
+
+  //     // Create a new values object with initial defaults
+  //     const formValues = {
+  //       employeeId: employee.id,
+  //       monday: createDayAvailability(),
+  //       tuesday: createDayAvailability(),
+  //       wednesday: createDayAvailability(),
+  //       thursday: createDayAvailability(),
+  //       friday: createDayAvailability(),
+  //       saturday: createDayAvailability(), 
+  //       sunday: createDayAvailability()
+  //     };
+
+  //     // Update form values with data from the database
+  //     availability.forEach(avail => {
+  //       const dayIndex = avail.dayOfWeek;
+
+  //       if (dayIndex >= 0 && dayIndex < dayMap.length) {
+  //         const dayKey = dayMap[dayIndex];
+
+  //         formValues[dayKey] = createDayAvailability(
+  //           true, // available
+  //           avail.startTime || "09:00",
+  //           avail.endTime || "17:00",
+  //           avail.isPreferred ? ["day"] : []
+  //         );
+  //       }
+  //     });
+
+  //     console.log("Setting form values:", formValues);
+  //     form.reset(formValues);
+  //   }
+  // }, [availability, employee.id]);
 
   const onFormSubmit = (data: AvailabilityValues) => {
     // Transform the form data to the API format for saving to database
@@ -572,7 +595,7 @@ function AvailabilityForm({ employee, availability, onSubmit, isLoading }: Avail
       'saturday': 6,  
       'sunday': 0     // Sunday is 0 in database
     };
-    
+
     // Create availability entries only for days marked as available
     const availabilityData = Object.entries(data)
       .filter(([key, value]) => 
@@ -589,21 +612,21 @@ function AvailabilityForm({ employee, availability, onSubmit, isLoading }: Avail
           isAvailable: boolean; 
           startTime: string; 
           endTime: string; 
-          availableShifts: ("day" | "night")[];
+          isPreferred: boolean; // Changed to boolean
         };
-        
+
         // Get the numeric day of week value from our mapping
         const dayOfWeek = dayToDayOfWeek[dayKey];
-        
+
         return {
           employeeId: employee.id,
           dayOfWeek,  // This is the numeric value (0-6) for database
           startTime: data.startTime || "09:00",
           endTime: data.endTime || "17:00",
-          isPreferred: Array.isArray(data.availableShifts) && data.availableShifts.includes("day")
+          isPreferred: data.isPreferred
         };
       });
-    
+
     console.log("Submitting availability data:", availabilityData);
     onSubmit(availabilityData);
   };
@@ -617,15 +640,13 @@ function AvailabilityForm({ employee, availability, onSubmit, isLoading }: Avail
           </div>
         ) : (
           <div className="space-y-6">
-            {days.map((day) => {
-              const dayKey = day.key as keyof AvailabilityValues;
-              
-              return (
-                <div key={day.key} className="space-y-2">
+            {days.map((day) => (
+              <div key={day.key} className="space-y-4">
+                <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-2">
                     <FormField
                       control={form.control}
-                      name={`${dayKey}.isAvailable` as any}
+                      name={`${day.key}.isAvailable`}
                       render={({ field }) => (
                         <FormItem className="flex items-center space-x-2 space-y-0">
                           <FormControl>
@@ -641,17 +662,15 @@ function AvailabilityForm({ employee, availability, onSubmit, isLoading }: Avail
                       )}
                     />
                   </div>
-                  
-                  {/* Only show time fields when the day is marked as available */}
-                  {form.watch(`${dayKey}.isAvailable` as const) && (
-                    <div className="pl-6 space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
+
+                  {form.watch(`${day.key}.isAvailable`) && (
+                    <>
+                      <div className="flex items-center space-x-2">
                         <FormField
                           control={form.control}
-                          name={`${dayKey}.startTime` as any}
+                          name={`${day.key}.startTime`}
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Start Time</FormLabel>
                               <FormControl>
                                 <Input
                                   type="time"
@@ -662,17 +681,15 @@ function AvailabilityForm({ employee, availability, onSubmit, isLoading }: Avail
                                   name={field.name}
                                 />
                               </FormControl>
-                              <FormMessage />
                             </FormItem>
                           )}
                         />
-                        
+                        <span>to</span>
                         <FormField
                           control={form.control}
-                          name={`${dayKey}.endTime` as any}
+                          name={`${day.key}.endTime`}
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>End Time</FormLabel>
                               <FormControl>
                                 <Input
                                   type="time"
@@ -683,74 +700,38 @@ function AvailabilityForm({ employee, availability, onSubmit, isLoading }: Avail
                                   name={field.name}
                                 />
                               </FormControl>
-                              <FormMessage />
                             </FormItem>
                           )}
                         />
                       </div>
-                      
-                      <FormField
-                        control={form.control}
-                        name={`${dayKey}.availableShifts` as any}
-                        render={({ field }) => {
-                          const value = field.value || [];
-                          return (
-                            <FormItem>
-                              <FormLabel>Available Shifts</FormLabel>
-                              <div className="flex space-x-4">
-                                <FormItem className="flex items-center space-x-2 space-y-0">
-                                  <FormControl>
-                                    <Checkbox
-                                      checked={Array.isArray(value) && value.includes("day")}
-                                      onCheckedChange={(checked) => {
-                                        const currentArray = Array.isArray(value) ? [...value] : [];
-                                        if (checked) {
-                                          if (!currentArray.includes("day")) {
-                                            field.onChange([...currentArray, "day"]);
-                                          }
-                                        } else {
-                                          field.onChange(currentArray.filter(val => val !== "day"));
-                                        }
-                                      }}
-                                    />
-                                  </FormControl>
-                                  <FormLabel>Day Shift</FormLabel>
-                                </FormItem>
-                                
-                                <FormItem className="flex items-center space-x-2 space-y-0">
-                                  <FormControl>
-                                    <Checkbox
-                                      checked={Array.isArray(value) && value.includes("night")}
-                                      onCheckedChange={(checked) => {
-                                        const currentArray = Array.isArray(value) ? [...value] : [];
-                                        if (checked) {
-                                          if (!currentArray.includes("night")) {
-                                            field.onChange([...currentArray, "night"]);
-                                          }
-                                        } else {
-                                          field.onChange(currentArray.filter(val => val !== "night"));
-                                        }
-                                      }}
-                                    />
-                                  </FormControl>
-                                  <FormLabel>Night Shift</FormLabel>
-                                </FormItem>
-                              </div>
-                              <FormMessage />
+                      <div className="flex items-center space-x-2">
+                        <FormField
+                          control={form.control}
+                          name={`${day.key}.isPreferred`}
+                          render={({ field }) => (
+                            <FormItem className="flex items-center space-x-2 space-y-0">
+                              <FormControl>
+                                <Checkbox
+                                  checked={!!field.value}
+                                  onCheckedChange={(value) => field.onChange(!!value)}
+                                />
+                              </FormControl>
+                              <FormLabel className="font-medium">
+                                Preferred
+                              </FormLabel>
                             </FormItem>
-                          );
-                        }}
-                      />
-                    </div>
+                          )}
+                        />
+                      </div>
+                    </>
                   )}
-                  
-                  <Separator className="mt-2" />
                 </div>
-              );
-            })}
+                <Separator className="mt-2" />
+              </div>
+            ))}
           </div>
         )}
-        
+
         <SheetFooter>
           <SheetClose asChild>
             <Button type="button" variant="outline">Cancel</Button>
