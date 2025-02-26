@@ -98,6 +98,8 @@ export default function EmployeesPage() {
   const { data: employeeAvailability, isLoading: isLoadingAvailability } = useQuery<EmployeeAvailability[]>({
     queryKey: ['/api/employee-availability', selectedEmployee?.id],
     enabled: !!selectedEmployee,
+    // Add a refetch interval to ensure we have the latest data
+    refetchOnWindowFocus: true,
   });
 
   const createEmployeeMutation = useMutation({
@@ -531,7 +533,8 @@ function AvailabilityForm({ employee, availability, onSubmit, isLoading }: Avail
 
     // Then set the available days
     availability.forEach(avail => {
-      const dayKey = dayMap[avail.dayOfWeek];
+      // Convert the numeric dayOfWeek (0-6) to the corresponding day key
+      const dayKey = dayMap[avail.dayOfWeek as number];
       if (dayKey && dayKey in defaultValues) {
         defaultValues[dayKey] = {
           isAvailable: true,
@@ -541,6 +544,10 @@ function AvailabilityForm({ employee, availability, onSubmit, isLoading }: Avail
         };
       }
     });
+    
+    // Debug to console
+    console.log("Loaded availability data:", availability);
+    console.log("Mapped to form values:", defaultValues);
   }
 
   // Initialize form with defaultValues
@@ -552,9 +559,38 @@ function AvailabilityForm({ employee, availability, onSubmit, isLoading }: Avail
   // Reset form when availability changes
   useEffect(() => {
     if (availability && availability.length > 0) {
-      form.reset(defaultValues);
+      // Create a new defaultValues object with updated data
+      const updatedValues = { ...defaultValues };
+      
+      // Reset all days to not available first
+      Object.keys(updatedValues).forEach(key => {
+        if (key !== 'employeeId') {
+          updatedValues[key as keyof typeof updatedValues] = {
+            isAvailable: false,
+            startTime: "09:00",
+            endTime: "17:00",
+            availableShifts: []
+          };
+        }
+      });
+
+      // Then set the available days based on availability data
+      availability.forEach(avail => {
+        const dayKey = dayMap[avail.dayOfWeek as number];
+        if (dayKey && dayKey in updatedValues) {
+          updatedValues[dayKey] = {
+            isAvailable: true,
+            startTime: avail.startTime || "09:00",
+            endTime: avail.endTime || "17:00",
+            availableShifts: avail.isPreferred ? ["day"] : []
+          };
+        }
+      });
+      
+      // Reset the form with the updated values
+      form.reset(updatedValues);
     }
-  }, [availability]);
+  }, [availability, form]);
 
   const onFormSubmit = (data: AvailabilityValues) => {
     // Transform the form data to the API format
