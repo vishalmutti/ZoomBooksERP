@@ -184,10 +184,12 @@ export default function EmployeesPage() {
     },
     onSuccess: () => {
       toast({
-        title: "Success",
+        title: "Success", 
         description: "Availability updated successfully",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/employee-availability'] });
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/employee-availability', selectedEmployee?.id]
+      });
       setIsManagingAvailability(false);
     },
     onError: (error: Error) => {
