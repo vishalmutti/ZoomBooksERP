@@ -25,8 +25,7 @@ import { InsertEmployee, Department } from "@shared/schema";
 
 // Extend the schema to add client-side validation
 const formSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
+  name: z.string().min(1, "Full name is required"),
   email: z.string().email("Invalid email address"),
   phone: z.string().optional(),
   departmentId: z.coerce.number({
@@ -36,7 +35,6 @@ const formSchema = z.object({
   skills: z.string().optional().transform(val => 
     val ? val.split(',').map(s => s.trim()) : null
   ),
-  status: z.enum(["active", "inactive", "on_leave"]).default("active"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -56,14 +54,12 @@ export function EmployeeForm({ onSubmit, initialData, departments }: EmployeeFor
     : '';
 
   const defaultValues: Partial<FormValues> = {
-    firstName: initialData?.firstName || "",
-    lastName: initialData?.lastName || "",
+    name: initialData?.name || "",
     email: initialData?.email || "",
     phone: initialData?.phone || "",
     departmentId: initialData?.departmentId || undefined,
     position: initialData?.position || "",
     skills: skillsString,
-    status: initialData?.status || "active",
   };
 
   const form = useForm<FormValues>({
@@ -78,35 +74,19 @@ export function EmployeeForm({ onSubmit, initialData, departments }: EmployeeFor
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="firstName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>First Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="John" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="lastName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Last Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Doe" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Full Name</FormLabel>
+              <FormControl>
+                <Input placeholder="John Doe" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}
@@ -195,31 +175,7 @@ export function EmployeeForm({ onSubmit, initialData, departments }: EmployeeFor
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="status"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Status</FormLabel>
-              <Select
-                onValueChange={(value) => field.onChange(value as "active" | "inactive" | "on_leave")}
-                defaultValue={field.value}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                  <SelectItem value="on_leave">On Leave</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+
 
         <div className="flex justify-end pt-4">
           <Button type="submit">
