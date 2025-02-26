@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormEvent } from "react";
-import { Department } from "@shared/schema";
+import { Department, InsertDepartment } from "@shared/schema";
 import { Textarea } from "@/components/ui/textarea";
 
 interface DepartmentFormProps {
@@ -21,13 +21,18 @@ export function DepartmentForm({ onSubmit, initialData }: DepartmentFormProps) {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+    
+    // Convert string values to the correct types expected by the database schema
     const data: Partial<Department> = {
       name,
-      description,
-      targetHours: targetHours as unknown as string, // Handle type conversion for database
+      description: description || null,
+      // Ensure targetHours is a string that can be parsed as a decimal by the database
+      targetHours: targetHours,
       requiredStaffDay: Number(requiredStaffDay),
       requiredStaffNight: Number(requiredStaffNight),
     };
+    
+    console.log('Submitting department data:', data);
     onSubmit(data);
   };
 

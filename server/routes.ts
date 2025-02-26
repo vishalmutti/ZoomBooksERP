@@ -9,9 +9,9 @@ import fs from "fs";
 import express, { Router } from "express";
 import { eq, sql } from "drizzle-orm";
 import { db } from "./db";
-import { carriers, carrierLoads, departments } from "@shared/schema";
+import { carriers, carrierLoads, departments, employees } from "@shared/schema";
 import { insertInvoiceSchema, insertPaymentSchema, insertSupplierSchema, invoiceItems } from "@shared/schema";
-import { insertIncomingLoadSchema, insertFreightInvoiceSchema } from "@shared/schema";
+import { insertIncomingLoadSchema, insertFreightInvoiceSchema, insertDepartmentSchema } from "@shared/schema";
 import mime from 'mime-types';
 import FormData from 'form-data';
 
@@ -742,20 +742,109 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/departments", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
+      console.log('Department creation request body:', req.body);
+      
+      // Parse the data through the schema
+      const parsed = insertDepartmentSchema.safeParse(req.body);
+      
+      if (!parsed.success) {
+        console.error('Invalid department data:', parsed.error);
+        return res.status(400).json({ 
+          message: 'Invalid department data', 
+          error: parsed.error.format() 
+        });
+      }
+      
       const departmentData = {
-        name: req.body.name,
-        description: req.body.description || null,
-        targetHours: req.body.targetHours
+        name: parsed.data.name,
+        description: parsed.data.description,
+        targetHours: parsed.data.targetHours,
+        requiredStaffDay: parsed.data.requiredStaffDay || 0,
+        requiredStaffNight: parsed.data.requiredStaffNight || 0
       };
+      
+      console.log('Processed department data:', departmentData);
       
       const result = await db.insert(departments)
         .values(departmentData)
         .returning();
-        
+      
+      console.log('Created department:', result[0]);  
       return res.json(result[0]);
     } catch (error) {
       console.error('Error creating department:', error);
-      return res.status(500).json({ message: 'Failed to create department' });
+      return res.status(500).json({ 
+        message: 'Failed to create department',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+  
+  app.patch("/api/departments/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const id = parseInt(req.params.id);
+      console.log('Department update request body:', req.body);
+      
+      // Parse the data through the schema
+      const parsed = insertDepartmentSchema.partial().safeParse(req.body);
+      
+      if (!parsed.success) {
+        console.error('Invalid department update data:', parsed.error);
+        return res.status(400).json({ 
+          message: 'Invalid department data', 
+          error: parsed.error.format() 
+        });
+      }
+      
+      const result = await db.update(departments)
+        .set(parsed.data)
+        .where(eq(departments.id, id))
+        .returning();
+      
+      if (result.length === 0) {
+        return res.status(404).json({ message: 'Department not found' });
+      }
+      
+      console.log('Updated department:', result[0]);  
+      return res.json(result[0]);
+    } catch (error) {
+      console.error('Error updating department:', error);
+      return res.status(500).json({ 
+        message: 'Failed to update department',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+  
+  app.delete("/api/departments/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const id = parseInt(req.params.id);
+      
+      // First check if department exists
+      const existingDept = await db.select().from(departments).where(eq(departments.id, id));
+      if (existingDept.length === 0) {
+        return res.status(404).json({ message: 'Department not found' });
+      }
+      
+      // Check if department has employees
+      const employeesInDept = await db.select().from(employees).where(eq(employees.departmentId, id));
+      if (employeesInDept.length > 0) {
+        return res.status(400).json({
+          message: `Cannot delete department with ${employeesInDept.length} employees. Reassign them first.`
+        });
+      }
+      
+      await db.delete(departments).where(eq(departments.id, id));
+      
+      return res.json({ success: true, message: 'Department deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting department:', error);
+      return res.status(500).json({ 
+        message: 'Failed to delete department',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 
