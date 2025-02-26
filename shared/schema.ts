@@ -323,7 +323,10 @@ export type CarrierLoad = z.infer<typeof CarrierLoadSchema>;
 export const departments = pgTable("departments", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
   targetHours: decimal("target_hours", { precision: 10, scale: 2 }).notNull(),
+  requiredStaffDay: integer("required_staff_day").default(0).notNull(),
+  requiredStaffNight: integer("required_staff_night").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
