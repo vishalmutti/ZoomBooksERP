@@ -466,6 +466,17 @@ interface AvailabilityFormProps {
   isLoading: boolean;
 }
 
+// Map day names to database dayOfWeek values
+const dayToDayOfWeek: Record<string, number> = {
+  'monday': 1,    // Monday is 1 in database
+  'tuesday': 2,   
+  'wednesday': 3, 
+  'thursday': 4,  
+  'friday': 5,    
+  'saturday': 6,  
+  'sunday': 0     // Sunday is 0 in database
+};
+
 function AvailabilityForm({ employee, onSubmit, isLoading }: AvailabilityFormProps) {
   const { data: availability } = useQuery({
     queryKey: ['availability', employee.id],
