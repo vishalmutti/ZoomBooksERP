@@ -727,6 +727,18 @@ export function registerRoutes(app: Express): Server {
   });
 
 
+  // Department routes
+  app.post("/api/departments", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const result = await db.insert(departments).values(req.body).returning();
+      return res.json(result[0]);
+    } catch (error) {
+      console.error('Error creating department:', error);
+      return res.status(500).json({ message: 'Failed to create department' });
+    }
+  });
+
   // Carrier routes
   router.get("/api/carriers", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
