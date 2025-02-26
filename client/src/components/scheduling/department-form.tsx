@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,7 +24,7 @@ export function DepartmentForm({ onSubmit, initialData }: DepartmentFormProps) {
     const data: Partial<Department> = {
       name,
       description,
-      targetHours: parseFloat(targetHours),
+      targetHours: targetHours as unknown as string, // Handle type conversion for database
       requiredStaffDay: Number(requiredStaffDay),
       requiredStaffNight: Number(requiredStaffNight),
     };
@@ -39,6 +39,11 @@ export function DepartmentForm({ onSubmit, initialData }: DepartmentFormProps) {
     const calculatedHours = ((dayStaff + nightStaff) * 8.5).toFixed(2);
     setTargetHours(calculatedHours);
   };
+  
+  // Calculate target hours on initial load
+  useEffect(() => {
+    calculateTargetHours();
+  }, []);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
