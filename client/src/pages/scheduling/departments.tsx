@@ -220,6 +220,7 @@ export default function DepartmentsPage() {
                   <TableHead>Description</TableHead>
                   <TableHead>Required Staff (Day)</TableHead>
                   <TableHead>Required Staff (Night)</TableHead>
+                  <TableHead>Target Hours</TableHead>
                   <TableHead>Employees</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -233,6 +234,7 @@ export default function DepartmentsPage() {
                       <TableCell>{department.description || "—"}</TableCell>
                       <TableCell>{department.requiredStaffDay || "—"}</TableCell>
                       <TableCell>{department.requiredStaffNight || "—"}</TableCell>
+                      <TableCell>{department.targetHours || "—"}</TableCell>
                       <TableCell>
                         <Badge variant="outline">
                           {employeeCount} employee{employeeCount !== 1 ? 's' : ''}

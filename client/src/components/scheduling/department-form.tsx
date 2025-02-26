@@ -35,9 +35,8 @@ export function DepartmentForm({ onSubmit, initialData }: DepartmentFormProps) {
   const calculateTargetHours = () => {
     const dayStaff = Number(requiredStaffDay) || 0;
     const nightStaff = Number(requiredStaffNight) || 0;
-    const totalStaff = dayStaff + nightStaff;
-    // Each staff is expected to work 8.5 hours
-    const calculatedHours = (totalStaff * 8.5).toFixed(2);
+    // Calculate total required hours (staff count × 8.5 hours)
+    const calculatedHours = ((dayStaff + nightStaff) * 8.5).toFixed(2);
     setTargetHours(calculatedHours);
   };
 
