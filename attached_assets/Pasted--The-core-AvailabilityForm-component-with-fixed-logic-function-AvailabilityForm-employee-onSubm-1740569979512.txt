@@ -1,0 +1,194 @@
+// The core AvailabilityForm component with fixed logic
+function AvailabilityForm({ employee, onSubmit, isLoading }: AvailabilityFormProps) {
+  // Helper function to create a day availability object
+  const createDayAvailability = (
+    isAvailable: boolean = false, 
+    startTime: string = "09:00", 
+    endTime: string = "17:00", 
+    isPreferred: boolean = false
+  ) => ({
+    isAvailable,
+    startTime,
+    endTime,
+    isPreferred
+  });
+
+  // Create the initial default values
+  const initialValues: AvailabilityValues = {
+    employeeId: employee.id,
+    monday: createDayAvailability(),
+    tuesday: createDayAvailability(),
+    wednesday: createDayAvailability(),
+    thursday: createDayAvailability(),
+    friday: createDayAvailability(),
+    saturday: createDayAvailability(),
+    sunday: createDayAvailability()
+  };
+
+  const form = useForm<AvailabilityValues>({
+    resolver: zodResolver(availabilitySchema),
+    defaultValues: initialValues
+  });
+
+  const { data: availability } = useQuery({
+    queryKey: ['availability', employee.id],
+    queryFn: () => fetch(`/api/employee-availability/${employee.id}`).then(res => res.json())
+  });
+
+  useEffect(() => {
+    if (availability) {
+      const defaultValues = days.reduce((acc, day) => {
+        const dayData = availability.find(a => a.dayOfWeek === dayToDayOfWeek[day.key.toLowerCase()]);
+        if (dayData) {
+          acc[day.key.toLowerCase()] = {
+            isAvailable: true,
+            startTime: dayData.startTime,
+            endTime: dayData.endTime,
+            isPreferred: dayData.isPreferred
+          };
+        }
+        return acc;
+      }, {});
+
+      form.reset({ ...initialValues, ...defaultValues });
+    }
+  }, [availability, employee.id]);
+
+  // Check if an availability day is enabled - this is a helper to avoid type errors
+  const isDayEnabled = (dayKey: string): boolean => {
+    try {
+      const fieldValue = form.getValues(`${dayKey}.isAvailable` as any);
+      return Boolean(fieldValue);
+    } catch (err) {
+      return false;
+    }
+  };
+
+  const onFormSubmit = async (data: AvailabilityValues) => {
+    // Transform the form data to the API format for saving to database
+    const availabilityData = Object.entries(data)
+      .filter(([key, value]) => 
+        key !== 'employeeId' && 
+        value && 
+        typeof value === 'object' && 
+        value.isAvailable === true
+      )
+      .map(([dayKey, value]) => ({
+        employeeId: employee.id,
+        dayOfWeek: dayToDayOfWeek[dayKey],
+        startTime: value.startTime || "09:00",
+        endTime: value.endTime || "17:00",
+        isPreferred: value.isPreferred || false
+      }));
+
+    console.log("Submitting availability data:", availabilityData);
+    await onSubmit(availabilityData);
+  };
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-6">
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {days.map((day) => (
+              <div key={day.key} className="space-y-4">
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <FormField
+                      control={form.control}
+                      name={`${day.key}.isAvailable`}
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-2 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={!!field.value}
+                              onCheckedChange={(value) => field.onChange(!!value)}
+                            />
+                          </FormControl>
+                          <FormLabel className="font-medium">
+                            {day.name}
+                          </FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {form.watch(`${day.key}.isAvailable`) && (
+                    <>
+                      <div className="flex items-center gap-2 flex-1">
+                        <FormField
+                          control={form.control}
+                          name={`${day.key}.startTime`}
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
+                              <FormControl>
+                                <Input
+                                  type="time"
+                                  {...field}
+                                  disabled={!isDayEnabled(day.key)}
+                                  className="w-full"
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        <span className="text-sm text-muted-foreground">to</span>
+                        <FormField
+                          control={form.control}
+                          name={`${day.key}.endTime`}
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
+                              <FormControl>
+                                <Input
+                                  type="time"
+                                  {...field}
+                                  disabled={!isDayEnabled(day.key)}
+                                  className="w-full"
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <FormField
+                          control={form.control}
+                          name={`${day.key}.isPreferred`}
+                          render={({ field }) => (
+                            <FormItem className="flex items-center space-x-2 space-y-0">
+                              <FormControl>
+                                <Checkbox
+                                  checked={!!field.value}
+                                  onCheckedChange={(value) => field.onChange(!!value)}
+                                />
+                              </FormControl>
+                              <FormLabel className="font-medium">
+                                Preferred
+                              </FormLabel>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+                <Separator className="mt-2" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        <SheetFooter>
+          <SheetClose asChild>
+            <Button type="button" variant="outline">Cancel</Button>
+          </SheetClose>
+          <Button type="submit">Save Changes</Button>
+        </SheetFooter>
+      </form>
+    </Form>
+  );
+}
