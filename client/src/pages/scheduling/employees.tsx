@@ -517,19 +517,33 @@ function AvailabilityForm({ employee, availability, onSubmit, isLoading }: Avail
 
   // If we have availability data, populate the form
   if (availability && availability.length > 0) {
+    console.log("Received availability:", availability);
     availability.forEach(avail => {
       const dayKey = dayMap[avail.dayOfWeek as keyof typeof dayMap];
       if (dayKey && dayKey in defaultValues) {
         // @ts-ignore - We know these properties exist
         defaultValues[dayKey] = {
           isAvailable: true,
-          startTime: avail.startTime,
-          endTime: avail.endTime,
-          availableShifts: ["day"], // Default to day shift since it's not in the DB yet
+          startTime: avail.startTime || "09:00",
+          endTime: avail.endTime || "17:00",
+          availableShifts: avail.isPreferred ? ["day"] : [],
         };
       }
     });
   }
+
+  // Initialize form with defaultValues
+  const form = useForm<AvailabilityValues>({
+    resolver: zodResolver(availabilitySchema),
+    defaultValues,
+  });
+
+  // Reset form when availability changes
+  useEffect(() => {
+    if (availability && availability.length > 0) {
+      form.reset(defaultValues);
+    }
+  }, [availability]);
 
   const form = useForm<AvailabilityValues>({
     resolver: zodResolver(availabilitySchema),
