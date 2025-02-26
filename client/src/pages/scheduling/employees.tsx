@@ -676,39 +676,35 @@ function AvailabilityForm({ employee, onSubmit, isLoading }: AvailabilityFormPro
 
                   {form.watch(`${day.key}.isAvailable`) && (
                     <>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center gap-2 flex-1">
                         <FormField
                           control={form.control}
                           name={`${day.key}.startTime`}
                           render={({ field }) => (
-                            <FormItem>
+                            <FormItem className="flex-1">
                               <FormControl>
                                 <Input
                                   type="time"
-                                  value={field.value || "09:00"}
-                                  onChange={field.onChange}
-                                  onBlur={field.onBlur}
-                                  ref={field.ref}
-                                  name={field.name}
+                                  {...field}
+                                  disabled={!isDayEnabled(day.key)}
+                                  className="w-full"
                                 />
                               </FormControl>
                             </FormItem>
                           )}
                         />
-                        <span>to</span>
+                        <span className="text-sm text-muted-foreground">to</span>
                         <FormField
                           control={form.control}
                           name={`${day.key}.endTime`}
                           render={({ field }) => (
-                            <FormItem>
+                            <FormItem className="flex-1">
                               <FormControl>
                                 <Input
                                   type="time"
-                                  value={field.value || "17:00"}
-                                  onChange={field.onChange}
-                                  onBlur={field.onBlur}
-                                  ref={field.ref}
-                                  name={field.name}
+                                  {...field}
+                                  disabled={!isDayEnabled(day.key)}
+                                  className="w-full"
                                 />
                               </FormControl>
                             </FormItem>
