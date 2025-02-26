@@ -728,6 +728,17 @@ export function registerRoutes(app: Express): Server {
 
 
   // Employee routes
+  app.get("/api/employees", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const result = await db.select().from(employees);
+      return res.json(result);
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+      return res.status(500).json({ message: 'Failed to fetch employees' });
+    }
+  });
+
   app.post("/api/employees", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
