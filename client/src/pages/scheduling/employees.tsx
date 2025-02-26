@@ -507,26 +507,6 @@ function AvailabilityForm({ employee, onSubmit, isLoading }: AvailabilityFormPro
     }
   }, [availability]);
 
-  const onFormSubmit = async (data: AvailabilityValues) => {
-    const availabilityData = Object.entries(data)
-      .filter(([key, value]) => 
-        key !== 'employeeId' && 
-        value && 
-        typeof value === 'object' && 
-        value.isAvailable === true
-      )
-      .map(([dayKey, value]) => ({
-        employeeId: employee.id,
-        dayOfWeek: dayToDayOfWeek[dayKey],
-        startTime: value.startTime || "09:00",
-        endTime: value.endTime || "17:00",
-        isPreferred: value.isPreferred || false
-      }));
-
-    await onSubmit(availabilityData);
-  };
-
-
   // Helper function to create a day availability object
   const createDayAvailability = (
     isAvailable: boolean = false, 
@@ -564,8 +544,6 @@ function AvailabilityForm({ employee, onSubmit, isLoading }: AvailabilityFormPro
     "saturday"   // 6
   ] as const;
 
-  // Form is already initialized above, remove duplicate declaration
-
   // Check if an availability day is enabled - this is a helper to avoid type errors
   const isDayEnabled = (dayKey: string): boolean => {
     try {
@@ -575,44 +553,6 @@ function AvailabilityForm({ employee, onSubmit, isLoading }: AvailabilityFormPro
       return false;
     }
   };
-
-  // Update form when availability data changes
-  // useEffect(() => {
-  //   if (availability && availability.length > 0) {
-  //     console.log("Loading availability data:", availability);
-
-  //     // Create a new values object with initial defaults
-  //     const formValues = {
-  //       employeeId: employee.id,
-  //       monday: createDayAvailability(),
-  //       tuesday: createDayAvailability(),
-  //       wednesday: createDayAvailability(),
-  //       thursday: createDayAvailability(),
-  //       friday: createDayAvailability(),
-  //       saturday: createDayAvailability(), 
-  //       sunday: createDayAvailability()
-  //     };
-
-  //     // Update form values with data from the database
-  //     availability.forEach(avail => {
-  //       const dayIndex = avail.dayOfWeek;
-
-  //       if (dayIndex >= 0 && dayIndex < dayMap.length) {
-  //         const dayKey = dayMap[dayIndex];
-
-  //         formValues[dayKey] = createDayAvailability(
-  //           true, // available
-  //           avail.startTime || "09:00",
-  //           avail.endTime || "17:00",
-  //           avail.isPreferred ? ["day"] : []
-  //         );
-  //       }
-  //     });
-
-  //     console.log("Setting form values:", formValues);
-  //     form.reset(formValues);
-  //   }
-  // }, [availability, employee.id]);
 
   const onFormSubmit = async (data: AvailabilityValues) => {
     // Transform the form data to the API format for saving to database
@@ -639,10 +579,9 @@ function AvailabilityForm({ employee, onSubmit, isLoading }: AvailabilityFormPro
         dayOfWeek: dayToDayOfWeek[dayKey],
         startTime: value.startTime || "09:00",
         endTime: value.endTime || "17:00",
-        isPreferred: value.availableShifts?.includes("day") || false
+        isPreferred: value.isPreferred || false
       }));
 
-    console.log("Submitting availability data:", availabilityData);
     await onSubmit(availabilityData);
   };
 
