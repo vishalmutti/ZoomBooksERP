@@ -179,23 +179,40 @@ export default function EmployeesPage() {
 
   const updateAvailabilityMutation = useMutation({
     mutationFn: async (data: any) => {
-      return await apiRequest({
-        url: `/api/employee-availability/${selectedEmployee?.id}`,
+      console.log("Sending update with data:", data);
+      const response = await fetch(`/api/employee-availability/${selectedEmployee?.id}`, {
         method: 'PUT',
-        data,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+        credentials: 'include'
       });
+      
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error("API error:", response.status, errorData);
+        throw new Error(`Failed to update availability: ${errorData}`);
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       toast({
         title: "Success", 
         description: "Availability updated successfully",
       });
+      // Invalidate both query formats to ensure data refreshes
       queryClient.invalidateQueries({ 
         queryKey: ['/api/employee-availability', selectedEmployee?.id]
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['availability', selectedEmployee?.id]
       });
       setIsManagingAvailability(false);
     },
     onError: (error: Error) => {
+      console.error("Mutation error:", error);
       toast({
         title: "Error updating availability",
         description: error.message,
@@ -508,9 +525,10 @@ function AvailabilityForm({ employee, onSubmit, isLoading }: AvailabilityFormPro
     defaultValues: initialValues
   });
 
-  const { data: availability } = useQuery({
+  const { data: availability, isLoading: isLoadingEmployeeAvailability } = useQuery({
     queryKey: ['availability', employee.id],
-    queryFn: () => fetch(`/api/employee-availability/${employee.id}`).then(res => res.json())
+    queryFn: () => fetch(`/api/employee-availability/${employee.id}`).then(res => res.json()),
+    refetchOnWindowFocus: false
   });
 
   useEffect(() => {
@@ -585,7 +603,8 @@ function AvailabilityForm({ employee, onSubmit, isLoading }: AvailabilityFormPro
         isPreferred: value.isPreferred || false
       }));
 
-    await onSubmit(availabilityData);
+    console.log("Submitting availability data:", availabilityData);
+    await onSubmit(availabilityData);;
   };
 
   const AvailabilityForm: React.FC<AvailabilityFormProps> = ({ employee, availability, onSubmit, isLoading }) => {
