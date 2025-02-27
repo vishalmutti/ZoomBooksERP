@@ -188,13 +188,13 @@ export default function EmployeesPage() {
         body: JSON.stringify(data),
         credentials: 'include'
       });
-      
+
       if (!response.ok) {
         const errorData = await response.text();
         console.error("API error:", response.status, errorData);
         throw new Error(`Failed to update availability: ${errorData}`);
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
@@ -746,10 +746,31 @@ function AvailabilityForm({ employee, onSubmit, isLoading }: AvailabilityFormPro
         )}
 
         <SheetFooter>
-          <SheetClose asChild>
-            <Button type="button" variant="outline">Cancel</Button>
-          </SheetClose>
-          <Button type="submit">Save Changes</Button>
+          <div className="mt-6 flex justify-end space-x-2">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => form.reset()} 
+              disabled={isLoading}
+            >
+              Reset
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={isLoading}
+              onClick={() => {
+                // Log form state before submission
+                console.log("Current form values:", form.getValues());
+              }}
+            >
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
+                  <span>Saving...</span>
+                </div>
+              ) : "Save Changes"}
+            </Button>
+          </div>
         </SheetFooter>
       </form>
     </Form>
