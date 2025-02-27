@@ -97,3 +97,207 @@
 [STDOUT] 12:19:02 AM [express] GET /api/time-off-requests 200 in 110ms
 [STDOUT] 12:19:03 AM [express] GET /api/schedule-templates 200 in 88ms
 [STDOUT] 12:19:03 AM [express] GET /api/employee-availability 200 in 111ms
+[STDOUT] 12:21:31 AM [express] GET /api/time-off-requests 200 in 109ms
+[STDOUT] 12:21:32 AM [express] GET /api/employee-availability 200 in 102ms
+[STDOUT] 12:21:32 AM [express] GET /api/schedule-templates 200 in 109ms
+[STDOUT] 12:21:56 AM [express] GET /api/schedule-templates 200 in 100ms
+[STDOUT] 12:21:56 AM [express] GET /api/employee-availability 200 in 115ms
+[STDOUT] 12:21:56 AM [express] GET /api/time-off-requests 200 in 99ms
+[STDOUT] 12:39:05 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=HZKPFyJMLGIOapQSGMEw6
+[STDOUT] 12:39:06 AM [express] GET /api/time-off-requests 200 in 91ms
+[STDOUT] 12:39:06 AM [express] GET /api/employee-availability 200 in 108ms
+[STDOUT] 12:39:07 AM [express] GET /api/schedule-templates 200 in 111ms
+[STDOUT] 12:39:26 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=HZKPFyJMLGIOapQSGMEw6
+[STDOUT] 12:39:27 AM [express] GET /api/schedule-templates 200 in 91ms
+[STDOUT] 12:39:27 AM [express] GET /api/employee-availability 200 in 102ms
+[STDOUT] 12:39:27 AM [express] GET /api/time-off-requests 200 in 102ms
+[STDOUT] 12:39:41 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=HZKPFyJMLGIOapQSGMEw6
+[STDOUT] 12:39:42 AM [express] GET /api/schedule-templates 200 in 90ms
+[STDOUT] 12:39:42 AM [express] GET /api/time-off-requests 200 in 102ms
+[STDOUT] 12:39:42 AM [express] GET /api/employee-availability 200 in 102ms
+[STDOUT] 12:40:42 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=HZKPFyJMLGIOapQSGMEw6
+[STDOUT] 12:40:43 AM [express] GET /api/employee-availability 200 in 101ms
+[STDOUT] 12:40:43 AM [express] GET /api/time-off-requests 200 in 101ms
+[STDOUT] 12:40:44 AM [express] GET /api/schedule-templates 200 in 109ms
+[STDOUT] 12:41:41 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=HZKPFyJMLGIOapQSGMEw6
+[STDOUT] 12:41:43 AM [express] GET /api/time-off-requests 200 in 99ms
+[STDOUT] 12:41:43 AM [express] GET /api/employee-availability 200 in 101ms
+[STDOUT] 12:41:44 AM [express] GET /api/schedule-templates 200 in 100ms
+[STDOUT] 12:45:28 AM [express] GET /api/employee-availability 200 in 109ms
+[STDOUT] 12:45:52 AM [express] GET /api/shifts 200 in 101ms
+[STDOUT] 12:45:56 AM [express] GET /api/shifts 200 in 109ms
+[STDOUT] 12:45:58 AM [express] GET /api/employee-availability 200 in 109ms
+[STDOUT] 12:45:58 AM [express] GET /api/time-off-requests 200 in 124ms
+[STDOUT] 12:45:58 AM [express] GET /api/schedule-templates 200 in 112ms
+[STDOUT] 12:46:44 AM [express] GET /api/employee-availability 200 in 201ms
+[STDOUT] 12:46:44 AM [express] GET /api/time-off-requests 200 in 141ms
+[STDOUT] 12:46:44 AM [express] GET /api/schedule-templates 200 in 148ms
+[STDOUT] 12:50:30 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=HZKPFyJMLGIOapQSGMEw6
+[STDOUT] 12:50:43 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=HZKPFyJMLGIOapQSGMEw6
+[STDOUT] 12:50:44 AM [express] GET /api/employee-availability 200 in 99ms
+[STDOUT] 12:50:44 AM [express] GET /api/time-off-requests 200 in 109ms
+[STDOUT] 12:50:45 AM [express] GET /api/schedule-templates 200 in 102ms
+[STDOUT] 
+> rest-express@1.0.0 dev
+> tsx server/index.ts
+
+[STDOUT] Database connection successful
+[STDOUT] Supplier contacts migration completed
+[STDOUT] 12:52:22 AM [express] ✨ Server running at http://0.0.0.0:5001
+[STDOUT] 12:52:22 AM [express] 🔒 API available at http://0.0.0.0:5001/api
+[STDOUT] 12:54:08 AM [express] GET /api/employee-availability 200 in 100ms
+[STDOUT] 12:54:13 AM [express] GET /api/employee-availability 200 in 100ms
+[STDOUT] 12:54:19 AM [express] GET /api/time-off-requests 200 in 92ms
+[STDOUT] 12:54:19 AM [express] GET /api/employee-availability 200 in 101ms
+[STDOUT] 12:54:19 AM [express] GET /api/schedule-templates 200 in 100ms
+[STDOUT] 12:55:33 AM [express] GET /api/shifts 200 in 99ms
+[STDOUT] 12:55:37 AM [express] GET /api/time-off-requests 200 in 90ms
+[STDOUT] 12:55:37 AM [express] GET /api/employee-availability 200 in 106ms
+[STDOUT] 12:55:38 AM [express] GET /api/schedule-templates 200 in 113ms
+[STDOUT] 12:58:51 AM [express] GET /api/shifts 200 in 100ms
+[STDOUT] 12:58:56 AM [express] GET /api/employee-availability 200 in 99ms
+[STDOUT] 12:58:56 AM [express] GET /api/time-off-requests 200 in 108ms
+[STDOUT] 12:58:57 AM [express] GET /api/schedule-templates 200 in 100ms
+[STDOUT] 1:04:42 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=LR551f3sN_Z7jo25tWKxq
+[STDOUT] 1:04:43 AM [express] GET /api/time-off-requests 200 in 90ms
+[STDOUT] 1:04:43 AM [express] GET /api/employee-availability 200 in 98ms
+[STDOUT] 1:04:44 AM [express] GET /api/schedule-templates 200 in 100ms
+[STDOUT] 1:04:55 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=LR551f3sN_Z7jo25tWKxq
+[STDOUT] 1:04:56 AM [express] GET /api/time-off-requests 200 in 101ms
+[STDOUT] 1:04:56 AM [express] GET /api/employee-availability 200 in 102ms
+[STDOUT] 1:04:56 AM [express] GET /api/schedule-templates 200 in 104ms
+[STDOUT] 1:05:08 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=LR551f3sN_Z7jo25tWKxq
+[STDOUT] 1:05:09 AM [express] GET /api/employee-availability 200 in 95ms
+[STDOUT] 1:05:09 AM [express] GET /api/schedule-templates 200 in 101ms
+[STDOUT] 1:05:09 AM [express] GET /api/time-off-requests 200 in 105ms
+[STDOUT] 1:05:36 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=LR551f3sN_Z7jo25tWKxq
+[STDOUT] 1:05:37 AM [express] GET /api/time-off-requests 200 in 100ms
+[STDOUT] 1:05:37 AM [express] GET /api/employee-availability 200 in 107ms
+[STDOUT] 1:05:37 AM [express] GET /api/schedule-templates 200 in 109ms
+[STDOUT] 1:07:06 AM [express] GET /api/shifts 200 in 99ms
+[STDOUT] 1:07:11 AM [express] GET /api/employee-availability 200 in 88ms
+[STDOUT] 1:07:11 AM [express] GET /api/time-off-requests 200 in 107ms
+[STDOUT] 1:07:11 AM [express] GET /api/schedule-templates 200 in 111ms
+[STDOUT] 1:15:15 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=LR551f3sN_Z7jo25tWKxq
+[STDOUT] 1:15:17 AM [express] GET /api/time-off-requests 200 in 90ms
+[STDOUT] 1:15:17 AM [express] GET /api/employee-availability 200 in 91ms
+[STDOUT] 1:15:18 AM [express] GET /api/schedule-templates 200 in 110ms
+[STDOUT] 1:15:33 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=LR551f3sN_Z7jo25tWKxq
+[STDOUT] 1:15:33 AM [express] GET /api/schedule-templates 200 in 90ms
+[STDOUT] 1:15:33 AM [express] GET /api/employee-availability 200 in 91ms
+[STDOUT] 1:15:33 AM [express] GET /api/time-off-requests 200 in 100ms
+[STDOUT] 1:15:49 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=LR551f3sN_Z7jo25tWKxq
+[STDOUT] 1:15:50 AM [express] GET /api/schedule-templates 200 in 90ms
+[STDOUT] 1:15:50 AM [express] GET /api/employee-availability 200 in 90ms
+[STDOUT] 1:15:50 AM [express] GET /api/time-off-requests 200 in 100ms
+[STDOUT] 1:16:25 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=LR551f3sN_Z7jo25tWKxq
+[STDOUT] 1:16:26 AM [express] GET /api/employee-availability 200 in 102ms
+[STDOUT] 1:16:26 AM [express] GET /api/time-off-requests 200 in 113ms
+[STDOUT] 1:16:27 AM [express] GET /api/schedule-templates 200 in 100ms
+[STDOUT] 1:17:32 AM [express] GET /api/time-off-requests 200 in 162ms
+[STDOUT] 1:17:32 AM [express] GET /api/employee-availability 200 in 164ms
+[STDOUT] 1:17:32 AM [express] GET /api/schedule-templates 200 in 131ms
+[STDOUT] 1:20:35 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=LR551f3sN_Z7jo25tWKxq
+[STDOUT] 1:20:36 AM [express] GET /api/employee-availability 200 in 107ms
+[STDOUT] 1:20:36 AM [express] GET /api/time-off-requests 200 in 112ms
+[STDOUT] 1:20:37 AM [express] GET /api/schedule-templates 200 in 90ms
+[STDOUT] 1:20:53 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=LR551f3sN_Z7jo25tWKxq
+[STDOUT] 1:20:54 AM [express] GET /api/time-off-requests 200 in 99ms
+[STDOUT] 1:20:54 AM [express] GET /api/employee-availability 200 in 97ms
+[STDOUT] 1:20:54 AM [express] GET /api/schedule-templates 200 in 125ms
+[STDOUT] 1:21:12 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=LR551f3sN_Z7jo25tWKxq
+[STDOUT] 1:21:13 AM [express] GET /api/schedule-templates 200 in 89ms
+[STDOUT] 1:21:13 AM [express] GET /api/employee-availability 200 in 99ms
+[STDOUT] 1:21:13 AM [express] GET /api/time-off-requests 200 in 108ms
+[STDOUT] 1:23:07 AM [express] GET /api/schedule-templates 200 in 160ms
+[STDOUT] 1:23:07 AM [express] GET /api/employee-availability 200 in 189ms
+[STDOUT] 1:23:07 AM [express] GET /api/time-off-requests 200 in 111ms
+[STDOUT] 1:25:36 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=LR551f3sN_Z7jo25tWKxq
+[STDOUT] 1:25:37 AM [express] GET /api/employee-availability 200 in 103ms
+[STDOUT] 1:25:37 AM [express] GET /api/time-off-requests 200 in 108ms
+[STDOUT] 1:25:38 AM [express] GET /api/schedule-templates 200 in 101ms
+[STDOUT] 1:25:58 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=LR551f3sN_Z7jo25tWKxq
+[STDOUT] 1:25:59 AM [express] GET /api/schedule-templates 200 in 91ms
+[STDOUT] 1:25:59 AM [express] GET /api/time-off-requests 200 in 100ms
+[STDOUT] 1:25:59 AM [express] GET /api/employee-availability 200 in 109ms
+[STDOUT] 1:26:16 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=LR551f3sN_Z7jo25tWKxq
+[STDOUT] 1:26:17 AM [express] GET /api/employee-availability 200 in 104ms
+[STDOUT] 1:26:17 AM [express] GET /api/time-off-requests 200 in 113ms
+[STDOUT] 1:26:18 AM [express] GET /api/schedule-templates 200 in 100ms
+[STDOUT] 1:26:32 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=LR551f3sN_Z7jo25tWKxq
+[STDOUT] 1:26:33 AM [express] GET /api/employee-availability 200 in 100ms
+[STDOUT] 1:26:33 AM [express] GET /api/time-off-requests 200 in 100ms
+[STDOUT] 1:26:33 AM [express] GET /api/schedule-templates 200 in 101ms
+[STDOUT] 1:26:48 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=LR551f3sN_Z7jo25tWKxq
+[STDOUT] 1:26:48 AM [express] GET /api/schedule-templates 200 in 95ms
+[STDOUT] 1:26:48 AM [express] GET /api/time-off-requests 200 in 102ms
+[STDOUT] 1:26:48 AM [express] GET /api/employee-availability 200 in 101ms
+[STDOUT] 1:27:52 AM [express] GET /api/time-off-requests 200 in 140ms
+[STDOUT] 1:27:52 AM [express] GET /api/schedule-templates 200 in 110ms
+[STDOUT] 1:27:52 AM [express] GET /api/employee-availability 200 in 112ms
+[STDOUT] 1:33:46 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=LR551f3sN_Z7jo25tWKxq
+[STDOUT] 1:33:47 AM [express] GET /api/time-off-requests 200 in 90ms
+[STDOUT] 1:33:47 AM [express] GET /api/employee-availability 200 in 100ms
+[STDOUT] 1:33:48 AM [express] GET /api/schedule-templates 200 in 101ms
+[STDOUT] 1:34:28 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=LR551f3sN_Z7jo25tWKxq
+[STDOUT] 1:34:29 AM [express] GET /api/time-off-requests 200 in 108ms
+[STDOUT] 1:34:29 AM [express] GET /api/employee-availability 200 in 108ms
+[STDOUT] 1:34:30 AM [express] GET /api/schedule-templates 200 in 101ms
+[STDOUT] 1:34:51 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=LR551f3sN_Z7jo25tWKxq
+[STDOUT] 1:34:52 AM [express] GET /api/employee-availability 200 in 100ms
+[STDOUT] 1:34:52 AM [express] GET /api/schedule-templates 200 in 100ms
+[STDOUT] 1:34:52 AM [express] GET /api/time-off-requests 200 in 100ms
+[STDOUT] 1:35:09 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=LR551f3sN_Z7jo25tWKxq
+[STDOUT] 1:35:10 AM [express] GET /api/time-off-requests 200 in 105ms
+[STDOUT] 1:35:10 AM [express] GET /api/schedule-templates 200 in 101ms
+[STDOUT] 1:35:10 AM [express] GET /api/employee-availability 200 in 106ms
+[STDOUT] 1:35:27 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=LR551f3sN_Z7jo25tWKxq
+[STDOUT] 1:35:27 AM [express] GET /api/employee-availability 200 in 112ms
+[STDOUT] 1:35:27 AM [express] GET /api/schedule-templates 200 in 128ms
+[STDOUT] 1:35:27 AM [express] GET /api/time-off-requests 200 in 118ms
+[STDOUT] 1:41:55 AM [express] GET /api/employee-availability 200 in 110ms
+[STDOUT] 1:42:06 AM [express] GET /api/time-off-requests 200 in 92ms
+[STDOUT] 1:42:06 AM [express] GET /api/employee-availability 200 in 101ms
+[STDOUT] 1:42:06 AM [express] GET /api/schedule-templates 200 in 100ms
+[STDOUT] 1:45:44 AM [express] GET /api/employee-availability 200 in 100ms
+[STDOUT] 1:46:01 AM [express] GET /api/time-off-requests 200 in 94ms
+[STDOUT] 1:46:01 AM [express] GET /api/schedule-templates 200 in 98ms
+[STDOUT] 1:46:01 AM [express] GET /api/employee-availability 200 in 103ms
+[STDOUT] 1:50:01 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=LR551f3sN_Z7jo25tWKxq
+[STDOUT] 
+> rest-express@1.0.0 dev
+> tsx server/index.ts
+
+[STDOUT] Database connection successful
+[STDOUT] Supplier contacts migration completed
+[STDOUT] 2:31:28 AM [express] ✨ Server running at http://0.0.0.0:5001
+[STDOUT] 2:31:28 AM [express] 🔒 API available at http://0.0.0.0:5001/api
+[STDOUT] 2:31:51 AM [express] GET /api/employee-availability 200 in 162ms
+[STDOUT] 2:31:51 AM [express] GET /api/schedule-templates 200 in 166ms
+[STDOUT] 2:31:51 AM [express] GET /api/time-off-requests 200 in 128ms
+[STDOUT] 2:32:38 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=PzOoXInzjFJF4CzMmlgkk
+[STDOUT] 2:32:40 AM [express] GET /api/employee-availability 200 in 112ms
+[STDOUT] 2:32:40 AM [express] GET /api/time-off-requests 200 in 114ms
+[STDOUT] 2:32:40 AM [express] GET /api/schedule-templates 200 in 95ms
+[STDOUT] 2:40:48 AM [express] GET /api/employee-availability 200 in 158ms
+[STDOUT] 2:40:48 AM [express] GET /api/schedule-templates 200 in 149ms
+[STDOUT] 2:40:48 AM [express] GET /api/time-off-requests 200 in 161ms
+[STDOUT] 2:40:58 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=PzOoXInzjFJF4CzMmlgkk
+[STDOUT] 2:40:59 AM [express] GET /api/schedule-templates 200 in 98ms
+[STDOUT] 2:40:59 AM [express] GET /api/employee-availability 200 in 101ms
+[STDOUT] 2:40:59 AM [express] GET /api/time-off-requests 200 in 100ms
+[STDOUT] 2:49:12 AM [vite] hmr update /src/pages/scheduling/generate.tsx, /src/index.css?v=PzOoXInzjFJF4CzMmlgkk
+[STDOUT] 2:49:14 AM [express] GET /api/time-off-requests 200 in 110ms
+[STDOUT] 2:49:14 AM [express] GET /api/employee-availability 200 in 114ms
+[STDOUT] 2:49:15 AM [express] GET /api/schedule-templates 200 in 90ms
+[STDOUT] 2:49:39 AM [express] GET /api/time-off-requests 200 in 89ms
+[STDOUT] 2:49:39 AM [express] GET /api/schedule-templates 200 in 108ms
+[STDOUT] 2:49:39 AM [express] GET /api/employee-availability 200 in 108ms
+[STDOUT] 2:49:44 AM [express] GET /api/time-off-requests 200 in 111ms
+[STDOUT] 2:49:44 AM [express] GET /api/schedule-templates 200 in 114ms
+[STDOUT] 2:49:44 AM [express] GET /api/employee-availability 200 in 116ms
+[STDOUT] 2:52:24 AM [express] GET /api/employee-availability 200 in 114ms
+[STDOUT] 2:53:31 AM [express] GET /api/employee-availability 200 in 110ms
+[STDOUT] 2:53:38 AM [express] GET /api/time-off-requests 200 in 104ms
+[STDOUT] 2:53:38 AM [express] GET /api/employee-availability 200 in 101ms
+[STDOUT] 2:53:38 AM [express] GET /api/schedule-templates 200 in 101ms
