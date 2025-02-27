@@ -793,7 +793,7 @@ export function registerRoutes(app: Express): Server {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
       const employeeId = parseInt(req.params.employeeId);
-      
+
       // Delete existing availability using eq from drizzle-orm
       await db.delete(employeeAvailability)
         .where(eq(employeeAvailability.employeeId, employeeId));
