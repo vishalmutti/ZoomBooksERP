@@ -428,8 +428,14 @@ export default function EmployeesPage() {
             <div className="py-6">
               <AvailabilityForm 
                 employee={selectedEmployee}
-                onSubmit={(data) => updateAvailabilityMutation.mutate(data)}
-                isLoading={isLoadingAvailability}
+                onSubmit={async (data) => {
+                  try {
+                    await updateAvailabilityMutation.mutateAsync(data);
+                  } catch (error) {
+                    console.error("Failed to update availability:", error);
+                  }
+                }}
+                isLoading={updateAvailabilityMutation.isPending || isLoadingAvailability}
               />
             </div>
           </SheetContent>
@@ -604,7 +610,7 @@ function AvailabilityForm({ employee, onSubmit, isLoading }: AvailabilityFormPro
       }));
 
     console.log("Submitting availability data:", availabilityData);
-    await onSubmit(availabilityData);;
+    return await onSubmit(availabilityData);;
   };
 
   const AvailabilityForm: React.FC<AvailabilityFormProps> = ({ employee, availability, onSubmit, isLoading }) => {
