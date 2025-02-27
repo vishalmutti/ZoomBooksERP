@@ -179,7 +179,9 @@ export default function EmployeesPage() {
 
   const updateAvailabilityMutation = useMutation({
     mutationFn: async (data: any) => {
-      console.log("Sending update with data:", data);
+      // Add a small delay to ensure the server has time to process the request
+      await new Promise(resolve => setTimeout(resolve, 300));
+
       const response = await fetch(`/api/employee-availability/${selectedEmployee?.id}`, {
         method: 'PUT',
         headers: {
@@ -195,13 +197,11 @@ export default function EmployeesPage() {
         throw new Error(`Failed to update availability: ${errorData}`);
       }
 
-      return response.json();
+      const result = await response.json();
+      console.log("Server response:", result);
+      return result;
     },
     onSuccess: () => {
-      toast({
-        title: "Success", 
-        description: "Availability updated successfully",
-      });
       // Invalidate both query formats to ensure data refreshes
       queryClient.invalidateQueries({ 
         queryKey: ['/api/employee-availability', selectedEmployee?.id]
@@ -209,7 +209,11 @@ export default function EmployeesPage() {
       queryClient.invalidateQueries({
         queryKey: ['availability', selectedEmployee?.id]
       });
-      setIsManagingAvailability(false);
+
+      // Give time for UI to update before closing
+      setTimeout(() => {
+        setIsManagingAvailability(false);
+      }, 500);
     },
     onError: (error: Error) => {
       console.error("Mutation error:", error);
@@ -429,10 +433,27 @@ export default function EmployeesPage() {
               <AvailabilityForm 
                 employee={selectedEmployee}
                 onSubmit={async (data) => {
+                  toast({
+                    title: "Saving...",
+                    description: "Updating employee availability",
+                  });
+
                   try {
                     await updateAvailabilityMutation.mutateAsync(data);
+                    toast({
+                      title: "Success",
+                      description: "Availability updated successfully",
+                      variant: "default",
+                    });
+                    return true;
                   } catch (error) {
                     console.error("Failed to update availability:", error);
+                    toast({
+                      title: "Error",
+                      description: "Failed to update availability. Please try again.",
+                      variant: "destructive",
+                    });
+                    return false;
                   }
                 }}
                 isLoading={updateAvailabilityMutation.isPending || isLoadingAvailability}
