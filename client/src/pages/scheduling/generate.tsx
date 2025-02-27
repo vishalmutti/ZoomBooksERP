@@ -313,9 +313,9 @@ export default function GenerateSchedulePage() {
     departmentEmps.forEach((emp) => {
       weeklyHours[emp.id] = {};
       realRange.forEach((day) => {
-        const startOfWeek = new Date(day);
-        startOfWeek.setDate(day.getDate() - day.getDay()); // Sunday
-        const key = format(startOfWeek, "yyyy-MM-dd");
+      const startOfWeek = new Date(day);
+      startOfWeek.setDate(day.getDate() - day.getDay()); // Sunday
+      const key = format(startOfWeek, "yyyy-MM-dd");
         weeklyHours[emp.id][key] = 0;
       });
     });
@@ -365,17 +365,26 @@ export default function GenerateSchedulePage() {
             if (isOff) return false;
           }
 
-          // Check employeeAvailability?
+          // Check employeeAvailability
           if (!employeeAvailability?.length) {
             return true; // no availability data => always available
           }
-          const hasRecord = employeeAvailability.some((a) => a.employeeId === emp.id);
-          if (!hasRecord) return true; // no record => assume available
-
-          // Must match dayOfWeek
-          return employeeAvailability.some(
-            (a) => a.employeeId === emp.id && a.dayOfWeek === weekday
+          
+          // Get all availability records for this employee
+          const empAvailability = employeeAvailability.filter(
+            (a) => a.employeeId === emp.id
           );
+          
+          // If employee has availability records, only schedule on explicitly available days
+          if (empAvailability.length > 0) {
+            // Map weekday (0=Sunday, 6=Saturday) to match availability records
+            return empAvailability.some(
+              (a) => a.dayOfWeek === weekday
+            );
+          }
+          
+          // If no specific availability records, assume available
+          return true;
         });
 
         // Create day shifts
