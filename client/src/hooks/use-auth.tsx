@@ -42,13 +42,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           body: JSON.stringify(data),
           credentials: "include"
         });
-        
+
         if (!response.ok) {
           const errorText = await response.text();
           console.error("Login response error:", response.status, errorText);
           throw new Error("Invalid credentials or server error");
         }
-        
+
         return response.json();
       } catch (error) {
         console.error("Login error:", error);
@@ -88,18 +88,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/logout");
+      try {
+        const res = await fetch("/api/logout", {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json"
+          }
+        });
+
+        if (!res.ok) {
+          throw new Error("Logout failed");
+        }
+
+        return res.status === 204 ? {} : await res.json();
+      } catch (error) {
+        console.error("Logout error:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.setQueryData(["/api/user"], null);
+      navigate("/");
     },
-    onError: (error: Error) => {
-      toast({
-        title: "Logout failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
+    onError: (error) => {
+      console.error("Logout failed:", error);
+      // Force logout on client side even if server request fails
+      queryClient.setQueryData(["/api/user"], null);
+      navigate("/");
+    }
   });
 
   return (
