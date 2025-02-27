@@ -187,9 +187,23 @@ export default function GenerateSchedulePage() {
   const { data: timeOffRequests, isLoading: isLoadingTimeOff } = useQuery<TimeOffRequest[]>({
     queryKey: ["/api/time-off-requests"],
   });
+  // Fetch all employee availability data
   const { data: employeeAvailability, isLoading: isLoadingAvailability } =
     useQuery<EmployeeAvailability[]>({
-      queryKey: ["/api/employee-availability"],
+      queryKey: ["/api/employee-availability/all"],
+      queryFn: async () => {
+        // Fetch availability for each employee
+        if (!employees) return [];
+        
+        const availabilityPromises = employees.map(emp => 
+          fetch(`/api/employee-availability/${emp.id}`).then(res => res.json())
+        );
+        
+        const results = await Promise.all(availabilityPromises);
+        // Flatten the array of arrays
+        return results.flat();
+      },
+      enabled: !!employees, // Only run when employees data is available
     });
   const { data: scheduleTemplates, isLoading: isLoadingTemplates } = useQuery<any[]>({
     queryKey: ["/api/schedule-templates"],
@@ -296,6 +310,8 @@ export default function GenerateSchedulePage() {
    * Note that we parse the start/end as local dates.
    */
   function generateMockSchedule(data: GenerateScheduleValues): GeneratedShift[] {
+    console.log("Generating schedule with data:", data);
+    console.log("Employee availability data:", employeeAvailability);
     const result: GeneratedShift[] = [];
 
     const localStart = parseYMDToLocalDate(data.startDate); // local midnight
@@ -377,10 +393,17 @@ export default function GenerateSchedulePage() {
           
           // If employee has availability records, only schedule on explicitly available days
           if (empAvailability.length > 0) {
-            // Map weekday (0=Sunday, 6=Saturday) to match availability records
-            return empAvailability.some(
+            // Check if the employee has an availability record for this specific day of the week
+            // If they have records but none for this day, they are NOT available
+            console.log(`Checking availability for employee ${emp.id} on day ${weekday}`);
+            console.log(`Employee availability records:`, empAvailability);
+            
+            const isAvailableOnThisDay = empAvailability.some(
               (a) => a.dayOfWeek === weekday
             );
+            
+            console.log(`Employee ${emp.id} is available on day ${weekday}: ${isAvailableOnThisDay}`);
+            return isAvailableOnThisDay;
           }
           
           // If no specific availability records, assume available
