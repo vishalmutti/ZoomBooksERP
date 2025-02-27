@@ -1,5 +1,5 @@
-const { spawn } = require('child_process');
-const fs = require('fs');
+import { spawn } from 'child_process';
+import fs from 'fs';
 
 // Create a log file
 const logStream = fs.createWriteStream('server-log.txt', { flags: 'a' });
@@ -8,6 +8,7 @@ const logStream = fs.createWriteStream('server-log.txt', { flags: 'a' });
 const env = {
   ...process.env,
   DATABASE_URL: 'postgresql://neondb_owner:npg_AiDHzTW6Ftr5@ep-solitary-boat-a48bij2d.us-east-1.aws.neon.tech/neondb?sslmode=require',
+  REPL_ID: 'f3b73006-c223-4337-8aee-7410fa12bb3f',
   PORT: '3001'
 };
 

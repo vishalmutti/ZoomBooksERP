@@ -1,0 +1,99 @@
+[STDOUT] 
+> rest-express@1.0.0 dev
+> tsx server/index.ts
+
+[STDOUT] Database connection successful
+[STDOUT] Supplier contacts migration completed
+[STDOUT] 12:06:25 AM [express] ✨ Server running at http://0.0.0.0:5001
+[STDOUT] 12:06:25 AM [express] 🔒 API available at http://0.0.0.0:5001/api
+[STDOUT] 12:07:35 AM [express] GET /api/employee-availability 200 in 110ms
+[STDOUT] 12:08:30 AM [express] GET /api/time-off-requests 200 in 96ms
+[STDOUT] 12:08:30 AM [express] GET /api/employee-availability 200 in 101ms
+[STDOUT] 12:08:30 AM [express] GET /api/schedule-templates 200 in 99ms
+[STDOUT] 12:08:46 AM [express] GET /api/shifts 200 in 110ms
+[STDOUT] 12:11:15 AM [express] GET /api/shifts 200 in 110ms
+[STDOUT] 12:11:22 AM [express] GET /api/time-off-requests 200 in 89ms
+[STDOUT] 12:11:22 AM [express] GET /api/employee-availability 200 in 104ms
+[STDOUT] 12:11:22 AM [express] GET /api/schedule-templates 200 in 108ms
+[STDOUT] Department creation request body: {
+  name: 'PICKING & PACKING',
+  description: 'Picking single order and multi-orders. Shipping orders via ShipWise.',
+  targetHours: 25.5,
+  requiredStaffDay: 3,
+  requiredStaffNight: 0
+}
+[STDOUT] Processed department data: {
+  name: 'PICKING & PACKING',
+  description: 'Picking single order and multi-orders. Shipping orders via ShipWise.',
+  targetHours: 25.5,
+  requiredStaffDay: 3,
+  requiredStaffNight: 0
+}
+[STDOUT] Created department: {
+  id: 5,
+  name: 'PICKING & PACKING',
+  description: 'Picking single order and multi-orders. Shipping orders via ShipWise.',
+  targetHours: '25.50',
+  requiredStaffDay: 3,
+  requiredStaffNight: 0,
+  createdAt: 2025-02-27T08:13:32.573Z
+}
+[STDOUT] Department creation request body: {
+  name: 'CONVEYOR WATCHER',
+  description: 'Watching the conveyor. Material handling.',
+  targetHours: 17,
+  requiredStaffDay: 1,
+  requiredStaffNight: 1
+}
+[STDOUT] Processed department data: {
+  name: 'CONVEYOR WATCHER',
+  description: 'Watching the conveyor. Material handling.',
+  targetHours: 17,
+  requiredStaffDay: 1,
+  requiredStaffNight: 1
+}
+[STDOUT] Created department: {
+  id: 6,
+  name: 'CONVEYOR WATCHER',
+  description: 'Watching the conveyor. Material handling.',
+  targetHours: '17.00',
+  requiredStaffDay: 1,
+  requiredStaffNight: 1,
+  createdAt: 2025-02-27T08:14:09.464Z
+}
+[STDOUT] Department creation request body: {
+  name: 'WAREHOUSE MANAGEMENT',
+  description: 'Daily warehouse operation. Loading and unloading. Warehouse organization.',
+  targetHours: 17,
+  requiredStaffDay: 2,
+  requiredStaffNight: 0
+}
+[STDOUT] Processed department data: {
+  name: 'WAREHOUSE MANAGEMENT',
+  description: 'Daily warehouse operation. Loading and unloading. Warehouse organization.',
+  targetHours: 17,
+  requiredStaffDay: 2,
+  requiredStaffNight: 0
+}
+[STDOUT] Created department: {
+  id: 7,
+  name: 'WAREHOUSE MANAGEMENT',
+  description: 'Daily warehouse operation. Loading and unloading. Warehouse organization.',
+  targetHours: '17.00',
+  requiredStaffDay: 2,
+  requiredStaffNight: 0,
+  createdAt: 2025-02-27T08:14:59.747Z
+}
+[STDOUT] 12:16:28 AM [express] GET /api/employee-availability 200 in 108ms
+[STDOUT] 12:17:29 AM [express] GET /api/employee-availability 200 in 101ms
+[STDOUT] 12:17:32 AM [express] GET /api/employee-availability 200 in 110ms
+[STDOUT] 12:17:37 AM [express] GET /api/employee-availability 200 in 100ms
+[STDOUT] 12:17:43 AM [express] GET /api/employee-availability 200 in 100ms
+[STDOUT] 12:17:47 AM [express] GET /api/employee-availability 200 in 110ms
+[STDOUT] 12:18:00 AM [express] GET /api/employee-availability 200 in 102ms
+[STDOUT] 12:18:30 AM [express] GET /api/time-off-requests 200 in 104ms
+[STDOUT] 12:18:30 AM [express] GET /api/schedule-templates 200 in 99ms
+[STDOUT] 12:18:30 AM [express] GET /api/employee-availability 200 in 101ms
+[STDOUT] 12:19:02 AM [express] GET /api/time-off-requests 200 in 110ms
+[STDOUT] 12:19:03 AM [express] GET /api/schedule-templates 200 in 88ms
+[STDOUT] 12:19:03 AM [express] GET /api/employee-availability 200 in 111ms
