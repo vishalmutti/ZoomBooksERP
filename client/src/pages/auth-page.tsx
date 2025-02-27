@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,11 +46,26 @@ export default function AuthPage() {
                     <div>
                       <Label htmlFor="username">Username</Label>
                       <Input {...loginForm.register("username")} />
+                      {loginForm.formState.errors.username && (
+                        <p className="text-sm text-red-500">
+                          {loginForm.formState.errors.username.message}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <Label htmlFor="password">Password</Label>
                       <Input type="password" {...loginForm.register("password")} />
+                      {loginForm.formState.errors.password && (
+                        <p className="text-sm text-red-500">
+                          {loginForm.formState.errors.password.message}
+                        </p>
+                      )}
                     </div>
+                    {loginMutation.isError && (
+                      <p className="text-sm text-red-500">
+                        Login failed: {loginMutation.error?.message || "Invalid username or password"}
+                      </p>
+                    )}
                     <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
                       {loginMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                       Login

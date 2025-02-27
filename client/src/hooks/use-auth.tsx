@@ -32,9 +32,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const loginMutation = useMutation({
-    mutationFn: async (credentials: LoginData) => {
-      const res = await apiRequest("POST", "/api/login", credentials);
-      return await res.json();
+    mutationFn: async (data: LoginData) => {
+      try {
+        const response = await apiRequest("POST", "/api/login", data);
+        return response.json();
+      } catch (error) {
+        console.error("Login error:", error);
+        throw error instanceof Error 
+          ? error 
+          : new Error("Invalid credentials or server error");
+      }
     },
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
@@ -42,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onError: (error: Error) => {
       toast({
         title: "Login failed",
-        description: error.message,
+        description: error.message || "Invalid username or password",
         variant: "destructive",
       });
     },
