@@ -560,22 +560,36 @@ function AvailabilityForm({ employee, onSubmit, isLoading }: AvailabilityFormPro
 
   useEffect(() => {
     if (availability) {
-      const defaultValues = days.reduce((acc, day) => {
-        const dayData = availability.find(a => a.dayOfWeek === dayToDayOfWeek[day.key.toLowerCase()]);
+      // Create a properly typed initial object
+      const defaultValues: Partial<AvailabilityValues> = { 
+        employeeId: employee.id,
+        monday: createDayAvailability(),
+        tuesday: createDayAvailability(),
+        wednesday: createDayAvailability(),
+        thursday: createDayAvailability(),
+        friday: createDayAvailability(),
+        saturday: createDayAvailability(),
+        sunday: createDayAvailability()
+      };
+      
+      days.forEach(day => {
+        const dayData = availability.find((a: any) => a.dayOfWeek === dayToDayOfWeek[day.key.toLowerCase()]);
         if (dayData) {
-          acc[day.key.toLowerCase()] = {
-            isAvailable: true,
-            startTime: dayData.startTime,
-            endTime: dayData.endTime,
-            isPreferred: dayData.isPreferred
-          };
+          const dayKey = day.key.toLowerCase() as keyof typeof defaultValues;
+          if (dayKey !== 'employeeId') {
+            defaultValues[dayKey] = {
+              isAvailable: true,
+              startTime: dayData.startTime || "09:00",
+              endTime: dayData.endTime || "17:00",
+              isPreferred: Boolean(dayData.isPreferred)
+            };
+          }
         }
-        return acc;
-      }, {});
+      });
 
       form.reset(defaultValues);
     }
-  }, [availability]);
+  }, [availability, employee.id, form]);
 
   // Helper function to create a day availability object
 
@@ -592,10 +606,15 @@ function AvailabilityForm({ employee, onSubmit, isLoading }: AvailabilityFormPro
     "saturday"   // 6
   ] as const;
 
+  // Type-safe helper to get form field paths
+  type DayField<T extends string> = `${Lowercase<T>}.isAvailable` | `${Lowercase<T>}.startTime` | `${Lowercase<T>}.endTime` | `${Lowercase<T>}.isPreferred`;
+  
   // Check if an availability day is enabled - this is a helper to avoid type errors
   const isDayEnabled = (dayKey: string): boolean => {
     try {
-      const fieldValue = form.getValues(`${dayKey}.isAvailable` as any);
+      // Create a type-safe field path
+      const fieldPath = `${dayKey}.isAvailable` as const;
+      const fieldValue = form.getValues(fieldPath as any);
       return Boolean(fieldValue);
     } catch (err) {
       return false;
@@ -603,71 +622,53 @@ function AvailabilityForm({ employee, onSubmit, isLoading }: AvailabilityFormPro
   };
 
   const onFormSubmit = async (data: AvailabilityValues) => {
-    // Transform the form data to the API format for saving to database
-    const dayToDayOfWeek: Record<string, number> = {
-      'monday': 1,
-      'tuesday': 2,
-      'wednesday': 3,
-      'thursday': 4,
-      'friday': 5,
-      'saturday': 6,
-      'sunday': 0
-    };
+    try {
+      // Transform the form data to the API format for saving to database
+      const dayToDayOfWeek: Record<string, number> = {
+        'monday': 1,
+        'tuesday': 2,
+        'wednesday': 3,
+        'thursday': 4,
+        'friday': 5,
+        'saturday': 6,
+        'sunday': 0
+      };
 
-    // Create availability entries for days marked as available
-    const availabilityData = Object.entries(data)
-      .filter(([key, value]) => 
-        key !== 'employeeId' && 
-        value && 
-        typeof value === 'object' && 
-        value.isAvailable === true
-      )
-      .map(([dayKey, value]) => ({
-        employeeId: employee.id,
-        dayOfWeek: dayToDayOfWeek[dayKey],
-        startTime: value.startTime || "09:00",
-        endTime: value.endTime || "17:00",
-        isPreferred: value.isPreferred || false
-      }));
+      // Create availability entries for days marked as available
+      const availabilityData = Object.entries(data)
+        .filter(([key, value]) => 
+          key !== 'employeeId' && 
+          value && 
+          typeof value === 'object' && 
+          'isAvailable' in value && 
+          value.isAvailable === true
+        )
+        .map(([dayKey, value]) => {
+          // Type assertion to help TypeScript understand the structure
+          const dayData = value as { 
+            isAvailable: boolean; 
+            startTime: string; 
+            endTime: string; 
+            isPreferred: boolean;
+          };
+          
+          return {
+            employeeId: employee.id,
+            dayOfWeek: dayToDayOfWeek[dayKey],
+            startTime: dayData.startTime || "09:00",
+            endTime: dayData.endTime || "17:00",
+            isPreferred: dayData.isPreferred || false
+          };
+        });
 
-    console.log("Submitting availability data:", availabilityData);
-    return await onSubmit(availabilityData);;
+      console.log("Submitting availability data:", availabilityData);
+      return await onSubmit(availabilityData);
+    } catch (error) {
+      console.error("Error preparing availability data:", error);
+      throw error;
+    }
   };
 
-  const AvailabilityForm: React.FC<AvailabilityFormProps> = ({ employee, availability, onSubmit, isLoading }) => {
-    const availabilityData = Object.entries(data)
-      .filter(([key, value]) => 
-        // Filter out the employeeId field and only include days marked as available
-        key !== 'employeeId' && 
-        value && 
-        typeof value === 'object' && 
-        'isAvailable' in value && 
-        value.isAvailable === true
-      )
-      .map(([dayKey, dayData]) => {
-        // Cast to make TypeScript happy
-        const data = dayData as { 
-          isAvailable: boolean; 
-          startTime: string; 
-          endTime: string; 
-          isPreferred: boolean; // Changed to boolean
-        };
-
-        // Get the numeric day of week value from our mapping
-        const dayOfWeek = dayToDayOfWeek[dayKey];
-
-        return {
-          employeeId: employee.id,
-          dayOfWeek,  // This is the numeric value (0-6) for database
-          startTime: data.startTime || "09:00",
-          endTime: data.endTime || "17:00",
-          isPreferred: data.isPreferred
-        };
-      });
-
-    console.log("Submitting availability data:", availabilityData);
-    onSubmit(availabilityData);
-  };
 
   return (
     <Form {...form}>
@@ -682,66 +683,15 @@ function AvailabilityForm({ employee, onSubmit, isLoading }: AvailabilityFormPro
               <div key={day.key} className="space-y-4">
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-2">
-                    <FormField
-                      control={form.control}
-                      name={`${day.key}.isAvailable`}
-                      render={({ field }) => (
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                          <FormControl>
-                            <Checkbox
-                              checked={!!field.value}
-                              onCheckedChange={(value) => field.onChange(!!value)}
-                            />
-                          </FormControl>
-                          <FormLabel className="font-medium">
-                            {day.name}
-                          </FormLabel>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  {form.watch(`${day.key}.isAvailable`) && (
-                    <>
-                      <div className="flex items-center gap-2 flex-1">
+                    {/* Type-safe field name handling */}
+                    {(() => {
+                      // Create type-safe field names with explicit casting
+                      const isAvailableField = `${day.key}.isAvailable` as any;
+                      
+                      return (
                         <FormField
                           control={form.control}
-                          name={`${day.key}.startTime`}
-                          render={({ field }) => (
-                            <FormItem className="flex-1">
-                              <FormControl>
-                                <Input
-                                  type="time"
-                                  {...field}
-                                  disabled={!isDayEnabled(day.key)}
-                                  className="w-full"
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        <span className="text-sm text-muted-foreground">to</span>
-                        <FormField
-                          control={form.control}
-                          name={`${day.key}.endTime`}
-                          render={({ field }) => (
-                            <FormItem className="flex-1">
-                              <FormControl>
-                                <Input
-                                  type="time"
-                                  {...field}
-                                  disabled={!isDayEnabled(day.key)}
-                                  className="w-full"
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <FormField
-                          control={form.control}
-                          name={`${day.key}.isPreferred`}
+                          name={isAvailableField}
                           render={({ field }) => (
                             <FormItem className="flex items-center space-x-2 space-y-0">
                               <FormControl>
@@ -751,14 +701,87 @@ function AvailabilityForm({ employee, onSubmit, isLoading }: AvailabilityFormPro
                                 />
                               </FormControl>
                               <FormLabel className="font-medium">
-                                Preferred
+                                {day.name}
                               </FormLabel>
                             </FormItem>
                           )}
                         />
-                      </div>
-                    </>
-                  )}
+                      );
+                    })()}
+                  </div>
+
+                  {/* Use a safer way to check if day is available */}
+                  {(() => {
+                    const dayKey = day.key as keyof AvailabilityValues;
+                    const dayValue = form.getValues()[dayKey];
+                    const isAvailable = typeof dayValue === 'object' && dayValue?.isAvailable;
+                    
+                    if (!isAvailable) return null;
+                    
+                    // Create type-safe field names
+                    const startTimeField = `${day.key}.startTime` as any;
+                    const endTimeField = `${day.key}.endTime` as any;
+                    const isPreferredField = `${day.key}.isPreferred` as any;
+                    
+                    return (
+                      <>
+                        <div className="flex items-center gap-2 flex-1">
+                          <FormField
+                            control={form.control}
+                            name={startTimeField}
+                            render={({ field }) => (
+                              <FormItem className="flex-1">
+                                <FormControl>
+                                  <Input
+                                    type="time"
+                                    {...field}
+                                    disabled={!isAvailable}
+                                    className="w-full"
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                          <span className="text-sm text-muted-foreground">to</span>
+                          <FormField
+                            control={form.control}
+                            name={endTimeField}
+                            render={({ field }) => (
+                              <FormItem className="flex-1">
+                                <FormControl>
+                                  <Input
+                                    type="time"
+                                    {...field}
+                                    disabled={!isAvailable}
+                                    className="w-full"
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <FormField
+                            control={form.control}
+                            name={isPreferredField}
+                            render={({ field }) => (
+                              <FormItem className="flex items-center space-x-2 space-y-0">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={!!field.value}
+                                    onCheckedChange={(value) => field.onChange(!!value)}
+                                  />
+                                </FormControl>
+                                <FormLabel className="font-medium">
+                                  Preferred
+                                </FormLabel>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
                 <Separator className="mt-2" />
               </div>
