@@ -50,6 +50,7 @@ const ZoomBookAI = () => {
       let requestBody: any = {
         model: modelToUse,
         messages: messagesForAPI,
+        stream: true,
       };
 
       if (webSearchEnabled) {
@@ -57,12 +58,13 @@ const ZoomBookAI = () => {
           model: "openrouter/auto",
           plugins: [
             {
-        id: "web",
-        max_results: 5,
-        search_prompt: "A web search was conducted on `date`. Incorporate the following web search results into your response only if they contribute additional knowledge."
-      }
-    ],
-    messages: messagesForAPI,
+              id: "web",
+              max_results: 5,
+              search_prompt: "A web search was conducted on `date`. Incorporate the following web search results into your response only if they contribute additional knowledge."
+            }
+          ],
+          messages: messagesForAPI,
+          stream: true
         };
       }
 
@@ -138,21 +140,69 @@ const ZoomBookAI = () => {
         return;
       }
 
-      const data = await response.json();
-      if (data.choices && data.choices.length > 0) {
-        const reply = data.choices[0].message.content;
-      // Add the user message to the state
+      // Add user message immediately
       const userMessage: Message = { text: input, sender: 'user', attachments };
-      const newReply: Message = { text: reply, sender: 'bot' };
-      setMessages([...messages, userMessage, newReply]);
+      setMessages(prevMessages => [...prevMessages, userMessage]);
       
-      // Clear input and attachments
-      setInput('');
-      setAttachments([]);
-      } else {
-        console.error("OpenRouter API Error: No choices returned");
-        const errorReply: Message = { text: 'Error communicating with AI', sender: 'bot' };
-        setMessages([...messages, errorReply]);
+      let reply = "";
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('Response body is not readable');
+      }
+      const decoder = new TextDecoder();
+      let buffer = '';
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          // Append new chunk to buffer
+          buffer += decoder.decode(value, { stream: true });
+          // Process complete lines from buffer
+          while (true) {
+            const lineEnd = buffer.indexOf('\n');
+            if (lineEnd === -1) break;
+            const line = buffer.slice(0, lineEnd).trim();
+            buffer = buffer.slice(lineEnd + 1);
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') break;
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices[0].delta.content;
+                if (content) {
+                  reply += content;
+                  setMessages(prevMessages => {
+                    // Find the last bot message
+                    const lastMessage = prevMessages[prevMessages.length - 1];
+                    if (lastMessage?.sender === 'bot') {
+                      // Update existing bot message
+                      return [
+                        ...prevMessages.slice(0, -1),
+                        { text: reply, sender: 'bot' }
+                      ];
+                    } else {
+                      // Add new bot message
+                      return [
+                        ...prevMessages,
+                        { text: reply, sender: 'bot' }
+                      ];
+                    }
+                  });
+                }
+              } catch (e) {
+                // Ignore invalid JSON
+              }
+            } else if (line.startsWith(': OPENROUTER PROCESSING')) {
+              // Handle processing messages if needed
+              console.log("OpenRouter Processing...");
+            }
+          }
+        }
+      } finally {
+        reader.cancel();
+        // Clear input and attachments
+        setInput('');
+        setAttachments([]);
       }
     } catch (error) {
       console.error("OpenRouter API Error:", error);
