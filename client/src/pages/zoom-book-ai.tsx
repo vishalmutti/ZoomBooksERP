@@ -18,7 +18,7 @@ const ZoomBookAI = () => {
   const [attachments, setAttachments] = useState<File[]>([]);
   const [webSearchEnabled, setWebSearchEnabled] = useState(false);
 
-  const apiKey = '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';
+  const apiKey = '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';
   const model = 'google/gemini-2.0-flash-001';
 
   useEffect(() => {
@@ -29,27 +29,43 @@ const ZoomBookAI = () => {
   const sendMessage = async () => {
     if (!input && attachments.length === 0) return;
 
-    const newMessage: Message = { text: input, sender: 'user', attachments };
-    setMessages([...messages, newMessage]);
-    setInput('');
-    setAttachments([]);
-
     try {
+      // Keep input and attachments until API call completes
       let modelToUse = model;
-      
-      // Create the request body
-      const requestBody: any = {
+      let updatedInput = input;
+
+      if (webSearchEnabled) {
+        updatedInput = "Search the web if required for more up to date information. " + updatedInput;
+      }
+
+      // Prepare messages array with full chat history including the new message
+      const messagesForAPI = [...messages.map(msg => ({
+        role: msg.sender === 'user' ? 'user' : 'assistant',
+        content: msg.text
+      })), {
+        role: 'user',
+        content: updatedInput
+      }];
+
+      let requestBody: any = {
         model: modelToUse,
-        messages: [{
-          role: 'user',
-          content: input // Will be updated if there are attachments
-        }],
+        messages: messagesForAPI,
       };
 
       if (webSearchEnabled) {
-        requestBody.model = `${model}:online`;
+        requestBody = {
+          model: "openrouter/auto",
+          plugins: [
+            {
+        id: "web",
+        max_results: 5,
+        search_prompt: "A web search was conducted on `date`. Incorporate the following web search results into your response only if they contribute additional knowledge."
       }
-      
+    ],
+    messages: messagesForAPI,
+        };
+      }
+
       // Handle attachments if any
       if (attachments.length > 0) {
         let messageContent: any = [];
@@ -105,7 +121,7 @@ const ZoomBookAI = () => {
         headers: {
           'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
-        },
+          },
         body: JSON.stringify(requestBody),
       });
 
@@ -125,11 +141,17 @@ const ZoomBookAI = () => {
       const data = await response.json();
       if (data.choices && data.choices.length > 0) {
         const reply = data.choices[0].message.content;
-        const newReply: Message = { text: reply, sender: 'bot' };
-        setMessages([...messages, newReply]);
+      // Add the user message to the state
+      const userMessage: Message = { text: input, sender: 'user', attachments };
+      const newReply: Message = { text: reply, sender: 'bot' };
+      setMessages([...messages, userMessage, newReply]);
+      
+      // Clear input and attachments
+      setInput('');
+      setAttachments([]);
       } else {
         console.error("OpenRouter API Error: No choices returned");
-        const errorReply: Message = { text: 'Error communicating with AI: No response', sender: 'bot' };
+        const errorReply: Message = { text: 'Error communicating with AI', sender: 'bot' };
         setMessages([...messages, errorReply]);
       }
     } catch (error) {

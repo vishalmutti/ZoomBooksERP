@@ -380,3 +380,156 @@
 [STDOUT] 3:37:42 AM [express] GET /api/schedule-templates 200 in 100ms
 [STDOUT] 3:38:55 AM [express] GET /api/schedule-templates 200 in 107ms
 [STDOUT] 3:38:55 AM [express] GET /api/time-off-requests 200 in 119ms
+[STDOUT] 3:39:57 AM [express] GET /api/employee-availability 200 in 105ms
+[STDOUT] 3:40:03 AM [express] GET /api/time-off-requests 200 in 112ms
+[STDOUT] 3:40:03 AM [express] GET /api/schedule-templates 200 in 113ms
+[STDOUT] 3:40:23 AM [express] GET /api/time-off-requests 200 in 91ms
+[STDOUT] 3:40:23 AM [express] GET /api/schedule-templates 200 in 102ms
+[STDOUT] 
+> rest-express@1.0.0 dev
+> tsx server/index.ts
+
+[STDOUT] Database connection successful
+[STDOUT] Supplier contacts migration completed
+[STDOUT] 1:27:01 PM [express] ✨ Server running at http://0.0.0.0:5001
+[STDOUT] 1:27:01 PM [express] 🔒 API available at http://0.0.0.0:5001/api
+[STDOUT] 1:35:45 PM [express] GET /api/employee-availability 200 in 108ms
+[STDOUT] 1:35:49 PM [express] GET /api/time-off-requests 200 in 101ms
+[STDOUT] 1:35:49 PM [express] GET /api/schedule-templates 200 in 109ms
+[STDOUT] 1:41:25 PM [express] GET /api/time-off-requests 200 in 91ms
+[STDOUT] 1:41:26 PM [express] GET /api/schedule-templates 200 in 103ms
+[STDOUT] 1:41:35 PM [express] GET /api/employee-availability 200 in 105ms
+[STDOUT] 
+> rest-express@1.0.0 dev
+> tsx server/index.ts
+
+[STDOUT] Database connection successful
+[STDOUT] Supplier contacts migration completed
+[STDOUT] 4:15:17 PM [express] ✨ Server running at http://0.0.0.0:5001
+[STDOUT] 4:15:17 PM [express] 🔒 API available at http://0.0.0.0:5001/api
+[STDOUT] 4:24:37 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=B28mZukWoyQGIO80JTY8R
+[STDOUT] 4:24:49 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=B28mZukWoyQGIO80JTY8R
+[STDERR] 4:24:50 PM [vite] warning: This assignment will throw because "input" is a constant
+39 |  
+40 |        if (webSearchEnabled) {
+41 |          input = "Search the web if required for more up to date information. " + input;
+   |          ^
+42 |        }
+43 |  
+
+  Plugin: vite:esbuild
+  File: /Users/vishalmutti/Downloads/ZoomBooksManager/client/src/pages/zoom-book-ai.tsx
+[STDOUT] 4:25:12 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=B28mZukWoyQGIO80JTY8R
+[STDERR] 4:25:12 PM [vite] Internal server error: /Users/vishalmutti/Downloads/ZoomBooksManager/client/src/pages/zoom-book-ai.tsx: 'import' and 'export' may only appear at the top level. (57:0)
+
+  55 |         requestBody.model = `${model}:online`;
+  56 |       }
+> 57 | import React, { useState, useEffect, useRef } from 'react';
+     | ^
+  58 | import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+  59 | import { Button } from '@/components/ui/button';
+  60 | import { MessageSquare, PlusCircle, Search, Paperclip, Send, Trash, Edit, Bot } from 'lucide-react';
+  Plugin: vite:react-babel
+  File: /Users/vishalmutti/Downloads/ZoomBooksManager/client/src/pages/zoom-book-ai.tsx:57:0
+  55 |          requestBody.model = `${model}:online`;
+  56 |        }
+  57 |  import React, { useState, useEffect, useRef } from 'react';
+     |  ^
+  58 |  import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+  59 |  import { Button } from '@/components/ui/button';
+      at toParseError (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parse-error.ts:95:45)
+      at raise (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/tokenizer/index.ts:1496:19)
+      at parseStatementContent (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/statement.ts:591:16)
+      at parseStatementContent (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/plugins/typescript/index.ts:2906:20)
+      at parseStatementLike (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/statement.ts:437:17)
+      at parseStatementListItem (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/statement.ts:386:17)
+      at parseBlockOrModuleBlockBody (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/statement.ts:1407:16)
+      at parseBlockBody (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/statement.ts:1380:10)
+      at parseBlock (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/statement.ts:1348:10)
+      at parseTryStatement (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/statement.ts:1168:23)
+      at parseStatementContent (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/statement.ts:504:21)
+      at parseStatementContent (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/plugins/typescript/index.ts:2906:20)
+      at parseStatementLike (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/statement.ts:437:17)
+      at parseStatementListItem (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/statement.ts:386:17)
+      at parseBlockOrModuleBlockBody (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/statement.ts:1407:16)
+      at parseBlockBody (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/statement.ts:1380:10)
+      at parseBlock (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/statement.ts:1348:10)
+      at parseFunctionBody (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:2565:24)
+      at parseArrowExpression (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:2506:10)
+      at parseAsyncArrowFromCallExpression (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:1025:10)
+      at parseAsyncArrowFromCallExpression (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/plugins/typescript/index.ts:3416:20)
+      at parseCoverCallAndAsyncArrowHead (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:904:27)
+      at parseSubscript (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:772:19)
+      at parseSubscript (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/plugins/typescript/index.ts:2597:20)
+      at parseSubscripts (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:730:19)
+      at parseExprSubscripts (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:715:17)
+      at parseUpdate (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:688:21)
+      at parseMaybeUnary (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:650:23)
+      at parseMaybeUnary (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/plugins/typescript/index.ts:3584:20)
+      at parseMaybeUnaryOrPrivate (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:389:14)
+      at parseExprOps (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:401:23)
+      at parseMaybeConditional (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:356:23)
+      at parseMaybeAssign (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:298:21)
+      at parseMaybeAssign (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/plugins/typescript/index.ts:3456:22)
+      at callback (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:252:12)
+      at allowInAnd (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:3111:16)
+      at parseMaybeAssignAllowIn (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:251:17)
+      at parseVar (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/statement.ts:1550:18)
+      at parseVarStatement (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/statement.ts:1214:10)
+      at parseVarStatement (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/plugins/typescript/index.ts:2857:33)
+      at parseStatementContent (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/statement.ts:566:21)
+      at parseStatementContent (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/plugins/typescript/index.ts:2906:20)
+      at parseStatementLike (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/statement.ts:437:17)
+      at parseStatementListItem (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/statement.ts:386:17)
+      at parseBlockOrModuleBlockBody (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/statement.ts:1407:16)
+      at parseBlockBody (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/statement.ts:1380:10)
+      at parseBlock (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/statement.ts:1348:10)
+      at parseFunctionBody (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:2565:24)
+      at parseArrowExpression (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:2506:10)
+      at parseParenAndDistinguishExpression (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:1802:12)
+Server process exited with code 1
+[STDOUT] 
+> rest-express@1.0.0 dev
+> tsx server/index.ts
+
+[STDOUT] Database connection successful
+[STDOUT] Supplier contacts migration completed
+[STDOUT] 4:28:14 PM [express] ✨ Server running at http://0.0.0.0:5001
+[STDOUT] 4:28:14 PM [express] 🔒 API available at http://0.0.0.0:5001/api
+[STDERR] 4:28:17 PM [vite] Pre-transform error: /Users/vishalmutti/Downloads/ZoomBooksManager/client/src/pages/zoom-book-ai.tsx: Missing semicolon. (1:15)
+
+> 1 | starrt.shimport React, { useState, useEffect, useRef } from 'react';
+    |                ^
+  2 | import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+  3 | import { Button } from '@/components/ui/button';
+  4 | import { MessageSquare, PlusCircle, Search, Paperclip, Send, Trash, Edit, Bot } from 'lucide-react';
+Server process exited with code 1
+[STDOUT] 
+> rest-express@1.0.0 dev
+> tsx server/index.ts
+
+[STDOUT] Database connection successful
+[STDOUT] Supplier contacts migration completed
+[STDOUT] 4:29:30 PM [express] ✨ Server running at http://0.0.0.0:5001
+[STDOUT] 4:29:30 PM [express] 🔒 API available at http://0.0.0.0:5001/api
+[STDOUT] 4:43:16 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=T_0nqziQq4vQgVOLhKDJR
+[STDOUT] 4:45:32 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=T_0nqziQq4vQgVOLhKDJR
+[STDOUT] 4:45:39 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=T_0nqziQq4vQgVOLhKDJR
+[STDOUT] 4:45:47 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=T_0nqziQq4vQgVOLhKDJR
+[STDOUT] 4:45:50 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=T_0nqziQq4vQgVOLhKDJR
+[STDOUT] 4:52:34 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=T_0nqziQq4vQgVOLhKDJR
+[STDOUT] 5:03:33 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=T_0nqziQq4vQgVOLhKDJR
+[STDOUT] 5:19:06 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=T_0nqziQq4vQgVOLhKDJR
+[STDOUT] 5:19:25 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=T_0nqziQq4vQgVOLhKDJR
+[STDOUT] 5:21:58 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=T_0nqziQq4vQgVOLhKDJR
+[STDOUT] 5:22:23 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=T_0nqziQq4vQgVOLhKDJR
+[STDOUT] 5:24:02 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=T_0nqziQq4vQgVOLhKDJR
+[STDOUT] 5:24:28 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=T_0nqziQq4vQgVOLhKDJR
+[STDOUT] 
+> rest-express@1.0.0 dev
+> tsx server/index.ts
+
+[STDOUT] Database connection successful
+[STDOUT] Supplier contacts migration completed
+[STDOUT] 1:19:05 AM [express] ✨ Server running at http://0.0.0.0:5001
+[STDOUT] 1:19:05 AM [express] 🔒 API available at http://0.0.0.0:5001/api
