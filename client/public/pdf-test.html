@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF Processing Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #333;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .button {
+      padding: 10px 15px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .button:hover {
+      background-color: #45a049;
+    }
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: #f9f9f9;
+      white-space: pre-wrap;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .status {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    .loading {
+      display: none;
+      margin-top: 10px;
+      text-align: center;
+    }
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #3498db;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 2s linear infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <h1>PDF Processing Test</h1>
+  <p>Upload a PDF file to test the server-side PDF processing functionality.</p>
+  
+  <div class="container">
+    <div class="form-group">
+      <label for="pdfFile">Select a PDF file:</label>
+      <input type="file" id="pdfFile" accept="application/pdf" />
+    </div>
+    
+    <button id="processButton" class="button">Process PDF</button>
+    
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <p>Processing PDF...</p>
+    </div>
+    
+    <div id="status" class="status" style="display: none;"></div>
+    
+    <div id="result" class="result" style="display: none;"></div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const fileInput = document.getElementById('pdfFile');
+      const processButton = document.getElementById('processButton');
+      const loadingDiv = document.getElementById('loading');
+      const statusDiv = document.getElementById('status');
+      const resultDiv = document.getElementById('result');
+      
+      processButton.addEventListener('click', async function() {
+        // Check if a file is selected
+        if (!fileInput.files || fileInput.files.length === 0) {
+          showStatus('Please select a PDF file.', 'error');
+          return;
+        }
+        
+        const file = fileInput.files[0];
+        
+        // Check if the file is a PDF
+        if (file.type !== 'application/pdf') {
+          showStatus('Please select a valid PDF file.', 'error');
+          return;
+        }
+        
+        // Show loading indicator
+        loadingDiv.style.display = 'block';
+        statusDiv.style.display = 'none';
+        resultDiv.style.display = 'none';
+        
+        try {
+          // Create a FormData object
+          const formData = new FormData();
+          formData.append('file', file);
+          
+          // Send the file to the server
+          const response = await fetch('http://localhost:5001/api/process-pdf', {
+            method: 'POST',
+            body: formData
+          });
+          
+          // Hide loading indicator
+          loadingDiv.style.display = 'none';
+          
+          if (!response.ok) {
+            throw new Error(`Server error: ${response.status} ${response.statusText}`);
+          }
+          
+          // Parse the response
+          const result = await response.json();
+          
+          // Show the result
+          showStatus('PDF processed successfully!', 'success');
+          resultDiv.style.display = 'block';
+          resultDiv.textContent = JSON.stringify(result, null, 2);
+          
+        } catch (error) {
+          // Hide loading indicator
+          loadingDiv.style.display = 'none';
+          
+          // Show error message
+          showStatus(`Error: ${error.message}`, 'error');
+        }
+      });
+      
+      function showStatus(message, type) {
+        statusDiv.textContent = message;
+        statusDiv.className = `status ${type}`;
+        statusDiv.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>

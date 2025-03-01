@@ -14,6 +14,7 @@ import { insertInvoiceSchema, insertPaymentSchema, insertSupplierSchema, invoice
 import { insertIncomingLoadSchema, insertFreightInvoiceSchema, insertDepartmentSchema } from "@shared/schema";
 import mime from 'mime-types';
 import FormData from 'form-data';
+import pdfParse from 'pdf-parse';
 
 
 // Type definitions for file uploads
@@ -1173,6 +1174,51 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error('Error fetching carrier metrics:', error);
       return res.status(500).json({ message: 'Failed to fetch carrier metrics' });
+    }
+  });
+
+  // PDF processing endpoint
+  router.post("/api/process-pdf", upload, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      console.log("PDF processing request received");
+      
+      // Check if file was uploaded
+      const files = req.files as UploadedFiles;
+      const pdfFile = files?.file?.[0];
+      
+      if (!pdfFile) {
+        return res.status(400).json({ error: "No PDF file uploaded" });
+      }
+      
+      console.log(`Processing PDF file: ${pdfFile.filename}`);
+      
+      // Read the PDF file
+      const pdfPath = path.join(uploadDir, pdfFile.filename);
+      const dataBuffer = fs.readFileSync(pdfPath);
+      
+      // Extract text from PDF
+      const pdfData = await pdfParse(dataBuffer);
+      
+      // Extract images (simplified - just returning page count for now)
+      // In a production environment, you would use a more robust solution for image extraction
+      
+      // Return the extracted data
+      res.json({
+        text: pdfData.text,
+        pageCount: pdfData.numpages,
+        info: pdfData.info,
+        metadata: pdfData.metadata,
+        version: pdfData.version
+      });
+      
+    } catch (error) {
+      console.error("Error processing PDF:", error);
+      res.status(500).json({ 
+        error: "Failed to process PDF", 
+        details: error instanceof Error ? error.message : "Unknown error" 
+      });
     }
   });
 

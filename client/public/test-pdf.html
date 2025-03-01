@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF.js Worker Test</title>
+  <!-- Load PDF.js library -->
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.js"></script>
+  <script>
+    // Log when the page loads
+    window.addEventListener('load', () => {
+      console.log('Page loaded, testing PDF.js worker...');
+      testPdfWorker();
+    });
+
+    // Test function to verify PDF.js worker loading
+    async function testPdfWorker() {
+      try {
+        // Access the PDF.js library
+        const pdfjsLib = window['pdfjs-dist/build/pdf'];
+        console.log('PDF.js version:', pdfjsLib.version);
+        
+        // Try to use our local worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.min.js';
+        console.log('Setting worker source to local path:', pdfjsLib.GlobalWorkerOptions.workerSrc);
+        
+        // Create a simple PDF document to test
+        const pdfData = new Uint8Array([
+          '%PDF-1.7',
+          '1 0 obj << /Type /Catalog /Pages 2 0 R >>',
+          'endobj',
+          '2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >>',
+          'endobj',
+          '3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 100 100] /Contents 4 0 R >>',
+          'endobj',
+          '4 0 obj << /Length 44 >>',
+          'stream',
+          'BT /F1 12 Tf 10 10 Td (Test PDF document) Tj ET',
+          'endstream',
+          'endobj',
+          'xref',
+          '0 5',
+          '0000000000 65535 f',
+          '0000000010 00000 n',
+          '0000000056 00000 n',
+          '0000000111 00000 n',
+          '0000000212 00000 n',
+          'trailer << /Size 5 /Root 1 0 R >>',
+          'startxref',
+          '307',
+          '%%EOF'
+        ].join('\n'));
+        
+        // Try to load the PDF document
+        console.log('Attempting to load test PDF document...');
+        const loadingTask = pdfjsLib.getDocument({ data: pdfData });
+        
+        // Add event listeners for worker events
+        loadingTask.onProgress = (progress) => {
+          console.log('Loading progress:', progress.loaded, '/', progress.total);
+        };
+        
+        // Get the PDF document
+        const pdf = await loadingTask.promise;
+        console.log('PDF document loaded successfully!', pdf);
+        console.log('Number of pages:', pdf.numPages);
+        
+        // Get the first page
+        const page = await pdf.getPage(1);
+        console.log('Page loaded successfully!', page);
+        
+        // Display success message
+        document.getElementById('status').textContent = 'PDF.js worker loaded and working correctly!';
+        document.getElementById('status').className = 'success';
+        
+      } catch (error) {
+        console.error('Error testing PDF.js worker:', error);
+        document.getElementById('status').textContent = 'Error: ' + error.message;
+        document.getElementById('status').className = 'error';
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #333;
+    }
+    #status {
+      padding: 15px;
+      border-radius: 5px;
+      margin: 20px 0;
+    }
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    pre {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>PDF.js Worker Test</h1>
+  <p>This page tests if the PDF.js worker is loading correctly.</p>
+  
+  <div id="status">Testing PDF.js worker loading...</div>
+  
+  <h2>Instructions</h2>
+  <p>Check the browser console for detailed logs about the PDF.js worker loading process.</p>
+  
+  <h2>Expected Behavior</h2>
+  <p>If everything is working correctly:</p>
+  <ol>
+    <li>The page should load without errors</li>
+    <li>The status above should show "PDF.js worker loaded and working correctly!"</li>
+    <li>The console should show successful loading of the PDF.js worker</li>
+  </ol>
+  
+  <h2>Troubleshooting</h2>
+  <p>If you see errors:</p>
+  <ol>
+    <li>Check that the worker file exists at <code>/pdfjs/pdf.worker.min.js</code></li>
+    <li>Verify that the worker file is accessible (no CORS issues)</li>
+    <li>Check the browser console for specific error messages</li>
+  </ol>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF.js Worker Simple Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #333;
+    }
+    #status {
+      padding: 15px;
+      border-radius: 5px;
+      margin: 20px 0;
+    }
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    pre {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>PDF.js Worker Simple Test</h1>
+  <p>This page tests if the PDF.js worker file is accessible.</p>
+  
+  <div id="status">Testing worker file accessibility...</div>
+  
+  <script>
+    // Function to test if a file is accessible
+    async function testFileAccess(url) {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        // Get the content type
+        const contentType = response.headers.get('content-type');
+        console.log(`File ${url} is accessible. Content-Type: ${contentType}`);
+        
+        // Read some of the content
+        const text = await response.text();
+        const preview = text.substring(0, 100) + '...';
+        console.log(`Content preview: ${preview}`);
+        
+        return {
+          success: true,
+          contentType,
+          preview
+        };
+      } catch (error) {
+        console.error(`Error accessing ${url}:`, error);
+        return {
+          success: false,
+          error: error.message
+        };
+      }
+    }
+
+    // Test our worker file
+    async function runTest() {
+      const workerUrl = '/pdfjs/pdf.worker.min.js';
+      const result = await testFileAccess(workerUrl);
+      
+      const statusElement = document.getElementById('status');
+      
+      if (result.success) {
+        statusElement.textContent = `Worker file is accessible! Content-Type: ${result.contentType}`;
+        statusElement.className = 'success';
+        
+        // Add content preview
+        const preElement = document.createElement('pre');
+        preElement.textContent = result.preview;
+        document.body.appendChild(document.createElement('h2')).textContent = 'Content Preview';
+        document.body.appendChild(preElement);
+      } else {
+        statusElement.textContent = `Error accessing worker file: ${result.error}`;
+        statusElement.className = 'error';
+      }
+    }
+
+    // Run the test when the page loads
+    window.addEventListener('load', runTest);
+  </script>
+</body>
+</html>

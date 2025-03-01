@@ -533,3 +533,516 @@ Server process exited with code 1
 [STDOUT] Supplier contacts migration completed
 [STDOUT] 1:19:05 AM [express] ✨ Server running at http://0.0.0.0:5001
 [STDOUT] 1:19:05 AM [express] 🔒 API available at http://0.0.0.0:5001/api
+[STDOUT] 
+> rest-express@1.0.0 dev
+> tsx server/index.ts
+
+[STDOUT] Database connection successful
+[STDOUT] Supplier contacts migration completed
+[STDOUT] Re-optimizing dependencies because lockfile has changed
+[STDOUT] 12:34:13 PM [express] ✨ Server running at http://0.0.0.0:5001
+[STDOUT] 12:34:13 PM [express] 🔒 API available at http://0.0.0.0:5001/api
+[STDERR] Keep-alive query failed: Error: Connection terminated unexpectedly
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDERR] Keep-alive query failed: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:575:9)
+    at process.processTimers (node:internal/timers:549:7)
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDERR] Keep-alive query failed: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:575:9)
+    at process.processTimers (node:internal/timers:549:7)
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDERR] Failed to prune sessions: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at async PGStore._asyncQuery (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/connect-pg-simple/index.js:322:21)
+[STDERR] Keep-alive query failed: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDERR] Keep-alive query failed: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDERR] Keep-alive query failed: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDERR] Keep-alive query failed: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDERR] Keep-alive query failed: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDERR] Keep-alive query failed: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDERR] Keep-alive query failed: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:575:9)
+    at process.processTimers (node:internal/timers:549:7)
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDERR] Keep-alive query failed: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:575:9)
+    at process.processTimers (node:internal/timers:549:7)
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDERR] Keep-alive query failed: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:575:9)
+    at process.processTimers (node:internal/timers:549:7)
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDERR] Keep-alive query failed: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:575:9)
+    at process.processTimers (node:internal/timers:549:7)
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDERR] Keep-alive query failed: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:575:9)
+    at process.processTimers (node:internal/timers:549:7)
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDERR] Keep-alive query failed: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:575:9)
+    at process.processTimers (node:internal/timers:549:7)
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDERR] Keep-alive query failed: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:575:9)
+    at process.processTimers (node:internal/timers:549:7)
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDERR] Keep-alive query failed: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDERR] Keep-alive query failed: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:575:9)
+    at process.processTimers (node:internal/timers:549:7)
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDERR] Keep-alive query failed: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:575:9)
+    at process.processTimers (node:internal/timers:549:7)
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDOUT] 1:29:46 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=RBJEz-Km0vRqPv0G8VuLx
+[STDERR] Keep-alive query failed: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDERR] Keep-alive query failed: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDERR] Failed to prune sessions: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at async PGStore._asyncQuery (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/connect-pg-simple/index.js:322:21)
+[STDERR] Keep-alive query failed: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:575:9)
+    at process.processTimers (node:internal/timers:549:7)
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDERR] Keep-alive query failed: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:575:9)
+    at process.processTimers (node:internal/timers:549:7)
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDOUT] 1:31:31 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=RBJEz-Km0vRqPv0G8VuLx
+[STDERR] Keep-alive query failed: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:575:9)
+    at process.processTimers (node:internal/timers:549:7)
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDERR] Keep-alive query failed: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDERR] Keep-alive query failed: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:575:9)
+    at process.processTimers (node:internal/timers:549:7)
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDERR] Keep-alive query failed: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:575:9)
+    at process.processTimers (node:internal/timers:549:7)
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDERR] Keep-alive query failed: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:575:9)
+    at process.processTimers (node:internal/timers:549:7)
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDERR] Keep-alive query failed: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:575:9)
+    at process.processTimers (node:internal/timers:549:7)
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDERR] Keep-alive query failed: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:575:9)
+    at process.processTimers (node:internal/timers:549:7)
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDERR] Keep-alive query failed: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:575:9)
+    at process.processTimers (node:internal/timers:549:7)
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDERR] Keep-alive query failed: Error: Cannot use a pool after calling end on the pool
+    at file:///Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:575:9)
+    at process.processTimers (node:internal/timers:549:7)
+    at async Timeout._onTimeout (/Users/vishalmutti/Downloads/ZoomBooksManager/server/db.ts:100:5)
+[STDOUT] 
+> rest-express@1.0.0 dev
+> tsx server/index.ts
+
+[STDOUT] Database connection successful
+[STDOUT] Supplier contacts migration completed
+[STDOUT] Re-optimizing dependencies because lockfile has changed
+[STDOUT] 1:36:44 PM [express] ✨ Server running at http://0.0.0.0:5001
+[STDOUT] 1:36:44 PM [express] 🔒 API available at http://0.0.0.0:5001/api
+[STDOUT] 1:42:00 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=6MvbGFnc_dCemKplZDy1C
+[STDOUT] 1:42:21 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=6MvbGFnc_dCemKplZDy1C
+[STDOUT] 1:42:46 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=6MvbGFnc_dCemKplZDy1C
+[STDOUT] 1:43:12 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=6MvbGFnc_dCemKplZDy1C
+[STDOUT] 1:43:40 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=6MvbGFnc_dCemKplZDy1C
+[STDOUT] 1:44:00 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=6MvbGFnc_dCemKplZDy1C
+[STDOUT] 
+> rest-express@1.0.0 dev
+> tsx server/index.ts
+
+[STDOUT] Database connection successful
+[STDOUT] Supplier contacts migration completed
+[STDOUT] 1:46:24 PM [express] ✨ Server running at http://0.0.0.0:5001
+[STDOUT] 1:46:25 PM [express] 🔒 API available at http://0.0.0.0:5001/api
+[STDOUT] 
+> rest-express@1.0.0 dev
+> tsx server/index.ts
+
+[STDOUT] Database connection successful
+[STDOUT] Supplier contacts migration completed
+[STDOUT] 2:05:25 PM [express] ✨ Server running at http://0.0.0.0:5001
+[STDOUT] 2:05:25 PM [express] 🔒 API available at http://0.0.0.0:5001/api
+[STDOUT] 2:10:47 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=Evpj8wQGkefntUC5EltdD
+[STDOUT] 2:11:28 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=Evpj8wQGkefntUC5EltdD
+[STDOUT] 2:21:49 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=Evpj8wQGkefntUC5EltdD
+[STDOUT] 2:23:04 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=Evpj8wQGkefntUC5EltdD
+[STDOUT] 2:24:03 PM [vite] page reload public/pdf-test.html
+[STDOUT] 2:24:03 PM [vite] page reload public/pdf-test.html
+[STDOUT] 2:24:23 PM [vite] page reload public/pdf-test.html
+[STDOUT] 2:26:42 PM [express] POST /api/process-pdf 200 in 4ms
+[STDOUT] 
+> rest-express@1.0.0 dev
+> tsx server/index.ts
+
+[STDERR] node:fs:563
+  return binding.open(
+                 ^
+
+Error: ENOENT: no such file or directory, open './test/data/05-versions-space.pdf'
+    at Object.openSync (node:fs:563:18)
+    at Object.readFileSync (node:fs:447:35)
+    at Object.<anonymous> (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/pdf-parse/index.js:15:25)
+    at Module._compile (node:internal/modules/cjs/loader:1723:14)
+    at Object.transformer (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/tsx/dist/register-DCnOAxY2.cjs:2:1186)
+    at Module.load (node:internal/modules/cjs/loader:1458:32)
+    at Function._load (node:internal/modules/cjs/loader:1275:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:234:24)
+    at cjsLoader (node:internal/modules/esm/translators:311:5) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: './test/data/05-versions-space.pdf'
+}
+
+Node.js v23.7.0
+Server process exited with code 1
+[STDOUT] 
+> rest-express@1.0.0 dev
+> tsx server/index.ts
+
+[STDOUT] Database connection successful
+[STDOUT] Supplier contacts migration completed
+[STDOUT] Re-optimizing dependencies because lockfile has changed
+[STDOUT] 2:31:05 PM [express] ✨ Server running at http://0.0.0.0:5002
+[STDOUT] 2:31:05 PM [express] 🔒 API available at http://0.0.0.0:5002/api
+[STDOUT] 2:35:53 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=Evpj8wQGkefntUC5EltdD
+[STDERR] 2:35:53 PM [vite] Internal server error: /Users/vishalmutti/Downloads/ZoomBooksManager/client/src/pages/zoom-book-ai.tsx: Unterminated string constant. (741:60)
+
+  739 |                   }}
+  740 |                 />
+> 741 |                 <label htmlFor="attachment-input" className="absolute right-14 top-2.5 cursor-pointer text-gray-500 hover:text-gray-700
+      |                                                             ^
+  742 |
+  Plugin: vite:react-babel
+  File: /Users/vishalmutti/Downloads/ZoomBooksManager/client/src/pages/zoom-book-ai.tsx:741:60
+  739|                    }}
+  740|                  />
+  741|                  <label htmlFor="attachment-input" className="absolute right-14 top-2.5 cursor-pointer text-gray-500 hover:text-gray-700
+     |                                                              ^
+  742|  
+      at toParseError (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parse-error.ts:95:45)
+      at raise (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/tokenizer/index.ts:1496:19)
+      at jsxReadString (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/plugins/jsx/index.ts:174:22)
+      at getTokenFromCode (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/plugins/jsx/index.ts:609:16)
+      at getTokenFromCode (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/plugins/typescript/index.ts:3815:13)
+      at nextToken (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/tokenizer/index.ts:274:10)
+      at next (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/tokenizer/index.ts:121:10)
+      at eat (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/tokenizer/index.ts:126:12)
+      at jsxParseAttribute (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/plugins/jsx/index.ts:407:25)
+      at jsxParseOpeningElementAfterName (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/plugins/jsx/index.ts:433:30)
+      at jsxParseOpeningElementAfterName (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/plugins/typescript/index.ts:3888:20)
+      at jsxParseOpeningElementAt (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/plugins/jsx/index.ts:423:19)
+      at jsxParseElementAt (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/plugins/jsx/index.ts:463:35)
+      at jsxParseElementAt (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/plugins/jsx/index.ts:476:34)
+      at jsxParseElementAt (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/plugins/jsx/index.ts:476:34)
+      at jsxParseElementAt (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/plugins/jsx/index.ts:476:34)
+      at jsxParseElementAt (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/plugins/jsx/index.ts:476:34)
+      at jsxParseElementAt (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/plugins/jsx/index.ts:476:34)
+      at jsxParseElementAt (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/plugins/jsx/index.ts:476:34)
+      at jsxParseElement (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/plugins/jsx/index.ts:552:19)
+      at parseExprAtom (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/plugins/jsx/index.ts:566:21)
+      at parseExprSubscripts (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:709:23)
+      at parseUpdate (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:688:21)
+      at parseMaybeUnary (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:650:23)
+      at parseMaybeUnary (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/plugins/typescript/index.ts:3584:20)
+      at parseMaybeUnaryOrPrivate (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:389:14)
+      at parseExprOps (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:401:23)
+      at parseMaybeConditional (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:356:23)
+      at parseMaybeAssign (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:298:21)
+      at fn (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/plugins/typescript/index.ts:3437:23)
+      at tryParse (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/util.ts:174:20)
+      at parseMaybeAssign (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/plugins/typescript/index.ts:3436:20)
+      at callback (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:252:12)
+      at allowInAnd (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:3116:12)
+      at parseMaybeAssignAllowIn (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:251:17)
+      at parseParenAndDistinguishExpression (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:1779:16)
+      at parseExprAtom (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:1126:21)
+      at parseExprAtom (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/plugins/jsx/index.ts:576:22)
+      at parseExprSubscripts (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:709:23)
+      at parseUpdate (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:688:21)
+      at parseMaybeUnary (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:650:23)
+      at parseMaybeUnary (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/plugins/typescript/index.ts:3584:20)
+      at parseMaybeUnaryOrPrivate (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:389:14)
+      at parseExprOps (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:401:23)
+      at parseMaybeConditional (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:356:23)
+      at parseMaybeAssign (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:298:21)
+      at parseMaybeAssign (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/plugins/typescript/index.ts:3456:22)
+      at parseExpressionBase (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:221:23)
+      at callback (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:212:39)
+      at allowInAnd (/Users/vishalmutti/Downloads/ZoomBooksManager/node_modules/@babel/parser/src/parser/expression.ts:3111:16)
+Server process exited with code 1
+[STDOUT] 
+> rest-express@1.0.0 dev
+> tsx server/index.ts
+
+[STDOUT] Database connection successful
+[STDOUT] Supplier contacts migration completed
+[STDOUT] 2:46:39 PM [express] ✨ Server running at http://0.0.0.0:5001
+[STDOUT] 2:46:39 PM [express] 🔒 API available at http://0.0.0.0:5001/api
+[STDOUT] 2:53:18 PM [vite] hmr update /src/index.css?v=LJ0k54bHw4ZABXz2IMKX_, /src/pages/zoom-book-ai.tsx
+[STDOUT] 2:53:29 PM [vite] hmr update /src/index.css?v=LJ0k54bHw4ZABXz2IMKX_, /src/pages/zoom-book-ai.tsx
+[STDOUT] 2:54:01 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=LJ0k54bHw4ZABXz2IMKX_
+[STDOUT] 
+> rest-express@1.0.0 dev
+> tsx server/index.ts
+
+[STDOUT] Database connection successful
+[STDOUT] Supplier contacts migration completed
+[STDOUT] 2:55:52 PM [express] ✨ Server running at http://0.0.0.0:5001
+[STDOUT] 2:55:52 PM [express] 🔒 API available at http://0.0.0.0:5001/api
+[STDOUT] 2:55:55 PM [express] GET /api 200 in 207ms
+[STDOUT] 3:05:09 PM [vite] hmr update /src/index.css?v=NYzaYOmxiyS3QoPCOHub8, /src/pages/zoom-book-ai.tsx
+[STDOUT] 3:09:26 PM [vite] hmr update /src/index.css?v=NYzaYOmxiyS3QoPCOHub8, /src/pages/zoom-book-ai.tsx
+[STDOUT] 3:10:07 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=NYzaYOmxiyS3QoPCOHub8
+[STDOUT] 3:10:26 PM [vite] hmr update /src/pages/zoom-book-ai.tsx, /src/index.css?v=NYzaYOmxiyS3QoPCOHub8
+[STDOUT] 3:15:02 PM [vite] hmr update /src/index.css?v=NYzaYOmxiyS3QoPCOHub8, /src/pages/zoom-book-ai.tsx
+[STDOUT] 3:15:14 PM [vite] hmr update /src/index.css?v=NYzaYOmxiyS3QoPCOHub8, /src/pages/zoom-book-ai.tsx
+[STDOUT] 3:15:40 PM [vite] hmr update /src/index.css?v=NYzaYOmxiyS3QoPCOHub8, /src/pages/zoom-book-ai.tsx
+[STDOUT] 
+> rest-express@1.0.0 dev
+> tsx server/index.ts
+
+[STDOUT] Database connection successful
+[STDOUT] Supplier contacts migration completed
+[STDOUT] Re-optimizing dependencies because lockfile has changed
+[STDOUT] 3:26:58 PM [express] ✨ Server running at http://0.0.0.0:5002
+[STDOUT] 3:26:58 PM [express] 🔒 API available at http://0.0.0.0:5002/api
+[STDOUT] 
+> rest-express@1.0.0 dev
+> tsx server/index.ts
+
+[STDOUT] Database connection successful
+[STDOUT] Supplier contacts migration completed
+[STDOUT] 11:45:28 PM [express] ✨ Server running at http://0.0.0.0:5002
+[STDOUT] 11:45:28 PM [express] 🔒 API available at http://0.0.0.0:5002/api
+[STDOUT] 12:07:24 AM [vite] hmr update /src/index.css?v=GVbhR0mFqzlivuwdczV9C, /src/pages/zoom-book-ai.tsx
+[STDOUT] 
+> rest-express@1.0.0 dev
+> tsx server/index.ts
+
+[STDOUT] Database connection successful
+[STDOUT] Supplier contacts migration completed
+[STDOUT] 12:16:44 AM [express] ✨ Server running at http://0.0.0.0:5002
+[STDOUT] 12:16:44 AM [express] 🔒 API available at http://0.0.0.0:5002/api
+[STDOUT] Updating load: 17 with data: {
+  loadType: 'Incoming',
+  supplierId: '7',
+  referenceNumber: 'HiKavin123',
+  location: 'Ontario',
+  scheduledPickup: '2025-02-19T00:00:00.000Z',
+  scheduledDelivery: '2025-02-20T00:00:00.000Z',
+  status: 'Pending',
+  carrier: 'Supersonic',
+  notes: '',
+  loadCost: '1000.00',
+  freightCost: '200.00',
+  freightCostCurrency: 'USD',
+  profitRoi: '0.00',
+  bolFile: '1740036769807-369220488.pdf',
+  materialInvoiceFile: '1740036769826-221373661.pdf',
+  freightInvoiceFile: '1740037216028-468178295.pdf',
+  loadPerformanceFile: null,
+  materialInvoiceStatus: 'UNPAID',
+  freightInvoiceStatus: 'UNPAID'
+}
+[STDOUT] Updating load with data: {
+  id: 17,
+  loadType: 'Incoming',
+  supplierId: '7',
+  referenceNumber: 'HiKavin123',
+  location: 'Ontario',
+  pickupLocation: null,
+  deliveryLocation: null,
+  scheduledPickup: '2025-02-19T00:00:00.000Z',
+  scheduledDelivery: '2025-02-20T00:00:00.000Z',
+  status: 'Pending',
+  carrier: 'Supersonic',
+  notes: '',
+  loadCost: '1000.00',
+  freightCost: '200.00',
+  freightCostCurrency: 'USD',
+  profitRoi: '0.00',
+  bolFile: '1740036769807-369220488.pdf',
+  materialInvoiceFile: '1740036769826-221373661.pdf',
+  freightInvoiceFile: '1740037216028-468178295.pdf',
+  loadPerformanceFile: null,
+  materialInvoiceStatus: 'UNPAID',
+  freightInvoiceStatus: 'UNPAID',
+  createdAt: 2025-02-20T07:32:49.873Z
+}
+[STDOUT] Load updated successfully: {
+  id: 17,
+  loadType: 'Incoming',
+  supplierId: '7',
+  referenceNumber: 'HiKavin123',
+  location: 'Ontario',
+  pickupLocation: null,
+  deliveryLocation: null,
+  scheduledPickup: '2025-02-19',
+  scheduledDelivery: '2025-02-20',
+  status: 'Pending',
+  carrier: 'Supersonic',
+  notes: '',
+  loadCost: '1000.00',
+  freightCost: '200.00',
+  freightCostCurrency: 'USD',
+  profitRoi: '0.00',
+  bolFile: '1740036769807-369220488.pdf',
+  materialInvoiceFile: '1740036769826-221373661.pdf',
+  freightInvoiceFile: '1740037216028-468178295.pdf',
+  loadPerformanceFile: null,
+  materialInvoiceStatus: 'UNPAID',
+  freightInvoiceStatus: 'UNPAID',
+  createdAt: 2025-02-20T07:32:49.873Z
+}
+[STDOUT] Updating load: 17 with data: {
+  loadType: 'Incoming',
+  supplierId: '7',
+  referenceNumber: 'HiKavin123',
+  location: 'Ontario',
+  scheduledPickup: '2025-02-19T00:00:00.000Z',
+  scheduledDelivery: '2025-02-20T00:00:00.000Z',
+  status: 'Pending',
+  carrier: 'Supersonic',
+  notes: '',
+  loadCost: '1000.00',
+  freightCost: '200.00',
+  freightCostCurrency: 'USD',
+  profitRoi: '0.00',
+  bolFile: '1740817200894-259326525.pdf',
+  materialInvoiceFile: '1740036769826-221373661.pdf',
+  freightInvoiceFile: '1740037216028-468178295.pdf',
+  loadPerformanceFile: null,
+  materialInvoiceStatus: 'UNPAID',
+  freightInvoiceStatus: 'UNPAID'
+}
+[STDOUT] Updating load with data: {
+  id: 17,
+  loadType: 'Incoming',
+  supplierId: '7',
+  referenceNumber: 'HiKavin123',
+  location: 'Ontario',
+  pickupLocation: null,
+  deliveryLocation: null,
+  scheduledPickup: '2025-02-19T00:00:00.000Z',
+  scheduledDelivery: '2025-02-20T00:00:00.000Z',
+  status: 'Pending',
+  carrier: 'Supersonic',
+  notes: '',
+  loadCost: '1000.00',
+  freightCost: '200.00',
+  freightCostCurrency: 'USD',
+  profitRoi: '0.00',
+  bolFile: '1740817200894-259326525.pdf',
+  materialInvoiceFile: '1740036769826-221373661.pdf',
+  freightInvoiceFile: '1740037216028-468178295.pdf',
+  loadPerformanceFile: null,
+  materialInvoiceStatus: 'UNPAID',
+  freightInvoiceStatus: 'UNPAID',
+  createdAt: 2025-02-20T07:32:49.873Z
+}
+[STDOUT] Load updated successfully: {
+  id: 17,
+  loadType: 'Incoming',
+  supplierId: '7',
+  referenceNumber: 'HiKavin123',
+  location: 'Ontario',
+  pickupLocation: null,
+  deliveryLocation: null,
+  scheduledPickup: '2025-02-19',
+  scheduledDelivery: '2025-02-20',
+  status: 'Pending',
+  carrier: 'Supersonic',
+  notes: '',
+  loadCost: '1000.00',
+  freightCost: '200.00',
+  freightCostCurrency: 'USD',
+  profitRoi: '0.00',
+  bolFile: '1740817200894-259326525.pdf',
+  materialInvoiceFile: '1740036769826-221373661.pdf',
+  freightInvoiceFile: '1740037216028-468178295.pdf',
+  loadPerformanceFile: null,
+  materialInvoiceStatus: 'UNPAID',
+  freightInvoiceStatus: 'UNPAID',
+  createdAt: 2025-02-20T07:32:49.873Z
+}

@@ -1,12 +1,124 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, PlusCircle, Search, Paperclip, Send, Trash, Edit, Bot } from 'lucide-react';
+import { MessageSquare, PlusCircle, Search, Paperclip, Send, Trash, Edit, Bot, FileText, Image } from 'lucide-react';
+import * as pdfjsLib from 'pdfjs-dist';
+import { GlobalWorkerOptions } from 'pdfjs-dist';
+import { processPDFAttachment } from '@/pdf-processor';
+
+// For debugging
+console.log("PDF.js version:", pdfjsLib.version);
+
+// Set up the worker with multiple fallback options and better error handling
+const setupPdfWorker = () => {
+  try {
+    console.log("Setting up PDF.js worker...");
+    const pdfJsVersion = pdfjsLib.version;
+    console.log("PDF.js version:", pdfJsVersion);
+    
+    // Define worker paths with multiple fallbacks
+    const workerPaths = [
+      // Local path (if available)
+      `/pdfjs/pdf.worker.js`,
+      // CDN paths
+      `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfJsVersion}/build/pdf.worker.min.js`,
+      `https://unpkg.com/pdfjs-dist@${pdfJsVersion}/build/pdf.worker.min.js`,
+      // Specific version fallback
+      `https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.js`,
+      // Generic fallback
+      `https://mozilla.github.io/pdf.js/build/pdf.worker.js`
+    ];
+    
+    // Check if worker is already set
+    if (pdfjsLib.GlobalWorkerOptions.workerSrc) {
+      console.log("Worker already configured:", pdfjsLib.GlobalWorkerOptions.workerSrc);
+      return;
+    }
+    
+    // Function to try loading a worker
+    const tryWorkerPath = async (path: string): Promise<boolean> => {
+      console.log(`Attempting to use worker at: ${path}`);
+      
+      try {
+        // Set the worker source
+        pdfjsLib.GlobalWorkerOptions.workerSrc = path;
+        console.log("Worker source set to:", pdfjsLib.GlobalWorkerOptions.workerSrc);
+        
+        // Test if the worker is accessible
+        const response = await fetch(path, { method: 'HEAD' });
+        if (!response.ok) {
+          console.warn(`Worker not accessible at ${path}: ${response.status}`);
+          return false;
+        }
+        
+        console.log(`Worker file is accessible at ${path}`);
+        return true;
+      } catch (error) {
+        console.warn(`Failed to access worker at ${path}:`, error);
+        return false;
+      }
+    };
+    
+    // Try each worker path in sequence
+    (async () => {
+      for (const path of workerPaths) {
+        const success = await tryWorkerPath(path);
+        if (success) {
+          console.log(`Successfully configured PDF.js worker with: ${path}`);
+          // Create a test PDF document to verify worker is functioning
+          try {
+            // Create a minimal valid PDF as a Uint8Array
+            const pdfString = '%PDF-1.7\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 100 100] /Contents 4 0 R >>\nendobj\n4 0 obj\n<< /Length 8 >>\nstream\nBT\n/F1 12 Tf\nET\nendstream\nendobj\nxref\n0 5\n0000000000 65535 f\n0000000010 00000 n\n0000000059 00000 n\n0000000118 00000 n\n0000000217 00000 n\ntrailer\n<< /Size 5 /Root 1 0 R >>\nstartxref\n275\n%%EOF';
+            
+            // Convert string to Uint8Array
+            const encoder = new TextEncoder();
+            const testPdf = encoder.encode(pdfString);
+            
+            const loadingTask = pdfjsLib.getDocument({ data: testPdf });
+            const pdf = await loadingTask.promise;
+            console.log("PDF.js worker test successful, loaded PDF with", pdf.numPages, "pages");
+            break;
+          } catch (testError) {
+            console.warn("PDF.js worker test failed:", testError);
+            // Continue to next worker path
+          }
+        }
+      }
+    })();
+    
+    // Add a global error handler for worker loading issues
+    window.addEventListener('error', (event: ErrorEvent) => {
+      // Check if this is a PDF.js worker loading error
+      if ((event.message?.includes('worker') || event.filename?.includes('worker')) && 
+          (event.message?.includes('pdf') || event.filename?.includes('pdf'))) {
+        console.warn("PDF.js worker loading error:", event.message);
+        
+        // Try the next worker path in the list
+        const currentIndex = workerPaths.indexOf(pdfjsLib.GlobalWorkerOptions.workerSrc);
+        if (currentIndex >= 0 && currentIndex < workerPaths.length - 1) {
+          const nextPath = workerPaths[currentIndex + 1];
+          console.log("Trying next worker path due to error:", nextPath);
+          pdfjsLib.GlobalWorkerOptions.workerSrc = nextPath;
+        }
+      }
+    });
+  } catch (error) {
+    console.error("Error setting up PDF.js worker:", error);
+    // Use a reliable CDN as last resort
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://mozilla.github.io/pdf.js/build/pdf.worker.js';
+    console.log("Using fallback worker source:", pdfjsLib.GlobalWorkerOptions.workerSrc);
+  }
+};
+
+// Initialize the PDF worker
+console.log("Initializing PDF.js worker...");
+setupPdfWorker();
 
 interface Message {
   text: string;
   sender: 'user' | 'bot';
   attachments?: File[];
+  pdfContent?: string;
 }
 
 const ZoomBookAI = () => {
@@ -17,6 +129,8 @@ const ZoomBookAI = () => {
   const messageEndRef = useRef<HTMLDivElement>(null);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [webSearchEnabled, setWebSearchEnabled] = useState(false);
+  const [processingPDF, setProcessingPDF] = useState(false);
+  const [pdfProcessingStatus, setPdfProcessingStatus] = useState('');
 
   const apiKey = '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';
   const model = 'google/gemini-2.0-flash-001';
@@ -26,6 +140,8 @@ const ZoomBookAI = () => {
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // PDF Processing is now handled by the imported processPDFAttachment function
+
   const sendMessage = async () => {
     if (!input && attachments.length === 0) return;
 
@@ -33,6 +149,26 @@ const ZoomBookAI = () => {
       // Keep input and attachments until API call completes
       let modelToUse = model;
       let updatedInput = input;
+      let pdfContext = '';
+
+      // Process PDF attachments if any
+      const pdfAttachments = attachments.filter(file => file.type === 'application/pdf');
+      if (pdfAttachments.length > 0) {
+        setProcessingPDF(true);
+        
+        for (const pdfFile of pdfAttachments) {
+          const pdfContent = await processPDFAttachment(pdfFile, setPdfProcessingStatus);
+          pdfContext += pdfContent + "\n\n";
+        }
+        
+        setProcessingPDF(false);
+        setPdfProcessingStatus('');
+        
+        // Add PDF context to input
+        if (pdfContext) {
+          updatedInput = pdfContext + (input ? `\n\nUser query: ${input}` : "\n\nPlease analyze the PDF content above.");
+        }
+      }
 
       if (webSearchEnabled) {
         updatedInput = "Search the web if required for more up to date information. " + updatedInput;
@@ -60,7 +196,7 @@ const ZoomBookAI = () => {
             {
               id: "web",
               max_results: 5,
-              search_prompt: "A web search was conducted on `date`. Incorporate the following web search results into your response only if they contribute additional knowledge."
+              search_prompt: "A web search was conducted. Incorporate the following web search results into your response only if they contribute additional knowledge."
             }
           ],
           messages: messagesForAPI,
@@ -68,20 +204,21 @@ const ZoomBookAI = () => {
         };
       }
 
-      // Handle attachments if any
-      if (attachments.length > 0) {
+      // Handle non-PDF attachments
+      const nonPdfAttachments = attachments.filter(file => file.type !== 'application/pdf');
+      if (nonPdfAttachments.length > 0) {
         let messageContent: any = [];
         
         // Add text content if it exists
-        if (input) {
+        if (updatedInput) {
           messageContent.push({
             type: "text",
-            text: input
+            text: updatedInput
           });
         }
         
         // Convert each attachment to base64 and add it to the message content
-        for (const attachment of attachments) {
+        for (const attachment of nonPdfAttachments) {
           const base64 = await new Promise<string>((resolve, reject) => {
             const reader = new FileReader();
             reader.onloadend = () => resolve(reader.result as string);
@@ -99,7 +236,7 @@ const ZoomBookAI = () => {
               }
             });
           } else {
-            // For PDFs and other files, instruct the model to analyze the file
+            // For other files, instruct the model to analyze the file
             messageContent.push({
               type: "text",
               text: `I've attached a file named "${attachment.name}" (${attachment.type}). Please analyze this file and provide a summary or relevant information from it.`
@@ -141,7 +278,12 @@ const ZoomBookAI = () => {
       }
 
       // Add user message immediately
-      const userMessage: Message = { text: input, sender: 'user', attachments };
+      const userMessage: Message = { 
+        text: input, 
+        sender: 'user', 
+        attachments,
+        pdfContent: pdfContext || undefined
+      };
       setMessages(prevMessages => [...prevMessages, userMessage]);
       
       let reply = "";
@@ -348,7 +490,13 @@ const ZoomBookAI = () => {
                     <div className="mt-3 pt-3 border-t border-gray-200/30">
                       {message.attachments.map((attachment, index) => (
                         <div key={index} className="flex items-center text-sm text-gray-600">
-                          <Paperclip className="h-3.5 w-3.5 mr-1.5" />
+                          {attachment.type === 'application/pdf' ? (
+                            <FileText className="h-3.5 w-3.5 mr-1.5" />
+                          ) : attachment.type.startsWith('image/') ? (
+                            <Image className="h-3.5 w-3.5 mr-1.5" />
+                          ) : (
+                            <Paperclip className="h-3.5 w-3.5 mr-1.5" />
+                          )}
                           {attachment.name}
                         </div>
                       ))}
@@ -414,7 +562,7 @@ const ZoomBookAI = () => {
               <Button
                 onClick={sendMessage}
                 className="rounded-full"
-                disabled={!input && attachments.length === 0}
+                disabled={(!input && attachments.length === 0) || processingPDF}
               >
                 <Send className="h-4 w-4 mr-1" /> Send
               </Button>
@@ -424,7 +572,13 @@ const ZoomBookAI = () => {
               <div className="flex flex-wrap gap-2 mt-2">
                 {attachments.map((attachment, index) => (
                   <div key={index} className="flex items-center bg-gray-100 text-sm text-gray-700 px-3 py-1 rounded-full">
-                    <Paperclip className="h-3.5 w-3.5 mr-1.5" />
+                    {attachment.type === 'application/pdf' ? (
+                      <FileText className="h-3.5 w-3.5 mr-1.5" />
+                    ) : attachment.type.startsWith('image/') ? (
+                      <Image className="h-3.5 w-3.5 mr-1.5" />
+                    ) : (
+                      <Paperclip className="h-3.5 w-3.5 mr-1.5" />
+                    )}
                     <span className="truncate max-w-[150px]">{attachment.name}</span>
                     <button 
                       className="ml-1.5 text-gray-500 hover:text-red-500"
@@ -434,6 +588,13 @@ const ZoomBookAI = () => {
                     </button>
                   </div>
                 ))}
+              </div>
+            )}
+            
+            {processingPDF && (
+              <div className="text-sm text-gray-500 mt-2 flex items-center">
+                <div className="animate-spin mr-2 h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
+                {pdfProcessingStatus || "Processing PDF..."}
               </div>
             )}
           </div>
